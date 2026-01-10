@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>String Curtain + 4 Reveal Sections</title>
+  <title>String Curtain + 4 Sections</title>
   <style>
     html, body {
       margin: 0;
@@ -13,13 +13,13 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* 4 sections BEHIND the strings */
+    /* 4 sections BEHIND the canvas */
     .sections {
       position: fixed;
       inset: 0;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      z-index: 0; /* behind canvas */
+      z-index: 0;
     }
 
     .section {
@@ -29,45 +29,43 @@
       padding: 24px;
       box-sizing: border-box;
 
-      /* start hidden */
       opacity: 0;
       transform: translateY(14px);
       filter: blur(6px);
       transition: opacity 220ms ease, transform 220ms ease, filter 220ms ease;
 
-      /* pastel blocks */
-      background: rgba(255,255,255,0.04);
-      border-left: 1px solid rgba(255,255,255,0.06);
+      border-left: 1px solid rgba(255,255,255,0.08);
     }
 
-    /* Text styling */
     .section h3 {
       margin: 0 0 6px 0;
       font-size: 14px;
-      font-weight: 600;
-      color: rgba(10,10,14,0.86);
+      font-weight: 650;
+      color: rgba(10,10,14,0.88);
       letter-spacing: 0.2px;
     }
+
     .section p {
       margin: 0;
       font-size: 12px;
       line-height: 1.35;
-      color: rgba(10,10,14,0.70);
-      max-width: 34ch;
+      color: rgba(10,10,14,0.72);
+      max-width: 36ch;
     }
 
-    /* Pastel backgrounds (you can change these) */
-    .s1 { background: linear-gradient(180deg, rgba(255, 209, 220, 0.85), rgba(255, 209, 220, 0.55)); }
-    .s2 { background: linear-gradient(180deg, rgba(205, 233, 255, 0.85), rgba(205, 233, 255, 0.55)); }
-    .s3 { background: linear-gradient(180deg, rgba(209, 255, 224, 0.85), rgba(209, 255, 224, 0.55)); }
-    .s4 { background: linear-gradient(180deg, rgba(233, 216, 255, 0.85), rgba(233, 216, 255, 0.55)); }
+    /* Pastel section panels */
+    .s1 { background: linear-gradient(180deg, rgba(255, 209, 220, 0.90), rgba(255, 209, 220, 0.55)); }
+    .s2 { background: linear-gradient(180deg, rgba(205, 233, 255, 0.90), rgba(205, 233, 255, 0.55)); }
+    .s3 { background: linear-gradient(180deg, rgba(209, 255, 224, 0.90), rgba(209, 255, 224, 0.55)); }
+    .s4 { background: linear-gradient(180deg, rgba(233, 216, 255, 0.90), rgba(233, 216, 255, 0.55)); }
 
-    /* Canvas ABOVE the sections */
+    /* Canvas ON TOP */
     canvas {
+      position: fixed;
+      inset: 0;
       width: 100vw;
       height: 100vh;
       display: block;
-      position: relative;
       z-index: 2;
     }
 
@@ -75,7 +73,7 @@
       position: fixed;
       left: 14px;
       top: 12px;
-      color: rgba(255,255,255,0.7);
+      color: rgba(255,255,255,0.78);
       font-size: 12px;
       letter-spacing: .2px;
       pointer-events: none;
@@ -84,37 +82,15 @@
     }
   </style>
 </head>
-<body>
 
-  <!-- Behind: 4 reveal sections -->
-  <div class="sections" id="sections">
-    <div class="section s1" id="sec1">
-      <div>
-        <h3>Section 1</h3>
-        <p>Replace this text with your content.</p>
-      </div>
-    </div>
-    <div class="section s2" id="sec2">
-      <div>
-        <h3>Section 2</h3>
-        <p>Replace this text with your content.</p>
-      </div>
-    </div>
-    <div class="section s3" id="sec3">
-      <div>
-        <h3>Section 3</h3>
-        <p>Replace this text with your content.</p>
-      </div>
-    </div>
-    <div class="section s4" id="sec4">
-      <div>
-        <h3>Section 4</h3>
-        <p>Replace this text with your content.</p>
-      </div>
-    </div>
+<body>
+  <div class="sections">
+    <div class="section s1" id="sec1"><div><h3>Section 1</h3><p>Replace with your content.</p></div></div>
+    <div class="section s2" id="sec2"><div><h3>Section 2</h3><p>Replace with your content.</p></div></div>
+    <div class="section s3" id="sec3"><div><h3>Section 3</h3><p>Replace with your content.</p></div></div>
+    <div class="section s4" id="sec4"><div><h3>Section 4</h3><p>Replace with your content.</p></div></div>
   </div>
 
-  <!-- Above: strings -->
   <canvas id="c"></canvas>
   <div class="hud">Hover to open the strings like a curtain (reveals 4 sections)</div>
 
@@ -126,28 +102,17 @@
       document.getElementById("sec1"),
       document.getElementById("sec2"),
       document.getElementById("sec3"),
-      document.getElementById("sec4"),
+      document.getElementById("sec4")
     ];
 
-    function resize() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      canvas.style.width = window.innerWidth + "px";
-      canvas.style.height = window.innerHeight + "px";
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      seed();
-    }
-    window.addEventListener("resize", resize);
-
-    const pointer = { x: innerWidth * 0.5, y: innerHeight * 0.5, active: false };
+    // Pointer
+    const pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, active: false };
 
     window.addEventListener("mousemove", (e) => {
       pointer.x = e.clientX;
       pointer.y = e.clientY;
       pointer.active = true;
     });
-
     window.addEventListener("mouseleave", () => pointer.active = false);
 
     window.addEventListener("touchstart", (e) => {
@@ -166,11 +131,22 @@
 
     window.addEventListener("touchend", () => pointer.active = false);
 
+    // HiDPI + seed
     let strings = [];
+
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      seed();
+    }
+    window.addEventListener("resize", resize);
 
     function seed() {
       strings = [];
-      const W = innerWidth;
+      const W = window.innerWidth;
+
       const density = Math.max(90, Math.floor(W / 10));
       const gap = W / density;
 
@@ -181,9 +157,9 @@
           baseX,
           x: baseX,
           phase: Math.random() * 1000,
-          wobble: 0.6 + Math.random() * 1.4,
-          thickness: 0.6 + Math.random() * 1.2,
-          alpha: 0.10 + Math.random() * 0.22,
+          wobble: 0.7 + Math.random() * 1.5,
+          thickness: 1.0 + Math.random() * 1.6,     // slightly thicker so you can SEE them
+          alpha: 0.22 + Math.random() * 0.25,       // higher alpha so not invisible
 
           // pastel per string
           hue: Math.random() * 360,
@@ -194,15 +170,15 @@
     }
 
     const params = {
-      openRadius: 220,
-      openStrength: 140,
+      openRadius: 240,
+      openStrength: 170,
       returnEase: 0.10,
       followEase: 0.18,
       verticalBias: 0.85
     };
 
     function drawString(x, t, s) {
-      const H = innerHeight;
+      const H = window.innerHeight;
       const segments = 26;
       const segH = H / segments;
 
@@ -211,3 +187,6 @@
 
       for (let k = 1; k <= segments; k++) {
         const y = k * segH;
+
+        const wave =
+          Math.sin(
