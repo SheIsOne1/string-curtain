@@ -3,31 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>String Curtain + 4 Sections</title>
+  <title>String Curtain + 4 Sections (Debug-Safe)</title>
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: #07070b;
-      overflow: hidden;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    }
+    html, body { margin:0; height:100%; background:#07070b; overflow:hidden; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
 
-    /* 4 sections BEHIND the canvas */
     .sections {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       z-index: 0;
     }
-
     .section {
       height: 100%;
-      display: flex;
-      align-items: flex-end;
-      padding: 24px;
-      box-sizing: border-box;
+      display:flex;
+      align-items:flex-end;
+      padding:24px;
+      box-sizing:border-box;
 
       opacity: 0;
       transform: translateY(14px);
@@ -36,54 +27,20 @@
 
       border-left: 1px solid rgba(255,255,255,0.08);
     }
-
-    .section h3 {
-      margin: 0 0 6px 0;
-      font-size: 14px;
-      font-weight: 650;
-      color: rgba(10,10,14,0.88);
-      letter-spacing: 0.2px;
-    }
-
-    .section p {
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.35;
-      color: rgba(10,10,14,0.72);
-      max-width: 36ch;
-    }
-
-    /* Pastel section panels */
     .s1 { background: linear-gradient(180deg, rgba(255, 209, 220, 0.90), rgba(255, 209, 220, 0.55)); }
     .s2 { background: linear-gradient(180deg, rgba(205, 233, 255, 0.90), rgba(205, 233, 255, 0.55)); }
     .s3 { background: linear-gradient(180deg, rgba(209, 255, 224, 0.90), rgba(209, 255, 224, 0.55)); }
     .s4 { background: linear-gradient(180deg, rgba(233, 216, 255, 0.90), rgba(233, 216, 255, 0.55)); }
 
-    /* Canvas ON TOP */
-    canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      display: block;
-      z-index: 2;
-    }
+    .section h3 { margin:0 0 6px 0; font-size:14px; font-weight:650; color: rgba(10,10,14,0.88); }
+    .section p  { margin:0; font-size:12px; line-height:1.35; color: rgba(10,10,14,0.72); max-width:36ch; }
 
-    .hud {
-      position: fixed;
-      left: 14px;
-      top: 12px;
-      color: rgba(255,255,255,0.78);
-      font-size: 12px;
-      letter-spacing: .2px;
-      pointer-events: none;
-      user-select: none;
-      z-index: 3;
-    }
+    canvas { position: fixed; inset:0; width:100vw; height:100vh; display:block; z-index:2; }
+    .hud { position: fixed; left:14px; top:12px; z-index:3; color: rgba(255,255,255,0.78); font-size:12px; letter-spacing:.2px; pointer-events:none; user-select:none; }
   </style>
 </head>
-
 <body>
+
   <div class="sections">
     <div class="section s1" id="sec1"><div><h3>Section 1</h3><p>Replace with your content.</p></div></div>
     <div class="section s2" id="sec2"><div><h3>Section 2</h3><p>Replace with your content.</p></div></div>
@@ -92,101 +49,54 @@
   </div>
 
   <canvas id="c"></canvas>
-  <div class="hud">Hover to open the strings like a curtain (reveals 4 sections)</div>
+  <div class="hud">If you see a small white square top-left, JS is running. Hover to reveal sections.</div>
 
   <script>
+    // ---------- Canvas setup (debug-safe DPR handling) ----------
     const canvas = document.getElementById("c");
-    const ctx = canvas.getContext("2d", { alpha: true });
+    const ctx = canvas.getContext("2d");
 
-    const secEls = [
-      document.getElementById("sec1"),
-      document.getElementById("sec2"),
-      document.getElementById("sec3"),
-      document.getElementById("sec4")
-    ];
+    function setCanvasSize() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
 
-    // Pointer
-    const pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, active: false };
+      canvas.width  = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
 
-    window.addEventListener("mousemove", (e) => {
-      pointer.x = e.clientX;
-      pointer.y = e.clientY;
-      pointer.active = true;
-    });
-    window.addEventListener("mouseleave", () => pointer.active = false);
+      // Reset transform, then scale once.
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr, dpr);
 
-    window.addEventListener("touchstart", (e) => {
-      const t = e.touches[0];
-      pointer.x = t.clientX;
-      pointer.y = t.clientY;
-      pointer.active = true;
-    }, { passive: true });
-
-    window.addEventListener("touchmove", (e) => {
-      const t = e.touches[0];
-      pointer.x = t.clientX;
-      pointer.y = t.clientY;
-      pointer.active = true;
-    }, { passive: true });
-
-    window.addEventListener("touchend", () => pointer.active = false);
-
-    // HiDPI + seed
-    let strings = [];
-
-    function resize() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       seed();
     }
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", setCanvasSize);
 
-    function seed() {
-      strings = [];
-      const W = window.innerWidth;
+    // ---------- Pointer ----------
+    const pointer = { x: innerWidth*0.5, y: innerHeight*0.5, active: false };
 
-      const density = Math.max(90, Math.floor(W / 10));
-      const gap = W / density;
+    addEventListener("mousemove", (e) => { pointer.x=e.clientX; pointer.y=e.clientY; pointer.active=true; });
+    addEventListener("mouseleave", () => { pointer.active=false; });
 
-      for (let i = 0; i < density; i++) {
-        const baseX = (i + 0.5) * gap;
+    addEventListener("touchstart", (e) => {
+      const t = e.touches[0];
+      pointer.x=t.clientX; pointer.y=t.clientY; pointer.active=true;
+    }, { passive:true });
 
-        strings.push({
-          baseX,
-          x: baseX,
-          phase: Math.random() * 1000,
-          wobble: 0.7 + Math.random() * 1.5,
-          thickness: 1.0 + Math.random() * 1.6,     // slightly thicker so you can SEE them
-          alpha: 0.22 + Math.random() * 0.25,       // higher alpha so not invisible
+    addEventListener("touchmove", (e) => {
+      const t = e.touches[0];
+      pointer.x=t.clientX; pointer.y=t.clientY; pointer.active=true;
+    }, { passive:true });
 
-          // pastel per string
-          hue: Math.random() * 360,
-          sat: 55 + Math.random() * 15,
-          light: 72 + Math.random() * 12
-        });
+    addEventListener("touchend", () => { pointer.active=false; });
+
+    // ---------- Sections ----------
+    const secEls = [sec1, sec2, sec3, sec4];
+    function applySectionReveal(openAmt) {
+      for (const el of secEls) {
+        el.style.opacity = String(openAmt);
+        el.style.transform = `translateY(${(1-openAmt)*14}px)`;
+        el.style.filter = `blur(${(1-openAmt)*6}px)`;
       }
     }
-
-    const params = {
-      openRadius: 240,
-      openStrength: 170,
-      returnEase: 0.10,
-      followEase: 0.18,
-      verticalBias: 0.85
-    };
-
-    function drawString(x, t, s) {
-      const H = window.innerHeight;
-      const segments = 26;
-      const segH = H / segments;
-
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-
-      for (let k = 1; k <= segments; k++) {
-        const y = k * segH;
-
-        const wave =
-          Math.sin(
+    function curtainOpen
