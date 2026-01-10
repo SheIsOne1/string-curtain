@@ -12,22 +12,115 @@
       overflow: hidden;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    canvas { width: 100vw; height: 100vh; display: block; }
+
+    /* 4 sections behind */
+    .sections {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 0;
+
+      /* Controlled by JS */
+      opacity: 0;
+      transition: opacity 140ms ease;
+
+      /* Reveal ONLY a vertical "gap" using a mask.
+         JS updates --reveal-x (px) and --reveal-w (px). */
+      --reveal-x: 50vw;
+      --reveal-w: 0px;
+
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0) calc(var(--reveal-x) - var(--reveal-w)),
+        rgba(0,0,0,1) calc(var(--reveal-x) - var(--reveal-w)),
+        rgba(0,0,0,1) calc(var(--reveal-x) + var(--reveal-w)),
+        rgba(0,0,0,0) calc(var(--reveal-x) + var(--reveal-w)),
+        rgba(0,0,0,0) 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0) calc(var(--reveal-x) - var(--reveal-w)),
+        rgba(0,0,0,1) calc(var(--reveal-x) - var(--reveal-w)),
+        rgba(0,0,0,1) calc(var(--reveal-x) + var(--reveal-w)),
+        rgba(0,0,0,0) calc(var(--reveal-x) + var(--reveal-w)),
+        rgba(0,0,0,0) 100%
+      );
+    }
+
+    .section {
+      height: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: flex-end;
+
+      border-left: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .section h3 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      font-weight: 650;
+      color: rgba(10,10,14,0.88);
+      letter-spacing: 0.2px;
+    }
+    .section p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: rgba(10,10,14,0.72);
+      max-width: 36ch;
+    }
+
+    /* Pastel panels */
+    .s1 { background: linear-gradient(180deg, rgba(255, 209, 220, 0.90), rgba(255, 209, 220, 0.55)); }
+    .s2 { background: linear-gradient(180deg, rgba(205, 233, 255, 0.90), rgba(205, 233, 255, 0.55)); }
+    .s3 { background: linear-gradient(180deg, rgba(209, 255, 224, 0.90), rgba(209, 255, 224, 0.55)); }
+    .s4 { background: linear-gradient(180deg, rgba(233, 216, 255, 0.90), rgba(233, 216, 255, 0.55)); }
+
+    /* Canvas above */
+    canvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+    }
+
     .hud {
-      position: fixed; left: 14px; top: 12px;
+      position: fixed;
+      left: 14px;
+      top: 12px;
       color: rgba(255,255,255,0.7);
-      font-size: 12px; letter-spacing: .2px;
-      pointer-events: none; user-select: none;
+      font-size: 12px;
+      letter-spacing: .2px;
+      pointer-events: none;
+      user-select: none;
+      z-index: 3;
     }
   </style>
 </head>
 <body>
+
+  <!-- Behind: 4 reveal sections -->
+  <div class="sections" id="sections">
+    <div class="section s1"><div><h3>Section 1</h3><p>Replace with your content.</p></div></div>
+    <div class="section s2"><div><h3>Section 2</h3><p>Replace with your content.</p></div></div>
+    <div class="section s3"><div><h3>Section 3</h3><p>Replace with your content.</p></div></div>
+    <div class="section s4"><div><h3>Section 4</h3><p>Replace with your content.</p></div></div>
+  </div>
+
   <canvas id="c"></canvas>
   <div class="hud">Hover to open the strings like a curtain</div>
 
   <script>
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d", { alpha: true });
+    const sectionsEl = document.getElementById("sections");
 
     function resize() {
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -63,7 +156,7 @@
     function seed() {
       strings = [];
       const W = innerWidth;
-      const density = Math.max(90, Math.floor(W / 10)); // number of strings
+      const density = Math.max(90, Math.floor(W / 10)); // keep your original
       const gap = W / density;
 
       for (let i = 0; i < density; i++) {
@@ -73,7 +166,12 @@
           phase: Math.random() * 1000,
           wobble: 0.6 + Math.random() * 1.4,
           thickness: 0.6 + Math.random() * 1.2,
-          alpha: 0.10 + Math.random() * 0.22
+          alpha: 0.10 + Math.random() * 0.22,
+
+          // pastel per string
+          hue: Math.random() * 360,
+          sat: 55 + Math.random() * 15,
+          light: 72 + Math.random() * 12
         });
       }
     }
@@ -105,8 +203,32 @@
       }
 
       ctx.lineWidth = s.thickness;
-      ctx.strokeStyle = `rgba(255,255,255,${s.alpha})`;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = `hsla(${s.hue}, ${s.sat}%, ${s.light}%, ${s.alpha})`;
       ctx.stroke();
+    }
+
+    // Reveal width should match where the curtain actually opens.
+    // We approximate the visible "gap" as a fraction of openRadius, modulated by yFocus (same logic you already use).
+    function updateRevealMask() {
+      if (!pointer.active) {
+        sectionsEl.style.opacity = "0";
+        sectionsEl.style.setProperty("--reveal-w", "0px");
+        return;
+      }
+
+      const H = innerHeight;
+      const yNorm = pointer.y / Math.max(1, H);
+      const yFocus = 1 - Math.abs(yNorm - 0.5) * 2; // 0 at edges, 1 mid
+      const v = (1 - params.verticalBias) + params.verticalBias * Math.max(0, yFocus);
+
+      // "Gap half-width" in pixels (tied to openRadius + v). Tweak factors if you want wider/narrower reveal.
+      const halfGap = params.openRadius * 0.42 * v;
+
+      sectionsEl.style.opacity = "1";
+      sectionsEl.style.setProperty("--reveal-x", `${pointer.x}px`);
+      sectionsEl.style.setProperty("--reveal-w", `${Math.max(0, halfGap)}px`);
     }
 
     function frame(t) {
@@ -126,7 +248,7 @@
             const f = 1 - (adx / params.openRadius);
 
             const yNorm = pointer.y / Math.max(1, H);
-            const yFocus = 1 - Math.abs(yNorm - 0.5) * 2; // 0 at edges, 1 mid
+            const yFocus = 1 - Math.abs(yNorm - 0.5) * 2;
             const v = (1 - params.verticalBias) + params.verticalBias * yFocus;
 
             const dir = dx < 0 ? -1 : 1;
@@ -139,6 +261,9 @@
         s.x += (targetX - s.x) * (pointer.active ? params.followEase : params.returnEase);
       }
 
+      // Reveal only through the opening "gap"
+      updateRevealMask();
+
       ctx.globalCompositeOperation = "lighter";
       for (const s of strings) drawString(s.x, t, s);
       ctx.globalCompositeOperation = "source-over";
@@ -147,6 +272,10 @@
     }
 
     resize();
+    // start with reveal hidden
+    sectionsEl.style.opacity = "0";
+    sectionsEl.style.setProperty("--reveal-w", "0px");
+
     ctx.fillStyle = "rgb(7, 7, 11)";
     ctx.fillRect(0, 0, innerWidth, innerHeight);
     requestAnimationFrame(frame);
