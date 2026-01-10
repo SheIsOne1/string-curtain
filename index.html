@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>String Curtain (20 Pastel Strings)</title>
+  <title>String Curtain</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
-      background: #0c0c12;
+      background: #07070b;
       overflow: hidden;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -29,7 +29,6 @@
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d", { alpha: true });
 
-    // HiDPI
     function resize() {
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       canvas.width = Math.floor(window.innerWidth * dpr);
@@ -41,7 +40,6 @@
     }
     window.addEventListener("resize", resize);
 
-    // Pointer
     const pointer = { x: innerWidth * 0.5, y: innerHeight * 0.5, active: false };
 
     window.addEventListener("mousemove", (e) => {
@@ -61,56 +59,36 @@
 
     window.addEventListener("touchend", () => pointer.active = false);
 
-    // Curtain strings
     let strings = [];
     function seed() {
       strings = [];
-
       const W = innerWidth;
-
-      // EXACTLY 20 strings
-      const density = 20;
+      const density = Math.max(90, Math.floor(W / 10)); // number of strings
       const gap = W / density;
 
       for (let i = 0; i < density; i++) {
         const baseX = (i + 0.5) * gap;
-
         strings.push({
-          baseX,
-          x: baseX,
-
-          // motion
+          baseX, x: baseX,
           phase: Math.random() * 1000,
-          wobble: 0.8 + Math.random() * 1.2,
-
-          // WIDER strings
-          thickness: 3 + Math.random() * 2,
-
-          // slightly more visible
-          alpha: 0.45,
-
-          // Pastel color (HSLA)
-          hue: Math.random() * 360,
-          sat: 55 + Math.random() * 15,
-          light: 72 + Math.random() * 10
+          wobble: 0.6 + Math.random() * 1.4,
+          thickness: 0.6 + Math.random() * 1.2,
+          alpha: 0.10 + Math.random() * 0.22
         });
       }
     }
 
-    // Curtain opening behavior
     const params = {
-      openRadius: 240,      // influence width
-      openStrength: 170,    // how far strings part
-      returnEase: 0.10,     // return speed
-      followEase: 0.18,     // follow speed
-      verticalBias: 0.85    // stronger near center-ish
+      openRadius: 220,
+      openStrength: 140,
+      returnEase: 0.10,
+      followEase: 0.18,
+      verticalBias: 0.85
     };
 
     function drawString(x, t, s) {
       const H = innerHeight;
-
-      // Smooth path from top to bottom
-      const segments = 28;
+      const segments = 26;
       const segH = H / segments;
 
       ctx.beginPath();
@@ -118,34 +96,25 @@
 
       for (let k = 1; k <= segments; k++) {
         const y = k * segH;
-
         const wave =
           Math.sin((t * 0.0014) + (y * 0.018) + s.phase) * s.wobble +
           Math.cos((t * 0.0011) + (y * 0.012) + s.phase * 0.7) * s.wobble * 0.6;
 
-        // slight “fabric sag”
         const sag = (k / segments) * 0.9;
-
         ctx.lineTo(x + wave * sag, y);
       }
 
       ctx.lineWidth = s.thickness;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      // Pastel per-string color
-      ctx.strokeStyle = `hsla(${s.hue}, ${s.sat}%, ${s.light}%, ${s.alpha})`;
+      ctx.strokeStyle = `rgba(255,255,255,${s.alpha})`;
       ctx.stroke();
     }
 
     function frame(t) {
       const W = innerWidth, H = innerHeight;
 
-      // subtle trails
-      ctx.fillStyle = "rgba(12, 12, 18, 0.18)";
+      ctx.fillStyle = "rgba(7, 7, 11, 0.20)";
       ctx.fillRect(0, 0, W, H);
 
-      // compute targets per string
       for (const s of strings) {
         let targetX = s.baseX;
 
@@ -154,29 +123,22 @@
           const adx = Math.abs(dx);
 
           if (adx < params.openRadius) {
-            // falloff 1..0 with distance
             const f = 1 - (adx / params.openRadius);
 
-            // stronger near middle y
             const yNorm = pointer.y / Math.max(1, H);
             const yFocus = 1 - Math.abs(yNorm - 0.5) * 2; // 0 at edges, 1 mid
             const v = (1 - params.verticalBias) + params.verticalBias * yFocus;
 
-            // left strings go left, right go right
             const dir = dx < 0 ? -1 : 1;
-
-            // opening amount
             const open = dir * params.openStrength * (f * f) * v;
 
             targetX = s.baseX + open;
           }
         }
 
-        // easing
         s.x += (targetX - s.x) * (pointer.active ? params.followEase : params.returnEase);
       }
 
-      // glow-ish blend (optional, but nice for pastel)
       ctx.globalCompositeOperation = "lighter";
       for (const s of strings) drawString(s.x, t, s);
       ctx.globalCompositeOperation = "source-over";
@@ -184,11 +146,14 @@
       requestAnimationFrame(frame);
     }
 
-    // Start
     resize();
-    ctx.fillStyle = "rgb(12, 12, 18)";
+    ctx.fillStyle = "rgb(7, 7, 11)";
     ctx.fillRect(0, 0, innerWidth, innerHeight);
     requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
