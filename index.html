@@ -1,293 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>String Curtain</title>
 
- <!doctype html>
- <html lang="en">
- <head>
-   <meta charset="utf-8" />
-   <meta name="viewport" content="width=device-width,initial-scale=1" />
-   <title>String Curtain</title>
- 
-   <style>
-     html, body {
-       margin: 0;
-       height: 100%;
-       background: #07070b;
--      overflow: hidden;
-+      overflow-x: hidden;
-       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-     }
- 
-     /* ===== SECTIONS (behind curtain) ===== */
-     .sections {
--      position: fixed;
--      inset: 0;
--      display: grid;
--      grid-template-columns: repeat(4, 1fr);
-+      position: relative;
-+      display: block;
-       z-index: 0;
--
--      opacity: 0;
--      transition: opacity 160ms ease;
--
--      /* mask driven by JS */
--      --reveal-x: 50vw;
--      --reveal-w: 0px;
--
--      -webkit-mask-image: linear-gradient(
--        90deg,
--        transparent 0%,
--        transparent calc(var(--reveal-x) - var(--reveal-w)),
--        black calc(var(--reveal-x) - var(--reveal-w)),
--        black calc(var(--reveal-x) + var(--reveal-w)),
--        transparent calc(var(--reveal-x) + var(--reveal-w)),
--        transparent 100%
--      );
--      mask-image: linear-gradient(
--        90deg,
--        transparent 0%,
--        transparent calc(var(--reveal-x) - var(--reveal-w)),
--        black calc(var(--reveal-x) - var(--reveal-w)),
--        black calc(var(--reveal-x) + var(--reveal-w)),
--        transparent calc(var(--reveal-x) + var(--reveal-w)),
--        transparent 100%
--      );
--
--      -webkit-mask-repeat: no-repeat;
--      mask-repeat: no-repeat;
--      -webkit-mask-size: 100% 100%;
--      mask-size: 100% 100%;
-     }
- 
-     .section {
--      height: 100%;
-+      min-height: 100vh;
-       padding: 32px;
-       box-sizing: border-box;
-       display: flex;
-       align-items: center;
-       justify-content: center;
--      border-left: 1px solid rgba(255,255,255,0.08);
--
--      opacity: 0;
--      transition: opacity 180ms ease;
-+      border-top: 1px solid rgba(255,255,255,0.08);
-+      transition: box-shadow 280ms ease;
-     }
- 
-     .section h3 {
-       margin: 0;
-       font-size: 28px;
-       font-weight: 700;
-       letter-spacing: 0.5px;
-       color: rgba(10,10,14,0.9);
-+      opacity: 0.6;
-+      transform: translateY(12px);
-+      transition: transform 320ms ease, opacity 320ms ease;
-+    }
-+
-+    .section.is-active {
-+      box-shadow:
-+        0 0 30px rgba(255,255,255,0.25),
-+        0 0 70px rgba(255,255,255,0.18),
-+        inset 0 0 40px rgba(255,255,255,0.2);
-+    }
-+
-+    .section.is-active h3 {
-+      opacity: 1;
-+      transform: translateY(0);
-     }
- 
-     /* pastel panels */
-     .s1 { background: linear-gradient(180deg, rgba(255,209,220,0.92), rgba(255,209,220,0.55)); }
-     .s2 { background: linear-gradient(180deg, rgba(205,233,255,0.92), rgba(205,233,255,0.55)); }
-     .s3 { background: linear-gradient(180deg, rgba(209,255,224,0.92), rgba(209,255,224,0.55)); }
-     .s4 { background: linear-gradient(180deg, rgba(233,216,255,0.92), rgba(233,216,255,0.55)); }
- 
-     /* ===== CANVAS ===== */
-     canvas {
-       position: fixed;
-       inset: 0;
-       width: 100vw;
-       height: 100vh;
-       z-index: 2;
-     }
- 
-     .hud {
-       position: fixed;
-       left: 14px;
-       top: 12px;
-       color: rgba(255,255,255,0.7);
-       font-size: 12px;
-       pointer-events: none;
-       z-index: 3;
-     }
-+
-+    .debug {
-+      position: fixed;
-+      left: 14px;
-+      top: 34px;
-+      color: rgba(255,255,255,0.7);
-+      font-size: 11px;
-+      pointer-events: none;
-+      z-index: 3;
-+    }
-   </style>
- </head>
- 
- <body>
- 
-   <!-- Sections -->
-   <div class="sections" id="sections">
-     <div class="section s1" id="sec0"><h3>Belle</h3></div>
-     <div class="section s2" id="sec1"><h3>Making Of</h3></div>
-     <div class="section s3" id="sec2"><h3>Creators</h3></div>
-     <div class="section s4" id="sec3"><h3>Awards</h3></div>
-   </div>
- 
-   <!-- Curtain -->
-   <canvas id="c"></canvas>
--  <div class="hud">Hover — curtain softly snaps to a section</div>
-+  <div class="hud">Scroll — each section glows when active</div>
-+  <div class="debug" id="debug">Debug: waiting for scroll...</div>
- 
-   <script>
-     const canvas = document.getElementById("c");
-     const ctx = canvas.getContext("2d", { alpha: true });
-     const sectionsEl = document.getElementById("sections");
-     const sectionEls = [
-       document.getElementById("sec0"),
-       document.getElementById("sec1"),
-       document.getElementById("sec2"),
-       document.getElementById("sec3")
-     ];
-+    const debugEl = document.getElementById("debug");
- 
-     /* ===== CANVAS SETUP ===== */
-     function resize() {
-       const dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
-       canvas.width = innerWidth * dpr;
-       canvas.height = innerHeight * dpr;
-       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-       seed();
-     }
-     addEventListener("resize", resize);
- 
-     /* ===== POINTER ===== */
-     const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
-     addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
-     addEventListener("mouseleave", () => pointer.active = false);
- 
-+    /* ===== SCROLL SECTION DEBUG ===== */
-+    let activeSection = -1;
-+    function setActiveSection(index) {
-+      if (index === activeSection) return;
-+      activeSection = index;
-+      sectionEls.forEach((el, i) => el.classList.toggle("is-active", i === index));
-+      const name = sectionEls[index]?.querySelector("h3")?.textContent || "Unknown";
-+      debugEl.textContent = `Debug: section ${index + 1} — ${name}`;
-+      console.debug("[scroll]", `Active section ${index + 1}: ${name}`);
-+    }
-+
-+    const observer = new IntersectionObserver(entries => {
-+      entries.forEach(entry => {
-+        if (entry.isIntersecting) {
-+          const idx = sectionEls.indexOf(entry.target);
-+          if (idx !== -1) setActiveSection(idx);
-+        }
-+      });
-+    }, { threshold: 0.6 });
-+
-+    sectionEls.forEach(el => observer.observe(el));
-+
-     /* ===== 4-SECTION SNAP LOGIC ===== */
-     function sectionIndex(x) {
-       return Math.min(3, Math.max(0, Math.floor(x / (innerWidth / 4))));
-     }
-     function sectionCenter(i) {
-       return (i + 0.5) * (innerWidth / 4);
-     }
- 
-     /* ===== MAGNETIC SNAP STATE ===== */
-     let snapX = innerWidth / 2;
-     const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
- 
-     /* ===== STRINGS ===== */
-     let strings = [];
-     function seed() {
-       strings = [];
-       const count = Math.max(90, Math.floor(innerWidth / 10));
-       const gap = innerWidth / count;
- 
-       for (let i = 0; i < count; i++) {
-         strings.push({
-           baseX: (i + 0.5) * gap,
-           x: (i + 0.5) * gap,
-           phase: Math.random() * 1000,
-           wobble: 0.7 + Math.random() * 1.3,
-@@ -193,62 +207,51 @@
-       for (let i = 1; i <= seg; i++) {
-         const y = i * segH;
-         const wave =
-           Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
-           Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
-         ctx.lineTo(x + wave * (i / seg), y);
-       }
- 
-       ctx.lineWidth = s.thickness;
-       ctx.lineCap = "round";
-       ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${s.light}%,${s.alpha})`;
-       ctx.stroke();
-     }
- 
-     /* ===== LOOP ===== */
-     function loop(t) {
-       ctx.fillStyle = "rgba(7,7,11,0.22)";
-       ctx.fillRect(0, 0, innerWidth, innerHeight);
- 
-       const idx = sectionIndex(pointer.x);
-       const targetSnap = sectionCenter(idx);
- 
-       /* soft magnetic snap */
-       snapX += (targetSnap - snapX) * SNAP_EASE;
- 
--      /* reveal logic */
--      if (pointer.active) {
--        sectionsEl.style.opacity = "1";
--        sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
--        sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
--
--        sectionEls.forEach((el, i) => el.style.opacity = i === idx ? "1" : "0");
--      } else {
--        sectionsEl.style.opacity = "0";
--        sectionsEl.style.setProperty("--reveal-w", "0px");
--        sectionEls.forEach(el => el.style.opacity = "0");
--      }
-+      sectionsEl.style.opacity = "1";
- 
-       /* update strings */
-       for (const s of strings) {
-         let tx = s.baseX;
- 
-         if (pointer.active) {
-           const d = Math.abs(s.baseX - snapX);
-           if (d < params.openRadius) {
-             const f = 1 - d / params.openRadius;
-             const dir = s.baseX < snapX ? -1 : 1;
-             tx = s.baseX + dir * params.openStrength * f * f;
-           }
-         }
- 
-         s.x += (tx - s.x) * (pointer.active ? params.followEase : params.returnEase);
-       }
- 
-       ctx.globalCompositeOperation = "lighter";
-       strings.forEach(s => drawString(s.x, t, s));
-       ctx.globalCompositeOperation = "source-over";
- 
-       requestAnimationFrame(loop);
-     }
- 
-     resize();
- 
-EOF
-)
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #07070b;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* ===== SECTIONS (behind curtain) ===== */
+    .sections {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 0;
+
+      opacity: 0;
+      transition: opacity 160ms ease;
+
+      /* mask driven by JS */
+      --reveal-x: 50vw;
+      --reveal-w: 0px;
+
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent calc(var(--reveal-x) - var(--reveal-w)),
+        black calc(var(--reveal-x) - var(--reveal-w)),
+        black calc(var(--reveal-x) + var(--reveal-w)),
+        transparent calc(var(--reveal-x) + var(--reveal-w)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent calc(var(--reveal-x) - var(--reveal-w)),
+        black calc(var(--reveal-x) - var(--reveal-w)),
+        black calc(var(--reveal-x) + var(--reveal-w)),
+        transparent calc(var(--reveal-x) + var(--reveal-w)),
+        transparent 100%
+      );
+
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+    }
+
+    .section {
+      height: 100%;
+      padding: 32px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-left: 1px solid rgba(255,255,255,0.08);
+
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .section h3 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: rgba(10,10,14,0.9);
+    }
+
+    /* pastel panels */
+    .s1 { background: linear-gradient(180deg, rgba(255,209,220,0.92), rgba(255,209,220,0.55)); }
+    .s2 { background: linear-gradient(180deg, rgba(205,233,255,0.92), rgba(205,233,255,0.55)); }
+    .s3 { background: linear-gradient(180deg, rgba(209,255,224,0.92), rgba(209,255,224,0.55)); }
+    .s4 { background: linear-gradient(180deg, rgba(233,216,255,0.92), rgba(233,216,255,0.55)); }
+
+    /* ===== CANVAS ===== */
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+    }
+
+    .hud {
+      position: fixed;
+      left: 14px;
+      top: 12px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sections -->
+  <div class="sections" id="sections">
+    <div class="section s1" id="sec0"><h3>Belle</h3></div>
+    <div class="section s2" id="sec1"><h3>Making Of</h3></div>
+    <div class="section s3" id="sec2"><h3>Creators</h3></div>
+    <div class="section s4" id="sec3"><h3>Awards</h3></div>
+  </div>
+
+  <!-- Curtain -->
+  <canvas id="c"></canvas>
+  <div class="hud">Hover — curtain softly snaps to a section</div>
+
+  <script>
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d", { alpha: true });
+    const sectionsEl = document.getElementById("sections");
+    const sectionEls = [
+      document.getElementById("sec0"),
+      document.getElementById("sec1"),
+      document.getElementById("sec2"),
+      document.getElementById("sec3")
+    ];
+
+    /* ===== CANVAS SETUP ===== */
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      seed();
+    }
+    addEventListener("resize", resize);
+
+    /* ===== POINTER ===== */
+    const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
+    addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+    addEventListener("mouseleave", () => pointer.active = false);
+
+    /* ===== 4-SECTION SNAP LOGIC ===== */
+    function sectionIndex(x) {
+      return Math.min(3, Math.max(0, Math.floor(x / (innerWidth / 4))));
+    }
+    function sectionCenter(i) {
+      return (i + 0.5) * (innerWidth / 4);
+    }
+
+    /* ===== MAGNETIC SNAP STATE ===== */
+    let snapX = innerWidth / 2;
+    const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
+
+    /* ===== STRINGS ===== */
+    let strings = [];
+    function seed() {
+      strings = [];
+      const count = Math.max(90, Math.floor(innerWidth / 10));
+      const gap = innerWidth / count;
+
+      for (let i = 0; i < count; i++) {
+        strings.push({
+          baseX: (i + 0.5) * gap,
+          x: (i + 0.5) * gap,
+          phase: Math.random() * 1000,
+          wobble: 0.7 + Math.random() * 1.3,
+          thickness: 1.3 + Math.random() * 1.4,
+          alpha: 0.28 + Math.random() * 0.28,
+          hue: Math.random() * 360,
+          sat: 55 + Math.random() * 15,
+          light: 72 + Math.random() * 12
+        });
+      }
+    }
+
+    const params = {
+      openRadius: 220,
+      openStrength: 140,
+      followEase: 0.18,
+      returnEase: 0.10
+    };
+
+    function drawString(x, t, s) {
+      const seg = 26;
+      const segH = innerHeight / seg;
+
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+
+      for (let i = 1; i <= seg; i++) {
+        const y = i * segH;
+        const wave =
+          Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
+          Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
+        ctx.lineTo(x + wave * (i / seg), y);
+      }
+
+      ctx.lineWidth = s.thickness;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${s.light}%,${s.alpha})`;
+      ctx.stroke();
+    }
+
+    /* ===== LOOP ===== */
+    function loop(t) {
+      ctx.fillStyle = "rgba(7,7,11,0.22)";
+      ctx.fillRect(0, 0, innerWidth, innerHeight);
+
+      const idx = sectionIndex(pointer.x);
+      const targetSnap = sectionCenter(idx);
+
+      /* soft magnetic snap */
+      snapX += (targetSnap - snapX) * SNAP_EASE;
+
+      /* reveal logic */
+      if (pointer.active) {
+        sectionsEl.style.opacity = "1";
+        sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
+        sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
+
+        sectionEls.forEach((el, i) => el.style.opacity = i === idx ? "1" : "0");
+      } else {
+        sectionsEl.style.opacity = "0";
+        sectionsEl.style.setProperty("--reveal-w", "0px");
+        sectionEls.forEach(el => el.style.opacity = "0");
+      }
+
+      /* update strings */
+      for (const s of strings) {
+        let tx = s.baseX;
+
+        if (pointer.active) {
+          const d = Math.abs(s.baseX - snapX);
+          if (d < params.openRadius) {
+            const f = 1 - d / params.openRadius;
+            const dir = s.baseX < snapX ? -1 : 1;
+            tx = s.baseX + dir * params.openStrength * f * f;
+          }
+        }
+
+        s.x += (tx - s.x) * (pointer.active ? params.followEase : params.returnEase);
+      }
+
+      ctx.globalCompositeOperation = "lighter";
+      strings.forEach(s => drawString(s.x, t, s));
+      ctx.globalCompositeOperation = "source-over";
+
+      requestAnimationFrame(loop);
+    }
+
+    resize();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
