@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -73,6 +74,12 @@
       font-weight: 700;
       letter-spacing: 0.5px;
       color: rgba(10,10,14,0.9);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .section.show-title h3 {
+      opacity: 1;
     }
 
     /* pastel panels */
@@ -106,9 +113,9 @@
 
   <!-- Sections -->
   <div class="sections" id="sections">
-    <div class="section s1" id="sec0"><h3>Belle</h3></div>
+    <div class="section s1" id="sec0"><h3>Bella</h3></div>
     <div class="section s2" id="sec1"><h3>Making Of</h3></div>
-    <div class="section s3" id="sec2"><h3>Creators</h3></div>
+    <div class="section s3" id="sec2"><h3>creators</h3></div>
     <div class="section s4" id="sec3"><h3>Awards</h3></div>
   </div>
 
@@ -221,11 +228,21 @@
         sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
         sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
 
-        sectionEls.forEach((el, i) => el.style.opacity = i === idx ? "1" : "0");
+        sectionEls.forEach((el, i) => {
+          el.style.opacity = i === idx ? "1" : "0";
+          if (i === idx) {
+            el.classList.add("show-title");
+          } else {
+            el.classList.remove("show-title");
+          }
+        });
       } else {
         sectionsEl.style.opacity = "0";
         sectionsEl.style.setProperty("--reveal-w", "0px");
-        sectionEls.forEach(el => el.style.opacity = "0");
+        sectionEls.forEach(el => {
+          el.style.opacity = "0";
+          el.classList.remove("show-title");
+        });
       }
 
       /* update strings */
