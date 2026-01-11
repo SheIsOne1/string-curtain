@@ -25,6 +25,7 @@
       opacity: 0;
       transition: opacity 160ms ease;
 
+      /* mask driven by JS */
       --reveal-x: 50vw;
       --reveal-w: 0px;
 
@@ -70,11 +71,11 @@
       margin: 0;
       font-size: 28px;
       font-weight: 700;
-      letter-spacing: 0.6px;
-      color: rgba(255,255,255,0.95);
+      letter-spacing: 0.5px;
+      color: rgba(10,10,14,0.9);
     }
 
-    /* Pastel panels */
+    /* pastel panels */
     .s1 { background: linear-gradient(180deg, rgba(255,209,220,0.92), rgba(255,209,220,0.55)); }
     .s2 { background: linear-gradient(180deg, rgba(205,233,255,0.92), rgba(205,233,255,0.55)); }
     .s3 { background: linear-gradient(180deg, rgba(209,255,224,0.92), rgba(209,255,224,0.55)); }
@@ -103,6 +104,7 @@
 
 <body>
 
+  <!-- Sections -->
   <div class="sections" id="sections">
     <div class="section s1" id="sec0"><h3>Belle</h3></div>
     <div class="section s2" id="sec1"><h3>Making Of</h3></div>
@@ -110,13 +112,13 @@
     <div class="section s4" id="sec3"><h3>Awards</h3></div>
   </div>
 
+  <!-- Curtain -->
   <canvas id="c"></canvas>
-  <div class="hud">Hover — bouncy fabric curtain</div>
+  <div class="hud">Hover — curtain softly snaps to a section</div>
 
   <script>
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d", { alpha: true });
-
     const sectionsEl = document.getElementById("sections");
     const sectionEls = [
       document.getElementById("sec0"),
@@ -125,24 +127,22 @@
       document.getElementById("sec3")
     ];
 
+    /* ===== CANVAS SETUP ===== */
     function resize() {
       const dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
-      canvas.width = Math.floor(innerWidth * dpr);
-      canvas.height = Math.floor(innerHeight * dpr);
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       seed();
     }
     addEventListener("resize", resize);
 
+    /* ===== POINTER ===== */
     const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
-    addEventListener("mousemove", e => {
-      pointer.x = e.clientX;
-      pointer.y = e.clientY;
-      pointer.active = true;
-    });
+    addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
     addEventListener("mouseleave", () => pointer.active = false);
 
-    // 4 zones
+    /* ===== 4-SECTION SNAP LOGIC ===== */
     function sectionIndex(x) {
       return Math.min(3, Math.max(0, Math.floor(x / (innerWidth / 4))));
     }
@@ -150,7 +150,11 @@
       return (i + 0.5) * (innerWidth / 4);
     }
 
-    // Strings
+    /* ===== MAGNETIC SNAP STATE ===== */
+    let snapX = innerWidth / 2;
+    const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
+
+    /* ===== STRINGS ===== */
     let strings = [];
     function seed() {
       strings = [];
@@ -158,12 +162,9 @@
       const gap = innerWidth / count;
 
       for (let i = 0; i < count; i++) {
-        const baseX = (i + 0.5) * gap;
-
         strings.push({
-          baseX,
-          x: baseX,
-          vx: 0, // NEW: velocity for bouncy fabric
+          baseX: (i + 0.5) * gap,
+          x: (i + 0.5) * gap,
           phase: Math.random() * 1000,
           wobble: 0.7 + Math.random() * 1.3,
           thickness: 1.3 + Math.random() * 1.4,
@@ -178,12 +179,8 @@
     const params = {
       openRadius: 220,
       openStrength: 140,
-
-      // BOUNCE TUNING (playful)
-      spring: 0.028,  // higher = snappier / more bounce
-      damping: 0.82,  // lower = more bounce, higher = more stiff
-      maxV: 28,       // caps velocity to avoid wild jumps
-      trailAlpha: 0.22
+      followEase: 0.18,
+      returnEase: 0.10
     };
 
     function drawString(x, t, s) {
@@ -198,8 +195,6 @@
         const wave =
           Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
           Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
-
-        // a little "fabric sag" feel
         ctx.lineTo(x + wave * (i / seg), y);
       }
 
@@ -209,17 +204,55 @@
       ctx.stroke();
     }
 
+    /* ===== LOOP ===== */
     function loop(t) {
-      // background trails
-      ctx.fillStyle = `rgba(7,7,11,${params.trailAlpha})`;
+      ctx.fillStyle = "rgba(7,7,11,0.22)";
       ctx.fillRect(0, 0, innerWidth, innerHeight);
 
       const idx = sectionIndex(pointer.x);
-      const snapX = sectionCenter(idx); // no magnetic easing
+      const targetSnap = sectionCenter(idx);
 
+      /* soft magnetic snap */
+      snapX += (targetSnap - snapX) * SNAP_EASE;
+
+      /* reveal logic */
       if (pointer.active) {
         sectionsEl.style.opacity = "1";
         sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
         sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
+
         sectionEls.forEach((el, i) => el.style.opacity = i === idx ? "1" : "0");
       } else {
+        sectionsEl.style.opacity = "0";
+        sectionsEl.style.setProperty("--reveal-w", "0px");
+        sectionEls.forEach(el => el.style.opacity = "0");
+      }
+
+      /* update strings */
+      for (const s of strings) {
+        let tx = s.baseX;
+
+        if (pointer.active) {
+          const d = Math.abs(s.baseX - snapX);
+          if (d < params.openRadius) {
+            const f = 1 - d / params.openRadius;
+            const dir = s.baseX < snapX ? -1 : 1;
+            tx = s.baseX + dir * params.openStrength * f * f;
+          }
+        }
+
+        s.x += (tx - s.x) * (pointer.active ? params.followEase : params.returnEase);
+      }
+
+      ctx.globalCompositeOperation = "lighter";
+      strings.forEach(s => drawString(s.x, t, s));
+      ctx.globalCompositeOperation = "source-over";
+
+      requestAnimationFrame(loop);
+    }
+
+    resize();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
