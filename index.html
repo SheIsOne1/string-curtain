@@ -25,7 +25,6 @@
       opacity: 0;
       transition: opacity 160ms ease;
 
-      /* mask driven by JS */
       --reveal-x: 50vw;
       --reveal-w: 0px;
 
@@ -71,11 +70,11 @@
       margin: 0;
       font-size: 28px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      color: rgba(10,10,14,0.9);
+      letter-spacing: 0.6px;
+      color: rgba(255,255,255,0.95); /* WHITE TITLES */
     }
 
-    /* pastel panels */
+    /* Pastel panels */
     .s1 { background: linear-gradient(180deg, rgba(255,209,220,0.92), rgba(255,209,220,0.55)); }
     .s2 { background: linear-gradient(180deg, rgba(205,233,255,0.92), rgba(205,233,255,0.55)); }
     .s3 { background: linear-gradient(180deg, rgba(209,255,224,0.92), rgba(209,255,224,0.55)); }
@@ -114,7 +113,7 @@
 
   <!-- Curtain -->
   <canvas id="c"></canvas>
-  <div class="hud">Hover — curtain softly snaps to a section</div>
+  <div class="hud">Hover — curtain opens per section</div>
 
   <script>
     const canvas = document.getElementById("c");
@@ -127,7 +126,6 @@
       document.getElementById("sec3")
     ];
 
-    /* ===== CANVAS SETUP ===== */
     function resize() {
       const dpr = Math.max(1, Math.min(2, devicePixelRatio || 1));
       canvas.width = innerWidth * dpr;
@@ -137,12 +135,14 @@
     }
     addEventListener("resize", resize);
 
-    /* ===== POINTER ===== */
     const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
-    addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+    addEventListener("mousemove", e => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.active = true;
+    });
     addEventListener("mouseleave", () => pointer.active = false);
 
-    /* ===== 4-SECTION SNAP LOGIC ===== */
     function sectionIndex(x) {
       return Math.min(3, Math.max(0, Math.floor(x / (innerWidth / 4))));
     }
@@ -150,11 +150,6 @@
       return (i + 0.5) * (innerWidth / 4);
     }
 
-    /* ===== MAGNETIC SNAP STATE ===== */
-    let snapX = innerWidth / 2;
-    const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
-
-    /* ===== STRINGS ===== */
     let strings = [];
     function seed() {
       strings = [];
@@ -204,23 +199,17 @@
       ctx.stroke();
     }
 
-    /* ===== LOOP ===== */
     function loop(t) {
       ctx.fillStyle = "rgba(7,7,11,0.22)";
       ctx.fillRect(0, 0, innerWidth, innerHeight);
 
       const idx = sectionIndex(pointer.x);
-      const targetSnap = sectionCenter(idx);
+      const snapX = sectionCenter(idx); // NO magnetic easing
 
-      /* soft magnetic snap */
-      snapX += (targetSnap - snapX) * SNAP_EASE;
-
-      /* reveal logic */
       if (pointer.active) {
         sectionsEl.style.opacity = "1";
         sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
         sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
-
         sectionEls.forEach((el, i) => el.style.opacity = i === idx ? "1" : "0");
       } else {
         sectionsEl.style.opacity = "0";
@@ -228,10 +217,8 @@
         sectionEls.forEach(el => el.style.opacity = "0");
       }
 
-      /* update strings */
       for (const s of strings) {
         let tx = s.baseX;
-
         if (pointer.active) {
           const d = Math.abs(s.baseX - snapX);
           if (d < params.openRadius) {
@@ -240,7 +227,6 @@
             tx = s.baseX + dir * params.openStrength * f * f;
           }
         }
-
         s.x += (tx - s.x) * (pointer.active ? params.followEase : params.returnEase);
       }
 
