@@ -138,7 +138,7 @@
       align-items: center;
       justify-content: center;
       opacity: 0;
-      transition: opacity 200ms ease;
+      transition: opacity 200ms ease, transform 200ms ease;
       font-family: "Caveat Brush", cursive;
       font-weight: 400;
       font-style: normal;
@@ -148,6 +148,13 @@
       text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
       margin: 0;
       position: relative;
+      cursor: pointer;
+      pointer-events: auto !important;
+      z-index: 10;
+    }
+
+    .title-item:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -214,6 +221,58 @@
     const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
     addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
     addEventListener("mouseleave", () => pointer.active = false);
+
+    /* ===== CLICK NAVIGATION ===== */
+    // Click on canvas to navigate (only if not clicking on a title)
+    // Note: Titles are above canvas (z-index 3 vs 2), so clicks on titles 
+    // should hit titles first. This check is just a safety measure.
+    let lastClickTime = 0;
+    canvas.addEventListener("click", (e) => {
+      const now = Date.now();
+      if (now - lastClickTime < 300) return;
+      lastClickTime = now;
+
+      const clickedIdx = sectionIndex(e.clientX);
+      const contentSection = document.getElementById(`content${clickedIdx}`);
+      
+      if (contentSection) {
+        contentSection.scrollIntoView({ 
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    });
+
+    // Click on title to navigate
+    // Titles are above the canvas, so they should receive clicks first
+    // We use stopPropagation to prevent the click from bubbling to canvas
+    titleOverlayEls.forEach((titleEl, idx) => {
+      if (titleEl) {
+        // Make sure title is always clickable, even when opacity is 0
+        titleEl.style.pointerEvents = "auto";
+        titleEl.style.cursor = "pointer";
+        
+        titleEl.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation(); // Stop the click from reaching the canvas below
+          console.log(`Title ${idx} (${titleEl.textContent}) clicked!`);
+          
+          const contentSection = document.getElementById(`content${idx}`);
+          
+          if (contentSection) {
+            console.log(`Scrolling to content section ${idx}`);
+            contentSection.scrollIntoView({ 
+              behavior: "smooth",
+              block: "start"
+            });
+          } else {
+            console.error(`Content section ${idx} not found!`);
+          }
+        });
+      } else {
+        console.error(`Title element ${idx} is null!`);
+      }
+    });
 
     /* ===== 4-SECTION SNAP LOGIC ===== */
     function sectionIndex(x) {
