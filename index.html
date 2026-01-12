@@ -140,8 +140,9 @@
       font-weight: 700;
       letter-spacing: 0.5px;
       color: white !important;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
       margin: 0;
+      position: relative;
     }
   </style>
 </head>
@@ -188,10 +189,10 @@
     ];
     const debugEl = document.getElementById("debug");
 
-    // Debug: Log title elements
-    console.log("Title elements:", titleEls);
-    titleEls.forEach((title, i) => {
-      console.log(`Title ${i}:`, title, title ? title.textContent : "null");
+    // Debug: Log title overlay elements
+    console.log("Title overlay elements:", titleOverlayEls);
+    titleOverlayEls.forEach((title, i) => {
+      console.log(`Title overlay ${i}:`, title, title ? title.textContent : "null");
     });
 
     /* ===== CANVAS SETUP ===== */
@@ -300,16 +301,27 @@
         });
         
         // Debug display
-        if (debugEl && titleOverlayEls[idx]) {
-          const computedStyle = window.getComputedStyle(titleOverlayEls[idx]);
-          debugEl.innerHTML = `
-            Active: ${idx}<br>
-            Title: "${titleOverlayEls[idx].textContent}"<br>
-            Title opacity: ${titleOverlayEls[idx].style.opacity}<br>
-            Title computed opacity: ${computedStyle.opacity}<br>
-            Title visible: ${titleOverlayEls[idx].offsetParent !== null}<br>
-            Title color: ${computedStyle.color}
-          `;
+        if (debugEl) {
+          const titleEl = titleOverlayEls[idx];
+          if (titleEl) {
+            const computedStyle = window.getComputedStyle(titleEl);
+            const parentStyle = window.getComputedStyle(titleEl.parentElement);
+            debugEl.innerHTML = `
+              Active: ${idx}<br>
+              Title: "${titleEl.textContent}"<br>
+              Title element: ${titleEl ? 'found' : 'NOT FOUND'}<br>
+              Title opacity: ${titleEl.style.opacity || 'not set'}<br>
+              Title computed opacity: ${computedStyle.opacity}<br>
+              Parent opacity: ${parentStyle.opacity}<br>
+              Title visible: ${titleEl.offsetParent !== null}<br>
+              Title color: ${computedStyle.color}<br>
+              Title display: ${computedStyle.display}<br>
+              Title z-index: ${computedStyle.zIndex}<br>
+              Parent z-index: ${parentStyle.zIndex}
+            `;
+          } else {
+            debugEl.innerHTML = `Active: ${idx}<br>Title element NOT FOUND!`;
+          }
         }
       } else {
         sectionsEl.style.opacity = "0";
@@ -352,6 +364,16 @@
     }
 
     resize();
+    
+    // Test: Make sure title elements exist
+    titleOverlayEls.forEach((el, i) => {
+      if (!el) {
+        console.error(`Title overlay element ${i} NOT FOUND!`);
+      } else {
+        console.log(`Title overlay ${i} found:`, el.textContent);
+      }
+    });
+    
     requestAnimationFrame(loop);
   </script>
 </body>
