@@ -73,6 +73,7 @@
       font-weight: 700;
       letter-spacing: 0.5px;
       color: rgba(10,10,14,0.9);
+      opacity: 1;
       transition: opacity 200ms ease;
       pointer-events: none;
     }
@@ -150,10 +151,6 @@
     console.log("Title elements:", titleEls);
     titleEls.forEach((title, i) => {
       console.log(`Title ${i}:`, title, title ? title.textContent : "null");
-      // Initialize titles as hidden
-      if (title) {
-        title.style.opacity = "0";
-      }
     });
 
     /* ===== CANVAS SETUP ===== */
@@ -252,11 +249,7 @@
 
         sectionEls.forEach((el, i) => {
           el.style.opacity = i === idx ? "1" : "0";
-          if (titleEls[i]) {
-            const titleOpacity = i === idx ? "1" : "0";
-            titleEls[i].style.opacity = titleOpacity;
-            console.log(`Section ${i} (${titleEls[i].textContent}): section opacity=${el.style.opacity}, title opacity=${titleOpacity}`);
-          }
+          // Titles are always visible via CSS now
         });
         
         // Debug display
@@ -282,9 +275,7 @@
         sectionsEl.style.setProperty("--reveal-w", "0px");
         sectionEls.forEach((el, i) => {
           el.style.opacity = "0";
-          if (titleEls[i]) {
-            titleEls[i].style.opacity = "0";
-          }
+          // Titles are always visible via CSS now
         });
         if (debugEl) {
           debugEl.innerHTML = "Not hovering";
