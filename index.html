@@ -72,7 +72,7 @@
       font-size: 48px;
       font-weight: 700;
       letter-spacing: 0.5px;
-      color: white;
+      color: white !important;
       text-shadow: 0 2px 10px rgba(0,0,0,0.8);
       opacity: 1;
       transition: opacity 200ms ease;
@@ -119,6 +119,30 @@
       border-radius: 4px;
       font-family: monospace;
     }
+
+    /* Titles overlay - above canvas */
+    .titles-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .title-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 200ms ease;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: white !important;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      margin: 0;
+    }
   </style>
 </head>
 
@@ -130,6 +154,14 @@
     <div class="section s2" id="sec1"><h3>Making Of</h3></div>
     <div class="section s3" id="sec2"><h3>creators</h3></div>
     <div class="section s4" id="sec3"><h3>Awards</h3></div>
+  </div>
+
+  <!-- Titles Overlay (above canvas) -->
+  <div class="titles-overlay" id="titlesOverlay">
+    <div class="title-item" id="title0">Bella</div>
+    <div class="title-item" id="title1">Making Of</div>
+    <div class="title-item" id="title2">creators</div>
+    <div class="title-item" id="title3">Awards</div>
   </div>
 
   <!-- Curtain -->
@@ -148,6 +180,12 @@
       document.getElementById("sec3")
     ];
     const titleEls = sectionEls.map(el => el.querySelector("h3"));
+    const titleOverlayEls = [
+      document.getElementById("title0"),
+      document.getElementById("title1"),
+      document.getElementById("title2"),
+      document.getElementById("title3")
+    ];
     const debugEl = document.getElementById("debug");
 
     // Debug: Log title elements
@@ -252,25 +290,25 @@
 
         sectionEls.forEach((el, i) => {
           el.style.opacity = i === idx ? "1" : "0";
-          // Titles are always visible via CSS now
+        });
+        
+        // Show title in overlay (above canvas)
+        titleOverlayEls.forEach((titleEl, i) => {
+          if (titleEl) {
+            titleEl.style.opacity = i === idx ? "1" : "0";
+          }
         });
         
         // Debug display
-        if (debugEl && titleEls[idx]) {
-          const computedStyle = window.getComputedStyle(titleEls[idx]);
-          const sectionStyle = window.getComputedStyle(sectionEls[idx]);
-          const sectionsStyle = window.getComputedStyle(sectionsEl);
+        if (debugEl && titleOverlayEls[idx]) {
+          const computedStyle = window.getComputedStyle(titleOverlayEls[idx]);
           debugEl.innerHTML = `
             Active: ${idx}<br>
-            Title: "${titleEls[idx].textContent}"<br>
-            Title inline opacity: ${titleEls[idx].style.opacity || 'not set'}<br>
+            Title: "${titleOverlayEls[idx].textContent}"<br>
+            Title opacity: ${titleOverlayEls[idx].style.opacity}<br>
             Title computed opacity: ${computedStyle.opacity}<br>
-            Section opacity: ${sectionStyle.opacity}<br>
-            Sections opacity: ${sectionsStyle.opacity}<br>
-            Title color: ${computedStyle.color}<br>
-            Title visible: ${titleEls[idx].offsetParent !== null}<br>
-            Title display: ${computedStyle.display}<br>
-            Title visibility: ${computedStyle.visibility}
+            Title visible: ${titleOverlayEls[idx].offsetParent !== null}<br>
+            Title color: ${computedStyle.color}
           `;
         }
       } else {
@@ -278,7 +316,12 @@
         sectionsEl.style.setProperty("--reveal-w", "0px");
         sectionEls.forEach((el, i) => {
           el.style.opacity = "0";
-          // Titles are always visible via CSS now
+        });
+        // Hide all titles
+        titleOverlayEls.forEach(titleEl => {
+          if (titleEl) {
+            titleEl.style.opacity = "0";
+          }
         });
         if (debugEl) {
           debugEl.innerHTML = "Not hovering";
