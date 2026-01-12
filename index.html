@@ -73,13 +73,8 @@
       font-weight: 700;
       letter-spacing: 0.5px;
       color: rgba(10,10,14,0.9);
-      opacity: 0;
       transition: opacity 200ms ease;
       pointer-events: none;
-    }
-
-    .section.show-title h3 {
-      opacity: 1 !important;
     }
 
     /* pastel panels */
@@ -155,6 +150,10 @@
     console.log("Title elements:", titleEls);
     titleEls.forEach((title, i) => {
       console.log(`Title ${i}:`, title, title ? title.textContent : "null");
+      // Initialize titles as hidden
+      if (title) {
+        title.style.opacity = "0";
+      }
     });
 
     /* ===== CANVAS SETUP ===== */
@@ -264,13 +263,18 @@
         if (debugEl && titleEls[idx]) {
           const computedStyle = window.getComputedStyle(titleEls[idx]);
           const sectionStyle = window.getComputedStyle(sectionEls[idx]);
+          const sectionsStyle = window.getComputedStyle(sectionsEl);
           debugEl.innerHTML = `
             Active: ${idx}<br>
             Title: "${titleEls[idx].textContent}"<br>
-            Title opacity: ${titleEls[idx].style.opacity}<br>
-            Title computed: ${computedStyle.opacity}<br>
+            Title inline opacity: ${titleEls[idx].style.opacity || 'not set'}<br>
+            Title computed opacity: ${computedStyle.opacity}<br>
             Section opacity: ${sectionStyle.opacity}<br>
-            Title visible: ${titleEls[idx].offsetParent !== null}
+            Sections opacity: ${sectionsStyle.opacity}<br>
+            Title color: ${computedStyle.color}<br>
+            Title visible: ${titleEls[idx].offsetParent !== null}<br>
+            Title display: ${computedStyle.display}<br>
+            Title visibility: ${computedStyle.visibility}
           `;
         }
       } else {
