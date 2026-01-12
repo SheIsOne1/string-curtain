@@ -75,10 +75,11 @@
       color: rgba(10,10,14,0.9);
       opacity: 0;
       transition: opacity 200ms ease;
+      pointer-events: none;
     }
 
     .section.show-title h3 {
-      opacity: 1;
+      opacity: 1 !important;
     }
 
     /* pastel panels */
@@ -132,6 +133,7 @@
       document.getElementById("sec2"),
       document.getElementById("sec3")
     ];
+    const titleEls = sectionEls.map(el => el.querySelector("h3"));
 
     /* ===== CANVAS SETUP ===== */
     function resize() {
@@ -229,18 +231,18 @@
 
         sectionEls.forEach((el, i) => {
           el.style.opacity = i === idx ? "1" : "0";
-          if (i === idx) {
-            el.classList.add("show-title");
-          } else {
-            el.classList.remove("show-title");
+          if (titleEls[i]) {
+            titleEls[i].style.opacity = i === idx ? "1" : "0";
           }
         });
       } else {
         sectionsEl.style.opacity = "0";
         sectionsEl.style.setProperty("--reveal-w", "0px");
-        sectionEls.forEach(el => {
+        sectionEls.forEach((el, i) => {
           el.style.opacity = "0";
-          el.classList.remove("show-title");
+          if (titleEls[i]) {
+            titleEls[i].style.opacity = "0";
+          }
         });
       }
 
