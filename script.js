@@ -227,20 +227,21 @@ function handleMouseLeave(e) {
 }
 
 // Deactivate when mouse leaves the canvas
-// Use mouseout instead of mouseleave for more reliable detection
+// Use mouseout but be conservative - only deactivate if mouse clearly left
 canvas.addEventListener("mouseout", (e) => {
   // Check if the mouse is actually leaving the canvas
   // relatedTarget is the element the mouse is moving to
   const relatedTarget = e.relatedTarget;
   
-  // If relatedTarget is null or not a child of canvas, mouse left canvas
-  if (!relatedTarget || !canvas.contains(relatedTarget)) {
-    // Double-check mouse is actually outside canvas bounds
+  // Only deactivate if relatedTarget is clearly outside canvas (not just moving to another element)
+  if (!relatedTarget || (!canvas.contains(relatedTarget) && relatedTarget !== document.body)) {
+    // Double-check mouse is actually outside canvas bounds with a small buffer
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
+    const buffer = 5; // Small buffer to avoid false positives
     
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    if (x < rect.left - buffer || x > rect.right + buffer || y < rect.top - buffer || y > rect.bottom + buffer) {
       pointer.active = false;
       console.log("Mouse left canvas area - pointer.active set to false", "x:", x, "y:", y);
     }
@@ -248,11 +249,14 @@ canvas.addEventListener("mouseout", (e) => {
 });
 
 // Use document mouseleave for window leave detection (when mouse leaves browser window entirely)
+// NOTE: This event fires when mouse leaves the document, but can be unreliable
+// We'll use a more conservative approach - only deactivate if mouse is clearly outside
 document.addEventListener("mouseleave", (e) => {
-  // This fires when mouse leaves the browser window
-  if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= innerWidth || e.clientY >= innerHeight) {
+  // Only deactivate if mouse clearly left the viewport
+  // Don't deactivate if mouse is just moving between elements
+  if (e.clientY < -10 || e.clientX < -10 || e.clientX > innerWidth + 10 || e.clientY > innerHeight + 10) {
     pointer.active = false;
-    console.log("Mouse left browser window - pointer.active set to false");
+    console.log("Mouse left browser window - pointer.active set to false", "clientY:", e.clientY, "clientX:", e.clientX);
   }
 });
 
