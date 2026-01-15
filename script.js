@@ -99,14 +99,23 @@ function hideIntro() {
       document.removeEventListener("touchmove", blockAllInteractions, true);
       
       canvas.style.pointerEvents = "auto"; // Enable hover interactions
+      console.log("Canvas pointer-events set to auto");
       
-      // Activate pointer if mouse is already over canvas when curtain becomes ready
-      // This ensures hover works immediately if mouse is already in position
+      // Force a mouse move check to activate pointer if mouse is already over canvas
+      // Create a synthetic mousemove event to trigger activation
+      const syntheticEvent = new MouseEvent("mousemove", {
+        clientX: pointer.x,
+        clientY: pointer.y,
+        bubbles: true
+      });
+      handleMouseMove(syntheticEvent);
+      
+      // Also directly activate if mouse is within bounds
       const mouseOverCanvas = pointer.x >= 0 && pointer.x <= innerWidth && 
                               pointer.y >= 0 && pointer.y <= innerHeight;
       if (mouseOverCanvas) {
         pointer.active = true;
-        console.log("Curtain ready - pointer activated, mouse is over canvas");
+        console.log("Curtain ready - pointer activated directly, mouse is over canvas at", pointer.x, pointer.y);
       }
       
       // Enable title interactions
@@ -176,29 +185,35 @@ addEventListener("resize", resize);
 /* ===== POINTER ===== */
 const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
 
-// Track mouse position always
-addEventListener("mousemove", e => { 
+// Track mouse position - attach to both window and canvas for reliability
+function handleMouseMove(e) {
+  // Always update position, even if curtain not ready
   pointer.x = e.clientX; 
   pointer.y = e.clientY; 
+  
   // Activate pointer if curtain is ready
-  // Don't check bounds here - let mouseleave handle deactivation
   if (curtainReady) {
     if (!pointer.active) {
-      console.log("Mouse moved - pointer.active set to true");
+      console.log("Mouse moved - pointer.active set to true", "x:", pointer.x, "y:", pointer.y, "curtainReady:", curtainReady);
     }
     pointer.active = true;
   }
-});
+}
 
-// Deactivate when mouse leaves the window
-addEventListener("mouseleave", () => {
-  pointer.active = false;
-});
+// Attach to window (global)
+addEventListener("mousemove", handleMouseMove);
 
-// Also use canvas-specific mouseleave as backup
-canvas.addEventListener("mouseleave", () => {
+// Also attach to canvas for better reliability
+canvas.addEventListener("mousemove", handleMouseMove);
+
+// Deactivate when mouse leaves
+function handleMouseLeave() {
   pointer.active = false;
-});
+  console.log("Mouse left - pointer.active set to false");
+}
+
+addEventListener("mouseleave", handleMouseLeave);
+canvas.addEventListener("mouseleave", handleMouseLeave);
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
