@@ -99,7 +99,7 @@ function createParticles() {
   tempImg.resize(drawWidth, drawHeight);
   tempImg.loadPixels();
   
-  const pixelSize = 4; // Sample every 4th pixel for performance
+  const pixelSize = 3; // Sample every 3rd pixel for more particles
   const colors = [
     [300, 100, 70], // Pink
     [180, 100, 70], // Cyan
@@ -108,30 +108,41 @@ function createParticles() {
     [0, 100, 70]    // Red
   ];
   
+  let pixelsProcessed = 0;
+  let pixelsWithParticles = 0;
+  
+  // Make sure pixels are loaded
+  tempImg.loadPixels();
+  
   for (let y = 0; y < drawHeight; y += pixelSize) {
     for (let x = 0; x < drawWidth; x += pixelSize) {
+      pixelsProcessed++;
       const index = (y * drawWidth + x) * 4;
+      
+      if (index >= tempImg.pixels.length - 3) continue;
+      
       const r = tempImg.pixels[index];
       const g = tempImg.pixels[index + 1];
       const b = tempImg.pixels[index + 2];
       const a = tempImg.pixels[index + 3];
       
-      // Only create particles for visible pixels
-      if (a > 128) {
+      // Only create particles for visible pixels (lower alpha threshold)
+      if (a > 50) {
         const brightness = (r + g + b) / 3;
         
-        // Only create particles for lighter areas
-        if (brightness > 80) {
+        // Lower brightness threshold to get more particles
+        if (brightness > 50) { // Changed from 80 to 50
+          pixelsWithParticles++;
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           
           particles.push({
-            x: offsetX + x + random(-10, 10),
-            y: offsetY + y + random(-10, 10),
+            x: offsetX + x + random(-5, 5),
+            y: offsetY + y + random(-5, 5),
             targetX: offsetX + x,
             targetY: offsetY + y,
-            size: random(1.5, 3),
+            size: random(2.5, 4.5), // Larger particles
             color: randomColor,
-            opacity: random(0.6, 1.0),
+            opacity: random(0.8, 1.0), // Higher opacity
             phase: random(TWO_PI),
             speed: random(0.05, 0.15)
           });
@@ -139,6 +150,8 @@ function createParticles() {
       }
     }
   }
+  
+  console.log(`Processed ${pixelsProcessed} pixels, created ${pixelsWithParticles} particle positions`);
   
   particlesCreated = true;
   console.log(`Created ${particles.length} particles`);
@@ -174,10 +187,20 @@ function draw() {
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 60
+      particle.opacity * 100 // Higher opacity for visibility
     );
     noStroke();
+    // Draw larger circles for better visibility
     circle(particle.x + floatX, particle.y + floatY, particle.size);
+    
+    // Add a subtle glow effect
+    fill(
+      particle.color[0],
+      particle.color[1],
+      particle.color[2],
+      particle.opacity * 30
+    );
+    circle(particle.x + floatX, particle.y + floatY, particle.size * 1.5);
   }
   
   blendMode(BLEND);
