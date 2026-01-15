@@ -1,3 +1,4 @@
+// Updated: Removed content section errors - cache bust: 2024-01
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d", { alpha: true });
 const introPage = document.getElementById("introPage");
