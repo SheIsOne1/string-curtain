@@ -90,7 +90,13 @@ function hideIntro() {
       // Verify curtainReady was set correctly
       if (curtainReady !== true) {
         console.error("ERROR: curtainReady was not set correctly! Value:", curtainReady);
+      } else {
+        console.log("✓ curtainReady successfully set to true, value verified:", curtainReady);
       }
+      
+      // Force debug display to update by reading curtainReady again
+      // This ensures any potential scope issues are resolved
+      window.curtainReady = curtainReady; // Also store on window for debugging
       
       // Re-enable all interactions on the page
       document.body.style.pointerEvents = "auto";
@@ -483,8 +489,13 @@ function loop(t) {
     // Log if values don't match what we expect
     if (currentCurtainReady === false && t > 5000) { // After 5 seconds, curtain should be ready
       if (t % 180 === 0) { // Log occasionally
-        console.warn("WARNING: curtainReady is false but should be true! t:", t);
+        console.warn("WARNING: curtainReady is false but should be true! t:", t, "introAnimationComplete:", introAnimationComplete);
       }
+    }
+    
+    // Also log current state every 3 seconds for debugging
+    if (t % 180 === 0) {
+      console.log("Debug display update - curtainReady:", curtainReady, "pointer.active:", pointer.active, "t:", t);
     }
   }
 
