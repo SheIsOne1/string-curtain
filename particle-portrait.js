@@ -130,8 +130,8 @@ function createParticles() {
       if (a > 50) {
         const brightness = (r + g + b) / 3;
         
-        // Lower brightness threshold to get more particles
-        if (brightness > 50) { // Changed from 80 to 50
+        // Much lower brightness threshold to get MANY more particles
+        if (brightness > 30) { // Changed from 50 to 30 - very low threshold
           pixelsWithParticles++;
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           
@@ -162,13 +162,22 @@ function createParticles() {
 }
 
 function draw() {
-  if (!introShown || particles.length === 0) {
+  if (!introShown) {
     clear();
     return;
   }
   
+  if (particles.length === 0) {
+    // Debug: draw a test circle if no particles
+    fill(255, 0, 0, 200);
+    circle(width/2, height/2, 20);
+    console.log("No particles to draw!");
+    return;
+  }
+  
   clear();
-  blendMode(SCREEN);
+  // Try different blend mode - SCREEN might be hiding particles
+  blendMode(ADD); // ADD mode for brighter, more visible particles
   
   for (let i = 0; i < particles.length; i++) {
     let particle = particles[i];
@@ -182,25 +191,25 @@ function draw() {
     const floatX = sin(millis() * 0.001 + particle.phase) * 0.5;
     const floatY = cos(millis() * 0.0008 + particle.phase) * 0.5;
     
-    // Draw particle with colorful glow
+    // Draw particle with colorful glow - much brighter
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 100 // Higher opacity for visibility
+      particle.opacity * 150 // Much higher opacity
     );
     noStroke();
     // Draw larger circles for better visibility
     circle(particle.x + floatX, particle.y + floatY, particle.size);
     
-    // Add a subtle glow effect
+    // Add a brighter glow effect
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 30
+      particle.opacity * 60
     );
-    circle(particle.x + floatX, particle.y + floatY, particle.size * 1.5);
+    circle(particle.x + floatX, particle.y + floatY, particle.size * 2);
   }
   
   blendMode(BLEND);
