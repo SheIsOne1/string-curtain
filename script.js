@@ -110,6 +110,153 @@ function hideIntro() {
   }, 500);
 }
 
+/* ===== PARTICLE PORTRAIT ===== */
+const particleCanvas = document.getElementById("particlePortrait");
+let portraitParticles = [];
+let portraitImageLoaded = false;
+
+function createParticlePortrait(imageSrc) {
+  if (!particleCanvas) return;
+  
+  const portraitCtx = particleCanvas.getContext("2d", { alpha: true });
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  
+  img.onload = function() {
+    // Set canvas size
+    particleCanvas.width = innerWidth;
+    particleCanvas.height = innerHeight;
+    
+    // Calculate dimensions to fit image while maintaining aspect ratio
+    const maxWidth = innerWidth * 0.7;
+    const maxHeight = innerHeight * 0.8;
+    const imgAspect = img.width / img.height;
+    let drawWidth = maxWidth;
+    let drawHeight = maxWidth / imgAspect;
+    
+    if (drawHeight > maxHeight) {
+      drawHeight = maxHeight;
+      drawWidth = maxHeight * imgAspect;
+    }
+    
+    const offsetX = (innerWidth - drawWidth) / 2;
+    const offsetY = (innerHeight - drawHeight) / 2;
+    
+    // Create temporary canvas to sample pixels
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = drawWidth;
+    tempCanvas.height = drawHeight;
+    const tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(img, 0, 0, drawWidth, drawHeight);
+    
+    // Sample pixels to create particles
+    portraitParticles = [];
+    const pixelSize = 4; // Sample every 4th pixel for performance
+    const imageData = tempCtx.getImageData(0, 0, drawWidth, drawHeight);
+    
+    for (let y = 0; y < drawHeight; y += pixelSize) {
+      for (let x = 0; x < drawWidth; x += pixelSize) {
+        const index = (y * drawWidth + x) * 4;
+        const r = imageData.data[index];
+        const g = imageData.data[index + 1];
+        const b = imageData.data[index + 2];
+        const a = imageData.data[index + 3];
+        
+        // Only create particles for visible pixels (not transparent)
+        if (a > 128) {
+          // Calculate brightness
+          const brightness = (r + g + b) / 3;
+          
+          // Only create particles for lighter areas (skip dark areas for portrait effect)
+          if (brightness > 80) {
+            portraitParticles.push({
+              x: offsetX + x + (Math.random() - 0.5) * 20,
+              y: offsetY + y + (Math.random() - 0.5) * 20,
+              targetX: offsetX + x,
+              targetY: offsetY + y,
+              size: 1.5 + Math.random() * 1.5,
+              r: r,
+              g: g,
+              b: b,
+              opacity: 0.6 + Math.random() * 0.4,
+              phase: Math.random() * Math.PI * 2,
+              speed: 0.05 + Math.random() * 0.1
+            });
+          }
+        }
+      }
+    }
+    
+    portraitImageLoaded = true;
+    animatePortrait();
+  };
+  
+  img.onerror = function() {
+    console.error("Failed to load portrait image:", imageSrc);
+  };
+  
+  img.src = imageSrc;
+}
+
+function animatePortrait() {
+  if (!particleCanvas || !portraitImageLoaded || !introShown) return;
+  
+  const portraitCtx = particleCanvas.getContext("2d");
+  portraitCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+  
+  portraitCtx.globalCompositeOperation = "screen";
+  
+  for (const particle of portraitParticles) {
+    // Animate particles moving to their target positions
+    const dx = particle.targetX - particle.x;
+    const dy = particle.targetY - particle.y;
+    particle.x += dx * particle.speed;
+    particle.y += dy * particle.speed;
+    
+    // Add subtle floating animation
+    const time = Date.now() * 0.001;
+    const floatX = Math.sin(time + particle.phase) * 0.5;
+    const floatY = Math.cos(time * 0.8 + particle.phase) * 0.5;
+    
+    portraitCtx.beginPath();
+    portraitCtx.arc(
+      particle.x + floatX,
+      particle.y + floatY,
+      particle.size,
+      0,
+      Math.PI * 2
+    );
+    
+    // Use colorful glow effect
+    const colorIndex = Math.floor(Math.random() * 5);
+    const colors = [
+      `hsla(300, 100%, 70%, ${particle.opacity * 0.6})`,  // Pink
+      `hsla(180, 100%, 70%, ${particle.opacity * 0.6})`,  // Cyan
+      `hsla(60, 100%, 70%, ${particle.opacity * 0.6})`,   // Yellow
+      `hsla(240, 100%, 70%, ${particle.opacity * 0.6})`,  // Blue
+      `hsla(0, 100%, 70%, ${particle.opacity * 0.6})`     // Red
+    ];
+    
+    portraitCtx.fillStyle = colors[colorIndex];
+    portraitCtx.fill();
+  }
+  
+  requestAnimationFrame(animatePortrait);
+}
+
+// Resize handler for portrait canvas
+addEventListener("resize", () => {
+  if (particleCanvas && portraitImageLoaded) {
+    particleCanvas.width = innerWidth;
+    particleCanvas.height = innerHeight;
+    // Recreate particles on resize (optional - you might want to skip this for performance)
+    // createParticlePortrait("path/to/your/image.jpg");
+  }
+});
+
+// Initialize particle portrait with an image
+createParticlePortrait("images/portrait.png");
+
 // Click on intro page to proceed (only after animation completes)
 if (introPage) {
   // Block intro page clicks until animation completes
