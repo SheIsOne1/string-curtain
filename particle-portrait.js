@@ -27,6 +27,9 @@ function setup() {
     return;
   }
   
+  // Set color mode to HSB so we can use HSL-like colors
+  colorMode(HSB, 360, 100, 100, 1);
+  
   // Create canvas - p5.js handles this
   const canvas = createCanvas(windowWidth, windowHeight);
   canvas.parent("particlePortrait");
@@ -151,27 +154,37 @@ function createParticles() {
       const b = tempImg.pixels[index + 2];
       const a = tempImg.pixels[index + 3];
       
-      // Create particles for ALL visible pixels (very permissive)
-      if (a > 20) { // Very low alpha threshold - include almost all pixels
+      // Sample every Nth pixel more strategically
+      // Create particles based on image variation, not just brightness
+      if (a > 5) { // Very low alpha threshold
         const brightness = (r + g + b) / 3;
         
-        // Create particles for almost everything - just skip completely black pixels
-        // Lower threshold to get even more particles
-        if (brightness > 5) { // Extremely low threshold - almost all pixels
+        // Use a more complex logic: create particles where there's visual interest
+        // Higher probability for brighter pixels, but also some for darker areas
+        const brightnessProbability = map(brightness, 0, 255, 0.1, 1.0);
+        const shouldCreate = random() < brightnessProbability || brightness > 100;
+        
+        if (shouldCreate) {
           pixelsWithParticles++;
+          
+          // Choose color based on actual pixel color with some randomness
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           
           // Adjust opacity based on brightness for visual depth
-          const opacityMultiplier = map(brightness, 0, 255, 0.5, 1.0);
+          const opacityMultiplier = map(brightness, 0, 255, 0.6, 1.0);
+          
+          // Ensure particles are within canvas bounds
+          const finalX = constrain(offsetX + x + random(-2, 2), 0, width);
+          const finalY = constrain(offsetY + y + random(-2, 2), 0, height);
           
           particles.push({
-            x: offsetX + x + random(-5, 5),
-            y: offsetY + y + random(-5, 5),
-            targetX: offsetX + x,
-            targetY: offsetY + y,
+            x: finalX,
+            y: finalY,
+            targetX: constrain(offsetX + x, 0, width),
+            targetY: constrain(offsetY + y, 0, height),
             size: random(3, 5), // Even larger particles for visibility
             color: randomColor,
-            opacity: random(0.9, 1.0) * opacityMultiplier, // Higher opacity
+            opacity: random(0.8, 1.0) * opacityMultiplier, // Higher opacity
             phase: random(TWO_PI),
             speed: random(0.05, 0.15)
           });
@@ -195,6 +208,7 @@ function createParticles() {
 }
 
 function draw() {
+  // Only draw when intro page is visible
   if (!isIntroShown()) {
     clear();
     return;
@@ -202,15 +216,23 @@ function draw() {
   
   if (particles.length === 0) {
     // Debug: draw a test circle if no particles
+    colorMode(RGB, 255);
+    background(0, 0, 0, 0); // Transparent background in RGB mode
     fill(255, 0, 0, 200);
+    noStroke();
     circle(width/2, height/2, 20);
-    console.log("No particles to draw!");
+    colorMode(HSB, 360, 100, 100, 1); // Switch back to HSB
+    console.log("No particles to draw! particles.length =", particles.length);
     return;
   }
   
-  clear();
-  // Try different blend mode - SCREEN might be hiding particles
-  blendMode(ADD); // ADD mode for brighter, more visible particles
+  // Clear with transparent background - use RGB mode for background
+  colorMode(RGB, 255);
+  background(0, 0, 0, 0); // Transparent black in RGB
+  colorMode(HSB, 360, 100, 100, 1); // Switch back to HSB for particles
+  
+  // Use SCREEN blend mode for better visibility with dark background
+  blendMode(SCREEN);
   
   for (let i = 0; i < particles.length; i++) {
     let particle = particles[i];
@@ -225,11 +247,12 @@ function draw() {
     const floatY = cos(millis() * 0.0008 + particle.phase) * 0.5;
     
     // Draw particle with colorful glow - very bright
+    // HSB mode: H (0-360), S (0-100), B (0-100), Alpha (0-1)
     fill(
-      particle.color[0],
-      particle.color[1],
-      particle.color[2],
-      particle.opacity * 200 // Very high opacity for visibility
+      particle.color[0], // Hue (0-360)
+      particle.color[1], // Saturation (0-100)
+      particle.color[2], // Brightness (0-100)
+      min(1.0, particle.opacity) // Alpha 0-1, ensure it's not > 1
     );
     noStroke();
     // Draw larger circles for better visibility
@@ -240,7 +263,7 @@ function draw() {
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 80
+      particle.opacity * 0.6
     );
     circle(particle.x + floatX, particle.y + floatY, particle.size * 1.8);
     
@@ -248,7 +271,7 @@ function draw() {
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 40
+      particle.opacity * 0.3
     );
     circle(particle.x + floatX, particle.y + floatY, particle.size * 2.5);
   }
