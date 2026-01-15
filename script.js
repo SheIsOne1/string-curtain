@@ -252,17 +252,9 @@ canvas.addEventListener("mouseout", (e) => {
   }
 });
 
-// Use document mouseleave for window leave detection (when mouse leaves browser window entirely)
-// NOTE: This event fires when mouse leaves the document, but can be unreliable
-// We'll use a more conservative approach - only deactivate if mouse is clearly outside
-document.addEventListener("mouseleave", (e) => {
-  // Only deactivate if mouse clearly left the viewport
-  // Don't deactivate if mouse is just moving between elements
-  if (e.clientY < -10 || e.clientX < -10 || e.clientX > innerWidth + 10 || e.clientY > innerHeight + 10) {
-    pointer.active = false;
-    console.log("Mouse left browser window - pointer.active set to false", "clientY:", e.clientY, "clientX:", e.clientX);
-  }
-});
+// Removed aggressive document/window mouseleave handler
+// We'll rely on canvas mouseout and periodic checks instead
+// This prevents false positives when mouse moves between elements
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
@@ -416,6 +408,16 @@ function loop(t) {
   /* reveal logic */
   // Always update debug display with current state
   const isHovering = curtainReady && pointer.active;
+  
+  // Periodically check if mouse is still within viewport bounds
+  // This acts as a fallback deactivation if mouse truly left the window
+  if (t % 60 === 0) { // Check every ~1 second
+    if (pointer.active && (pointer.x < -50 || pointer.x > innerWidth + 50 || 
+                           pointer.y < -50 || pointer.y > innerHeight + 50)) {
+      pointer.active = false;
+      console.log("Mouse out of bounds - pointer.active set to false", pointer.x, pointer.y);
+    }
+  }
   
   // Debug log when hovering state changes (but only occasionally to avoid spam)
   if (t % 180 === 0 && isHovering) { // Log every ~3 seconds when hovering
