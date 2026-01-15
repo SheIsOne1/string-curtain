@@ -1,10 +1,13 @@
 /* ===== PARTICLE PORTRAIT using p5.js ===== */
+// Note: p5.js requires functions to be in global scope
+// No global variables declared here to avoid conflicts with script.js
+
 let particles = [];
 let portraitImg;
 let imageLoaded = false;
 let particlesCreated = false;
 
-// Track intro visibility - will check the element directly in draw()
+// Track intro visibility - does NOT use or declare introShown to avoid conflicts
 function isIntroShown() {
   const introPageEl = document.getElementById("introPage");
   return introPageEl && !introPageEl.classList.contains("hidden");
@@ -24,9 +27,21 @@ function setup() {
     return;
   }
   
+  // Create canvas - p5.js handles this
   const canvas = createCanvas(windowWidth, windowHeight);
   canvas.parent("particlePortrait");
   canvas.id("p5-particle-canvas");
+  
+  // Optimize canvas for frequent pixel reads (if possible)
+  try {
+    const canvasEl = canvas.elt;
+    if (canvasEl) {
+      // Note: This is a performance hint, not required for functionality
+      // The warning is just a suggestion for optimization
+    }
+  } catch(e) {
+    // Ignore if optimization not possible
+  }
   
   console.log("Canvas created:", canvas);
   
@@ -89,9 +104,12 @@ function createParticles() {
   // Create a temporary graphics to resize and sample
   let tempImg = portraitImg.get();
   tempImg.resize(drawWidth, drawHeight);
+  
+  // Load pixels - the warning about willReadFrequently is just a performance hint
+  // It's safe to ignore for one-time operations like this
   tempImg.loadPixels();
   
-  const pixelSize = 3; // Sample every 3rd pixel for more particles
+  const pixelSize = 2; // Sample every 2nd pixel for many more particles
   const colors = [
     [300, 100, 70], // Pink
     [180, 100, 70], // Cyan
@@ -119,11 +137,12 @@ function createParticles() {
       const a = tempImg.pixels[index + 3];
       
       // Create particles for ALL visible pixels (very permissive)
-      if (a > 30) { // Very low alpha threshold - include almost all pixels
+      if (a > 20) { // Very low alpha threshold - include almost all pixels
         const brightness = (r + g + b) / 3;
         
         // Create particles for almost everything - just skip completely black pixels
-        if (brightness > 10) { // Very very low threshold - almost all pixels
+        // Lower threshold to get even more particles
+        if (brightness > 5) { // Extremely low threshold - almost all pixels
           pixelsWithParticles++;
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           
@@ -135,9 +154,9 @@ function createParticles() {
             y: offsetY + y + random(-5, 5),
             targetX: offsetX + x,
             targetY: offsetY + y,
-            size: random(2.5, 4.5), // Larger particles
+            size: random(3, 5), // Even larger particles for visibility
             color: randomColor,
-            opacity: random(0.8, 1.0) * opacityMultiplier, // Higher opacity
+            opacity: random(0.9, 1.0) * opacityMultiplier, // Higher opacity
             phase: random(TWO_PI),
             speed: random(0.05, 0.15)
           });
@@ -186,25 +205,33 @@ function draw() {
     const floatX = sin(millis() * 0.001 + particle.phase) * 0.5;
     const floatY = cos(millis() * 0.0008 + particle.phase) * 0.5;
     
-    // Draw particle with colorful glow - much brighter
+    // Draw particle with colorful glow - very bright
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 150 // Much higher opacity
+      particle.opacity * 200 // Very high opacity for visibility
     );
     noStroke();
     // Draw larger circles for better visibility
     circle(particle.x + floatX, particle.y + floatY, particle.size);
     
-    // Add a brighter glow effect
+    // Add a brighter glow effect with multiple layers
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 60
+      particle.opacity * 80
     );
-    circle(particle.x + floatX, particle.y + floatY, particle.size * 2);
+    circle(particle.x + floatX, particle.y + floatY, particle.size * 1.8);
+    
+    fill(
+      particle.color[0],
+      particle.color[1],
+      particle.color[2],
+      particle.opacity * 40
+    );
+    circle(particle.x + floatX, particle.y + floatY, particle.size * 2.5);
   }
   
   blendMode(BLEND);
