@@ -1,22 +1,14 @@
 /* ===== PARTICLE PORTRAIT using p5.js ===== */
 let particles = [];
 let portraitImg;
-let introShown = true;
 let imageLoaded = false;
 let particlesCreated = false;
 
-// Listen for intro page visibility changes
-// Use the existing introPage from script.js or get it without redeclaring
-document.addEventListener('DOMContentLoaded', () => {
-  const portraitIntroPage = document.getElementById("introPage");
-  if (portraitIntroPage) {
-    introShown = !portraitIntroPage.classList.contains("hidden");
-    const observer = new MutationObserver(() => {
-      introShown = !portraitIntroPage.classList.contains("hidden");
-    });
-    observer.observe(portraitIntroPage, { attributes: true, attributeFilter: ['class'] });
-  }
-});
+// Track intro visibility - will check the element directly in draw()
+function isIntroShown() {
+  const introPageEl = document.getElementById("introPage");
+  return introPageEl && !introPageEl.classList.contains("hidden");
+}
 
 function preload() {
   console.log("Preloading image...");
@@ -165,7 +157,7 @@ function createParticles() {
 }
 
 function draw() {
-  if (!introShown) {
+  if (!isIntroShown()) {
     clear();
     return;
   }
