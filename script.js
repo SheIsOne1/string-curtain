@@ -116,13 +116,18 @@ let portraitParticles = [];
 let portraitImageLoaded = false;
 
 function createParticlePortrait(imageSrc) {
-  if (!particleCanvas) return;
+  if (!particleCanvas) {
+    console.error("Particle canvas not found!");
+    return;
+  }
   
+  console.log("Loading particle portrait:", imageSrc);
   const portraitCtx = particleCanvas.getContext("2d", { alpha: true });
   const img = new Image();
-  img.crossOrigin = "anonymous";
+  // Don't set crossOrigin for local files - it causes CORS issues
   
   img.onload = function() {
+    console.log("Image loaded successfully! Creating particles...");
     // Set canvas size
     particleCanvas.width = innerWidth;
     particleCanvas.height = innerHeight;
@@ -191,8 +196,9 @@ function createParticlePortrait(imageSrc) {
     animatePortrait();
   };
   
-  img.onerror = function() {
-    console.error("Failed to load portrait image:", imageSrc);
+  img.onerror = function(err) {
+    console.error("Failed to load portrait image:", imageSrc, err);
+    console.error("Make sure the image path is correct and the file exists");
   };
   
   img.src = imageSrc;
@@ -255,7 +261,15 @@ addEventListener("resize", () => {
 });
 
 // Initialize particle portrait with an image
-createParticlePortrait("images/portrait.png");
+// Wait for DOM to be ready before initializing
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticlePortrait("images/portrait.png");
+  });
+} else {
+  // DOM already ready
+  createParticlePortrait("images/portrait.png");
+}
 
 // Click on intro page to proceed (only after animation completes)
 if (introPage) {
