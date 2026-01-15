@@ -80,6 +80,7 @@ function hideIntro() {
       }
       
       curtainReady = true;
+      console.log("Curtain ready! Hover interactions enabled. pointer.active:", pointer.active);
       
       // Re-enable all interactions on the page
       document.body.style.pointerEvents = "auto";
@@ -99,12 +100,13 @@ function hideIntro() {
       
       canvas.style.pointerEvents = "auto"; // Enable hover interactions
       
-      // Trigger a fake mouseenter event to activate pointer if mouse is already over canvas
+      // Activate pointer if mouse is already over canvas when curtain becomes ready
       // This ensures hover works immediately if mouse is already in position
       const mouseOverCanvas = pointer.x >= 0 && pointer.x <= innerWidth && 
                               pointer.y >= 0 && pointer.y <= innerHeight;
       if (mouseOverCanvas) {
         pointer.active = true;
+        console.log("Curtain ready - pointer activated, mouse is over canvas");
       }
       
       // Enable title interactions
@@ -178,32 +180,25 @@ const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
 addEventListener("mousemove", e => { 
   pointer.x = e.clientX; 
   pointer.y = e.clientY; 
-  // Only activate pointer if curtain is ready
+  // Activate pointer if curtain is ready
+  // Don't check bounds here - let mouseleave handle deactivation
   if (curtainReady) {
+    if (!pointer.active) {
+      console.log("Mouse moved - pointer.active set to true");
+    }
     pointer.active = true;
   }
 });
 
-// Use canvas-specific mouse events for better hover detection
-canvas.addEventListener("mouseenter", (e) => {
-  if (curtainReady) {
-    pointer.active = true;
-    pointer.x = e.clientX;
-    pointer.y = e.clientY;
-  }
+// Deactivate when mouse leaves the window
+addEventListener("mouseleave", () => {
+  pointer.active = false;
 });
 
+// Also use canvas-specific mouseleave as backup
 canvas.addEventListener("mouseleave", () => {
   pointer.active = false;
 });
-
-// Also handle mouseleave on document (when mouse leaves browser window)
-document.addEventListener("mouseleave", () => {
-  pointer.active = false;
-});
-
-// Ensure pointer is active when mouse is already over canvas when curtain becomes ready
-// This is handled by checking mouse position in the enableInteractions function
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
@@ -344,6 +339,11 @@ function loop(t) {
   snapX += (targetSnap - snapX) * SNAP_EASE;
 
   /* reveal logic */
+  // Debug: log pointer state occasionally
+  if (t % 60 === 0) { // Log every ~1 second (assuming 60fps)
+    // console.log("Pointer active:", pointer.active, "curtainReady:", curtainReady, "pointer.x:", pointer.x, "pointer.y:", pointer.y);
+  }
+  
   if (pointer.active) {
     sectionsEl.style.opacity = "1";
     sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
@@ -367,17 +367,14 @@ function loop(t) {
         const computedStyle = window.getComputedStyle(titleEl);
         const parentStyle = window.getComputedStyle(titleEl.parentElement);
         debugEl.innerHTML = `
-          Active: ${idx}<br>
+          Pointer active: ${pointer.active}<br>
+          Curtain ready: ${curtainReady}<br>
+          Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}<br>
+          Active section: ${idx}<br>
           Title: "${titleEl.textContent}"<br>
-          Title element: ${titleEl ? 'found' : 'NOT FOUND'}<br>
           Title opacity: ${titleEl.style.opacity || 'not set'}<br>
-          Title computed opacity: ${computedStyle.opacity}<br>
-          Parent opacity: ${parentStyle.opacity}<br>
-          Title visible: ${titleEl.offsetParent !== null}<br>
-          Title color: ${computedStyle.color}<br>
-          Title display: ${computedStyle.display}<br>
-          Title z-index: ${computedStyle.zIndex}<br>
-          Parent z-index: ${parentStyle.zIndex}
+          Snap X: ${Math.floor(snapX)}<br>
+          Target snap: ${Math.floor(targetSnap)}
         `;
       } else {
         debugEl.innerHTML = `Active: ${idx}<br>Title element NOT FOUND!`;
@@ -396,7 +393,7 @@ function loop(t) {
       }
     });
     if (debugEl) {
-      debugEl.innerHTML = "Not hovering";
+      debugEl.innerHTML = `Not hovering<br>Pointer active: ${pointer.active}<br>Curtain ready: ${curtainReady}<br>Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}`;
     }
   }
 
