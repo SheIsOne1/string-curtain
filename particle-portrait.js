@@ -6,15 +6,15 @@ let imageLoaded = false;
 let particlesCreated = false;
 
 // Listen for intro page visibility changes
-let introPage;
+// Use the existing introPage from script.js or get it without redeclaring
 document.addEventListener('DOMContentLoaded', () => {
-  introPage = document.getElementById("introPage");
-  if (introPage) {
-    introShown = !introPage.classList.contains("hidden");
+  const portraitIntroPage = document.getElementById("introPage");
+  if (portraitIntroPage) {
+    introShown = !portraitIntroPage.classList.contains("hidden");
     const observer = new MutationObserver(() => {
-      introShown = !introPage.classList.contains("hidden");
+      introShown = !portraitIntroPage.classList.contains("hidden");
     });
-    observer.observe(introPage, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(portraitIntroPage, { attributes: true, attributeFilter: ['class'] });
   }
 });
 
@@ -126,14 +126,17 @@ function createParticles() {
       const b = tempImg.pixels[index + 2];
       const a = tempImg.pixels[index + 3];
       
-      // Only create particles for visible pixels (lower alpha threshold)
-      if (a > 50) {
+      // Create particles for ALL visible pixels (very permissive)
+      if (a > 30) { // Very low alpha threshold - include almost all pixels
         const brightness = (r + g + b) / 3;
         
-        // Much lower brightness threshold to get MANY more particles
-        if (brightness > 30) { // Changed from 50 to 30 - very low threshold
+        // Create particles for almost everything - just skip completely black pixels
+        if (brightness > 10) { // Very very low threshold - almost all pixels
           pixelsWithParticles++;
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          
+          // Adjust opacity based on brightness for visual depth
+          const opacityMultiplier = map(brightness, 0, 255, 0.5, 1.0);
           
           particles.push({
             x: offsetX + x + random(-5, 5),
@@ -142,7 +145,7 @@ function createParticles() {
             targetY: offsetY + y,
             size: random(2.5, 4.5), // Larger particles
             color: randomColor,
-            opacity: random(0.8, 1.0), // Higher opacity
+            opacity: random(0.8, 1.0) * opacityMultiplier, // Higher opacity
             phase: random(TWO_PI),
             speed: random(0.05, 0.15)
           });
