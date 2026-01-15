@@ -28,7 +28,8 @@ function setup() {
   }
   
   // Use RGB color mode for particles (easier and more predictable)
-  colorMode(RGB, 255, 255, 255, 1);
+  // Default RGB mode: all channels 0-255 including alpha
+  colorMode(RGB);
   
   // Create canvas - p5.js handles this
   const canvas = createCanvas(windowWidth, windowHeight);
@@ -228,11 +229,12 @@ function draw() {
   // Clear canvas - use clear() for transparent background
   clear();
   
-  // Ensure we're in RGB mode for particles
-  colorMode(RGB, 255, 255, 255, 1);
+  // Ensure we're in RGB mode for particles (default alpha range 0-255)
+  colorMode(RGB);
   
-  // Use ADD blend mode for brighter, more visible particles
-  blendMode(ADD);
+  // Use NORMAL blend mode to preserve actual colors
+  // SCREEN and ADD can wash out to white with many overlapping particles
+  blendMode(BLEND);
   
   for (let i = 0; i < particles.length; i++) {
     let particle = particles[i];
@@ -246,32 +248,34 @@ function draw() {
     const floatX = sin(millis() * 0.001 + particle.phase) * 0.5;
     const floatY = cos(millis() * 0.0008 + particle.phase) * 0.5;
     
-    // Draw particle with colorful glow - very bright
-    // RGB mode: R (0-255), G (0-255), B (0-255), Alpha (0-1)
+    // Draw particle with colorful glow
+    // RGB mode: R (0-255), G (0-255), B (0-255), Alpha (0-255)
+    // Reduce opacity to prevent white washout from overlapping particles
+    const alphaValue = min(255, Math.floor(particle.opacity * 255 * 0.6));
     fill(
       particle.color[0], // Red (0-255)
       particle.color[1], // Green (0-255)
       particle.color[2], // Blue (0-255)
-      min(255, particle.opacity * 255) // Alpha 0-255 for RGB mode
+      alphaValue // Alpha 0-255 for RGB mode
     );
     noStroke();
     // Draw larger circles for better visibility
     circle(particle.x + floatX, particle.y + floatY, particle.size);
     
-    // Add a brighter glow effect with multiple layers
+    // Add a subtle glow effect with multiple layers (less intense to avoid white)
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 255 * 0.6
+      Math.floor(alphaValue * 0.4)
     );
-    circle(particle.x + floatX, particle.y + floatY, particle.size * 1.8);
+    circle(particle.x + floatX, particle.y + floatY, particle.size * 1.5);
     
     fill(
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 255 * 0.3
+      Math.floor(alphaValue * 0.2)
     );
     circle(particle.x + floatX, particle.y + floatY, particle.size * 2.5);
   }
