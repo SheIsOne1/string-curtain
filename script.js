@@ -70,10 +70,16 @@ function hideIntro() {
     canvas.style.transition = "opacity 0.5s ease-in";
     if (debugEl) debugEl.style.opacity = "1";
     
-    // Enable interactions after curtain fade-in completes
-    setTimeout(() => {
+    // Enable interactions ONLY after BOTH Bella animation AND curtain fade-in completes
+    const enableInteractions = () => {
+      // Double-check that both animations are complete before enabling interactions
+      if (!introAnimationComplete) {
+        // If for some reason intro isn't complete, wait a bit more
+        setTimeout(enableInteractions, 100);
+        return;
+      }
+      
       curtainReady = true;
-      introAnimationComplete = true; // Also mark intro as complete
       
       // Re-enable all interactions on the page
       document.body.style.pointerEvents = "auto";
@@ -98,7 +104,9 @@ function hideIntro() {
           titleEl.style.pointerEvents = "auto";
         }
       });
-    }, 500); // Wait for the 0.5s fade-in transition to complete
+    };
+    
+    setTimeout(enableInteractions, 500); // Wait for the 0.5s fade-in transition to complete
   }, 500);
 }
 
@@ -115,12 +123,12 @@ if (introPage) {
   });
   
   // Mark animation as complete and allow transitions
-  // fadeInScale (1.5s) + delay (0.75s) + lights (5s) = 7.25s total
+  // fadeInScale (0.8s) + delay (0.3s) + lights (2.5s) = 3.6s total
   setTimeout(() => {
     introAnimationComplete = true;
     // Auto-transition after a short pause
     setTimeout(hideIntro, 300);
-  }, 7250);
+  }, 3600);
   
   // Also listen for animation end event as a backup
   const introTitle = introPage.querySelector('.intro-title');
