@@ -85,7 +85,12 @@ function hideIntro() {
       
       console.log("Setting curtainReady = true");
       curtainReady = true;
-      console.log("Curtain ready! Hover interactions enabled. pointer.active:", pointer.active);
+      console.log("Curtain ready! Hover interactions enabled. pointer.active:", pointer.active, "curtainReady:", curtainReady);
+      
+      // Verify curtainReady was set correctly
+      if (curtainReady !== true) {
+        console.error("ERROR: curtainReady was not set correctly! Value:", curtainReady);
+      }
       
       // Re-enable all interactions on the page
       document.body.style.pointerEvents = "auto";
@@ -227,12 +232,22 @@ function handleMouseLeave(e) {
 
 // Deactivate when mouse leaves the canvas
 canvas.addEventListener("mouseleave", (e) => {
-  pointer.active = false;
-  console.log("Mouse left canvas - pointer.active set to false");
+  // Only deactivate if mouse actually left the canvas area
+  // Check if mouse is still within window bounds
+  if (e.clientX < 0 || e.clientY < 0 || e.clientX > innerWidth || e.clientY > innerHeight) {
+    pointer.active = false;
+    console.log("Mouse left canvas area - pointer.active set to false");
+  }
 });
 
-// Use document mouseleave for window leave detection
-document.addEventListener("mouseleave", handleMouseLeave);
+// Use document mouseleave for window leave detection (when mouse leaves browser window entirely)
+document.addEventListener("mouseleave", (e) => {
+  // This fires when mouse leaves the browser window
+  if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= innerWidth || e.clientY >= innerHeight) {
+    pointer.active = false;
+    console.log("Mouse left browser window - pointer.active set to false");
+  }
+});
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
@@ -384,13 +399,16 @@ function loop(t) {
   snapX += (targetSnap - snapX) * SNAP_EASE;
 
   /* reveal logic */
-  // Debug: log pointer state occasionally
-  if (t % 3600 === 0) { // Log every ~60 seconds (assuming 60fps)
-    console.log("Loop - Pointer active:", pointer.active, "curtainReady:", curtainReady, "pointer.x:", pointer.x, "pointer.y:", pointer.y);
+  // Always update debug display with current state
+  const isHovering = curtainReady && pointer.active;
+  
+  // Debug log when hovering state changes (but only occasionally to avoid spam)
+  if (t % 180 === 0 && isHovering) { // Log every ~3 seconds when hovering
+    console.log("HOVERING - Pointer active:", pointer.active, "Curtain ready:", curtainReady, "Mouse:", pointer.x, pointer.y);
   }
   
   // Only reveal if curtain is ready AND pointer is active
-  if (curtainReady && pointer.active) {
+  if (isHovering) {
     sectionsEl.style.opacity = "1";
     sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
     sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
@@ -406,26 +424,6 @@ function loop(t) {
       }
     });
     
-    // Debug display
-    if (debugEl) {
-      const titleEl = titleOverlayEls[idx];
-      if (titleEl) {
-        const computedStyle = window.getComputedStyle(titleEl);
-        const parentStyle = window.getComputedStyle(titleEl.parentElement);
-        debugEl.innerHTML = `
-          Pointer active: ${pointer.active}<br>
-          Curtain ready: ${curtainReady}<br>
-          Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}<br>
-          Active section: ${idx}<br>
-          Title: "${titleEl.textContent}"<br>
-          Title opacity: ${titleEl.style.opacity || 'not set'}<br>
-          Snap X: ${Math.floor(snapX)}<br>
-          Target snap: ${Math.floor(targetSnap)}
-        `;
-      } else {
-        debugEl.innerHTML = `Active: ${idx}<br>Title element NOT FOUND!`;
-      }
-    }
   } else {
     sectionsEl.style.opacity = "0";
     sectionsEl.style.setProperty("--reveal-w", "0px");
@@ -438,9 +436,22 @@ function loop(t) {
         titleEl.style.opacity = "0";
       }
     });
-    if (debugEl) {
-      debugEl.innerHTML = `Not hovering<br>Pointer active: ${pointer.active}<br>Curtain ready: ${curtainReady}<br>Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}`;
-    }
+  }
+  
+  // Always update debug display with current state
+  if (debugEl) {
+    const titleEl = titleOverlayEls[idx];
+    const status = isHovering ? "HOVERING ✓" : "Not hovering";
+    debugEl.innerHTML = `
+      Status: ${status}<br>
+      Pointer active: ${pointer.active} (${typeof pointer.active})<br>
+      Curtain ready: ${curtainReady} (${typeof curtainReady})<br>
+      Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}<br>
+      Active section: ${idx}<br>
+      ${titleEl ? `Title: "${titleEl.textContent}"` : 'Title: NOT FOUND'}<br>
+      Snap X: ${Math.floor(snapX)}<br>
+      Target snap: ${Math.floor(targetSnap)}
+    `;
   }
 
   /* update strings */
