@@ -27,8 +27,8 @@ function setup() {
     return;
   }
   
-  // Set color mode to HSB so we can use HSL-like colors
-  colorMode(HSB, 360, 100, 100, 1);
+  // Use RGB color mode for particles (easier and more predictable)
+  colorMode(RGB, 255, 255, 255, 1);
   
   // Create canvas - p5.js handles this
   const canvas = createCanvas(windowWidth, windowHeight);
@@ -125,12 +125,13 @@ function createParticles() {
   console.log("Expected pixels:", floor(drawWidth) * floor(drawHeight) * 4);
   
   const pixelSize = 2; // Sample every 2nd pixel for many more particles
+  // Convert HSB colors to RGB for better compatibility
   const colors = [
-    [300, 100, 70], // Pink
-    [180, 100, 70], // Cyan
-    [60, 100, 70],  // Yellow
-    [240, 100, 70], // Blue
-    [0, 100, 70]    // Red
+    [255, 107, 179], // Pink (RGB from HSL 300, 100%, 70%)
+    [0, 255, 255],   // Cyan (RGB from HSL 180, 100%, 70%)
+    [255, 234, 0],   // Yellow (RGB from HSL 60, 100%, 70%)
+    [102, 51, 255],  // Blue (RGB from HSL 240, 100%, 70%)
+    [255, 51, 51]    // Red (RGB from HSL 0, 100%, 70%)
   ];
   
   let pixelsProcessed = 0;
@@ -216,23 +217,22 @@ function draw() {
   
   if (particles.length === 0) {
     // Debug: draw a test circle if no particles
-    colorMode(RGB, 255);
-    background(0, 0, 0, 0); // Transparent background in RGB mode
+    clear();
     fill(255, 0, 0, 200);
     noStroke();
     circle(width/2, height/2, 20);
-    colorMode(HSB, 360, 100, 100, 1); // Switch back to HSB
     console.log("No particles to draw! particles.length =", particles.length);
     return;
   }
   
-  // Clear with transparent background - use RGB mode for background
-  colorMode(RGB, 255);
-  background(0, 0, 0, 0); // Transparent black in RGB
-  colorMode(HSB, 360, 100, 100, 1); // Switch back to HSB for particles
+  // Clear canvas - use clear() for transparent background
+  clear();
   
-  // Use SCREEN blend mode for better visibility with dark background
-  blendMode(SCREEN);
+  // Ensure we're in RGB mode for particles
+  colorMode(RGB, 255, 255, 255, 1);
+  
+  // Use ADD blend mode for brighter, more visible particles
+  blendMode(ADD);
   
   for (let i = 0; i < particles.length; i++) {
     let particle = particles[i];
@@ -247,12 +247,12 @@ function draw() {
     const floatY = cos(millis() * 0.0008 + particle.phase) * 0.5;
     
     // Draw particle with colorful glow - very bright
-    // HSB mode: H (0-360), S (0-100), B (0-100), Alpha (0-1)
+    // RGB mode: R (0-255), G (0-255), B (0-255), Alpha (0-1)
     fill(
-      particle.color[0], // Hue (0-360)
-      particle.color[1], // Saturation (0-100)
-      particle.color[2], // Brightness (0-100)
-      min(1.0, particle.opacity) // Alpha 0-1, ensure it's not > 1
+      particle.color[0], // Red (0-255)
+      particle.color[1], // Green (0-255)
+      particle.color[2], // Blue (0-255)
+      min(255, particle.opacity * 255) // Alpha 0-255 for RGB mode
     );
     noStroke();
     // Draw larger circles for better visibility
@@ -263,7 +263,7 @@ function draw() {
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 0.6
+      particle.opacity * 255 * 0.6
     );
     circle(particle.x + floatX, particle.y + floatY, particle.size * 1.8);
     
@@ -271,7 +271,7 @@ function draw() {
       particle.color[0],
       particle.color[1],
       particle.color[2],
-      particle.opacity * 0.3
+      particle.opacity * 255 * 0.3
     );
     circle(particle.x + floatX, particle.y + floatY, particle.size * 2.5);
   }

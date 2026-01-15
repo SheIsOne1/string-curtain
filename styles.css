@@ -86,8 +86,8 @@ html, body {
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 1;
-  z-index: 2; /* Above background and particles, below title */
+  opacity: 0.8; /* Slightly reduced to not overpower */
+  z-index: 1; /* Below title, above background */
   pointer-events: none;
   overflow: hidden;
 }
