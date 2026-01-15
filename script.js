@@ -226,41 +226,10 @@ addEventListener("mousemove", handleMouseMove);
 // Also attach to canvas for better reliability
 canvas.addEventListener("mousemove", handleMouseMove);
 
-// Deactivate when mouse leaves the window (not just the canvas)
-// Only deactivate if mouse actually leaves the browser window
-function handleMouseLeave(e) {
-  // Only deactivate if mouse left the window itself, not just moved to another element
-  if (e.target === document || e.target === document.body) {
-    pointer.active = false;
-    console.log("Mouse left window - pointer.active set to false");
-  }
-}
-
-// Deactivate when mouse leaves the canvas
-// Use mouseout but be conservative - only deactivate if mouse clearly left
-canvas.addEventListener("mouseout", (e) => {
-  // Check if the mouse is actually leaving the canvas
-  // relatedTarget is the element the mouse is moving to
-  const relatedTarget = e.relatedTarget;
-  
-  // Only deactivate if relatedTarget is clearly outside canvas (not just moving to another element)
-  if (!relatedTarget || (!canvas.contains(relatedTarget) && relatedTarget !== document.body)) {
-    // Double-check mouse is actually outside canvas bounds with a small buffer
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    const buffer = 5; // Small buffer to avoid false positives
-    
-    if (x < rect.left - buffer || x > rect.right + buffer || y < rect.top - buffer || y > rect.bottom + buffer) {
-      pointer.active = false;
-      console.log("Mouse left canvas area - pointer.active set to false", "x:", x, "y:", y);
-    }
-  }
-});
-
-// Removed aggressive document/window mouseleave handler
-// We'll rely on canvas mouseout and periodic checks instead
+// REMOVED all mouseleave/mouseout handlers - they were firing too frequently
+// We'll rely ONLY on periodic bounds checking in the loop
 // This prevents false positives when mouse moves between elements
+// pointer.active will be set to true on mousemove and only reset by the loop's bounds check
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
