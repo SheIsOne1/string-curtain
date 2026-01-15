@@ -2,43 +2,78 @@
 let particles = [];
 let portraitImg;
 let introShown = true;
+let imageLoaded = false;
+let particlesCreated = false;
 
 // Listen for intro page visibility changes
-const introPage = document.getElementById("introPage");
-if (introPage) {
-  const observer = new MutationObserver(() => {
+let introPage;
+document.addEventListener('DOMContentLoaded', () => {
+  introPage = document.getElementById("introPage");
+  if (introPage) {
     introShown = !introPage.classList.contains("hidden");
-  });
-  observer.observe(introPage, { attributes: true, attributeFilter: ['class'] });
-}
+    const observer = new MutationObserver(() => {
+      introShown = !introPage.classList.contains("hidden");
+    });
+    observer.observe(introPage, { attributes: true, attributeFilter: ['class'] });
+  }
+});
 
 function preload() {
-  // Load the image
-  portraitImg = loadImage("images/portrait.png", 
-    () => console.log("Image loaded successfully!"),
-    () => console.error("Failed to load image: images/portrait.png")
-  );
+  console.log("Preloading image...");
+  // Load the image - p5.js handles this automatically
+  portraitImg = loadImage("images/portrait.png");
 }
 
 function setup() {
+  console.log("Setting up p5.js canvas...");
+  const container = select("#particlePortrait");
+  if (!container) {
+    console.error("Container #particlePortrait not found!");
+    return;
+  }
+  
   const canvas = createCanvas(windowWidth, windowHeight);
   canvas.parent("particlePortrait");
   canvas.id("p5-particle-canvas");
   
-  // Only create particles if image loaded
+  console.log("Canvas created:", canvas);
+  
+  // Check if image is loaded
   if (portraitImg && portraitImg.width > 0) {
+    console.log("Image already loaded, creating particles...");
+    imageLoaded = true;
     createParticles();
   } else {
-    // Wait a bit for image to load
-    setTimeout(() => {
+    console.log("Waiting for image to load...");
+    // Wait for image to load (p5.js handles this in preload, but just in case)
+    let attempts = 0;
+    const checkImage = setInterval(() => {
+      attempts++;
       if (portraitImg && portraitImg.width > 0) {
+        console.log("Image loaded after", attempts, "attempts");
+        imageLoaded = true;
         createParticles();
+        clearInterval(checkImage);
+      } else if (attempts > 50) {
+        console.error("Image failed to load after 5 seconds");
+        clearInterval(checkImage);
       }
     }, 100);
   }
 }
 
 function createParticles() {
+  if (particlesCreated) {
+    console.log("Particles already created");
+    return;
+  }
+  
+  if (!portraitImg || portraitImg.width === 0) {
+    console.error("Cannot create particles: image not loaded");
+    return;
+  }
+  
+  console.log("Creating particles from image:", portraitImg.width, "x", portraitImg.height);
   particles = [];
   
   // Calculate dimensions to fit image
@@ -56,9 +91,13 @@ function createParticles() {
   const offsetX = (width - drawWidth) / 2;
   const offsetY = (height - drawHeight) / 2;
   
-  // Sample pixels to create particles
-  portraitImg.resize(drawWidth, drawHeight);
-  portraitImg.loadPixels();
+  console.log("Draw dimensions:", drawWidth, "x", drawHeight);
+  console.log("Offset:", offsetX, offsetY);
+  
+  // Create a temporary graphics to resize and sample
+  let tempImg = portraitImg.get();
+  tempImg.resize(drawWidth, drawHeight);
+  tempImg.loadPixels();
   
   const pixelSize = 4; // Sample every 4th pixel for performance
   const colors = [
@@ -72,10 +111,10 @@ function createParticles() {
   for (let y = 0; y < drawHeight; y += pixelSize) {
     for (let x = 0; x < drawWidth; x += pixelSize) {
       const index = (y * drawWidth + x) * 4;
-      const r = portraitImg.pixels[index];
-      const g = portraitImg.pixels[index + 1];
-      const b = portraitImg.pixels[index + 2];
-      const a = portraitImg.pixels[index + 3];
+      const r = tempImg.pixels[index];
+      const g = tempImg.pixels[index + 1];
+      const b = tempImg.pixels[index + 2];
+      const a = tempImg.pixels[index + 3];
       
       // Only create particles for visible pixels
       if (a > 128) {
@@ -101,11 +140,16 @@ function createParticles() {
     }
   }
   
+  particlesCreated = true;
   console.log(`Created ${particles.length} particles`);
+  
+  if (particles.length === 0) {
+    console.warn("No particles were created! Check brightness threshold or image content.");
+  }
 }
 
 function draw() {
-  if (!introShown) {
+  if (!introShown || particles.length === 0) {
     clear();
     return;
   }
@@ -113,7 +157,8 @@ function draw() {
   clear();
   blendMode(SCREEN);
   
-  for (let particle of particles) {
+  for (let i = 0; i < particles.length; i++) {
+    let particle = particles[i];
     // Animate particles moving to their target positions
     const dx = particle.targetX - particle.x;
     const dy = particle.targetY - particle.y;
