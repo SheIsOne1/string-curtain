@@ -43,8 +43,20 @@ function hideIntro() {
 // Click on intro page to proceed
 if (introPage) {
   introPage.addEventListener("click", hideIntro);
-  // Also auto-transition after 3 seconds
-  setTimeout(hideIntro, 3000);
+  // Auto-transition after lights animation completes
+  // fadeInScale (1.5s) + delay (0.75s) + lights (5s) = 7.25s total
+  setTimeout(hideIntro, 7250);
+  
+  // Also listen for animation end event as a backup
+  const introTitle = introPage.querySelector('.intro-title');
+  if (introTitle) {
+    introTitle.addEventListener('animationend', (e) => {
+      // Wait a bit after animation ends, then transition
+      if (e.animationName === 'lights' && introShown) {
+        setTimeout(hideIntro, 300);
+      }
+    });
+  }
 }
 
 // Debug: Log title overlay elements
