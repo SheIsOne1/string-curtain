@@ -19,14 +19,44 @@ const debugEl = document.getElementById("debug");
 
 // Initially hide the curtain animation
 let introShown = true;
+let introAnimationComplete = false; // Track when intro animation is complete
 let curtainReady = false; // Track when curtain is ready for interaction
+
+// Disable all interactions initially
 canvas.style.opacity = "0";
-canvas.style.pointerEvents = "none"; // Disable interactions until curtain is ready
+canvas.style.pointerEvents = "none";
 sectionsEl.style.opacity = "0";
 if (debugEl) debugEl.style.opacity = "0";
 
+// Block all interactions on the page until curtain is ready
+document.body.style.pointerEvents = "none";
+document.body.style.userSelect = "none";
+document.body.style.cursor = "wait";
+
+// Block keyboard events
+function blockAllInteractions(e) {
+  if (!curtainReady) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+}
+
+// Add event listeners to block all interactions
+document.addEventListener("keydown", blockAllInteractions, true);
+document.addEventListener("keyup", blockAllInteractions, true);
+document.addEventListener("keypress", blockAllInteractions, true);
+document.addEventListener("contextmenu", blockAllInteractions, true);
+document.addEventListener("mousedown", blockAllInteractions, true);
+document.addEventListener("mouseup", blockAllInteractions, true);
+document.addEventListener("touchstart", blockAllInteractions, true);
+document.addEventListener("touchend", blockAllInteractions, true);
+document.addEventListener("touchmove", blockAllInteractions, true);
+
 // Handle intro page transition
 function hideIntro() {
+  // Prevent skipping animation - only allow after animation completes
+  if (!introAnimationComplete) return;
   if (!introShown) return;
   introShown = false;
   
@@ -43,6 +73,24 @@ function hideIntro() {
     // Enable interactions after curtain fade-in completes
     setTimeout(() => {
       curtainReady = true;
+      introAnimationComplete = true; // Also mark intro as complete
+      
+      // Re-enable all interactions on the page
+      document.body.style.pointerEvents = "auto";
+      document.body.style.userSelect = "auto";
+      document.body.style.cursor = "default";
+      
+      // Remove blocking event listeners
+      document.removeEventListener("keydown", blockAllInteractions, true);
+      document.removeEventListener("keyup", blockAllInteractions, true);
+      document.removeEventListener("keypress", blockAllInteractions, true);
+      document.removeEventListener("contextmenu", blockAllInteractions, true);
+      document.removeEventListener("mousedown", blockAllInteractions, true);
+      document.removeEventListener("mouseup", blockAllInteractions, true);
+      document.removeEventListener("touchstart", blockAllInteractions, true);
+      document.removeEventListener("touchend", blockAllInteractions, true);
+      document.removeEventListener("touchmove", blockAllInteractions, true);
+      
       canvas.style.pointerEvents = "auto"; // Enable hover interactions
       // Enable title interactions
       titleOverlayEls.forEach(titleEl => {
@@ -54,19 +102,33 @@ function hideIntro() {
   }, 500);
 }
 
-// Click on intro page to proceed
+// Click on intro page to proceed (only after animation completes)
 if (introPage) {
-  introPage.addEventListener("click", hideIntro);
-  // Auto-transition after lights animation completes
+  // Block intro page clicks until animation completes
+  introPage.addEventListener("click", (e) => {
+    if (!introAnimationComplete) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    hideIntro();
+  });
+  
+  // Mark animation as complete and allow transitions
   // fadeInScale (1.5s) + delay (0.75s) + lights (5s) = 7.25s total
-  setTimeout(hideIntro, 7250);
+  setTimeout(() => {
+    introAnimationComplete = true;
+    // Auto-transition after a short pause
+    setTimeout(hideIntro, 300);
+  }, 7250);
   
   // Also listen for animation end event as a backup
   const introTitle = introPage.querySelector('.intro-title');
   if (introTitle) {
     introTitle.addEventListener('animationend', (e) => {
-      // Wait a bit after animation ends, then transition
       if (e.animationName === 'lights' && introShown) {
+        introAnimationComplete = true;
+        // Wait a bit after animation ends, then allow transition
         setTimeout(hideIntro, 300);
       }
     });

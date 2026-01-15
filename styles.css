@@ -18,6 +18,9 @@ html, body {
   opacity: 1;
   transition: opacity 1s ease-out, visibility 1s ease-out;
   visibility: visible;
+  pointer-events: auto; /* Allow pointer events, but controlled by JS */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .intro-page.hidden {
@@ -35,12 +38,13 @@ html, body {
   cursor: pointer;
   transition: transform 0.3s ease;
   /* Initial color and text-shadow will be set by lights animation at 0% */
-  color: hsl(230, 40%, 80%);
+  color: hsl(300, 100%, 70%);
   text-shadow:
-    0 0 1em hsla(320, 100%, 50%, 0.2),
-    0 0 0.125em hsla(320, 100%, 60%, 0.3),
-    -1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
-    1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
+    0 0 1em hsla(300, 100%, 60%, 0.8),
+    0 0 0.5em hsla(300, 100%, 70%, 0.6),
+    -1em -0.125em 0.5em hsla(60, 100%, 60%, 0.4),
+    1em 0.125em 0.5em hsla(180, 100%, 60%, 0.4),
+    0 0 2em hsla(330, 100%, 70%, 0.4);
 }
 
 .intro-title:hover {
@@ -60,48 +64,63 @@ html, body {
 
 @keyframes lights {
   0% {
-    color: hsl(230, 40%, 80%);
+    color: hsl(300, 100%, 70%);
     text-shadow:
-      0 0 1em hsla(320, 100%, 50%, 0.2),
-      0 0 0.125em hsla(320, 100%, 60%, 0.3),
-      -1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
-      1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
+      0 0 1em hsla(300, 100%, 60%, 0.8),
+      0 0 0.5em hsla(300, 100%, 70%, 0.6),
+      -1em -0.125em 0.5em hsla(60, 100%, 60%, 0.4),
+      1em 0.125em 0.5em hsla(180, 100%, 60%, 0.4),
+      0 0 2em hsla(330, 100%, 70%, 0.4);
   }
   
-  30% { 
-    color: hsl(230, 80%, 90%);
+  20% { 
+    color: hsl(60, 100%, 70%);
     text-shadow:
-      0 0 1em hsla(320, 100%, 50%, 0.5),
-      0 0 0.125em hsla(320, 100%, 60%, 0.5),
-      -0.5em -0.125em 0.25em hsla(40, 100%, 60%, 0.2),
-      0.5em 0.125em 0.25em hsla(200, 100%, 60%, 0.4);
+      0 0 1em hsla(60, 100%, 60%, 0.8),
+      0 0 0.5em hsla(60, 100%, 70%, 0.6),
+      -0.5em -0.125em 0.5em hsla(300, 100%, 60%, 0.6),
+      0.5em 0.125em 0.5em hsla(180, 100%, 60%, 0.6),
+      0 0 2em hsla(30, 100%, 70%, 0.5);
   }
   
   40% { 
-    color: hsl(230, 100%, 95%);
+    color: hsl(180, 100%, 70%);
     text-shadow:
-      0 0 1em hsla(320, 100%, 50%, 0.5),
-      0 0 0.125em hsla(320, 100%, 90%, 0.5),
-      -0.25em -0.125em 0.125em hsla(40, 100%, 60%, 0.2),
-      0.25em 0.125em 0.125em hsla(200, 100%, 60%, 0.4);
+      0 0 1em hsla(180, 100%, 60%, 0.9),
+      0 0 0.5em hsla(180, 100%, 70%, 0.7),
+      -0.25em -0.125em 0.5em hsla(240, 100%, 60%, 0.7),
+      0.25em 0.125em 0.5em hsla(300, 100%, 60%, 0.7),
+      0 0 2em hsla(200, 100%, 70%, 0.6);
   }
   
-  70% {
-    color: hsl(230, 80%, 90%);
+  60% {
+    color: hsl(240, 100%, 75%);
     text-shadow:
-      0 0 1em hsla(320, 100%, 50%, 0.5),
-      0 0 0.125em hsla(320, 100%, 60%, 0.5),
-      0.5em -0.125em 0.25em hsla(40, 100%, 60%, 0.2),
-      -0.5em 0.125em 0.25em hsla(200, 100%, 60%, 0.4);
+      0 0 1em hsla(240, 100%, 65%, 0.9),
+      0 0 0.5em hsla(240, 100%, 75%, 0.7),
+      0.5em -0.125em 0.5em hsla(300, 100%, 60%, 0.7),
+      -0.5em 0.125em 0.5em hsla(180, 100%, 60%, 0.7),
+      0 0 2em hsla(270, 100%, 75%, 0.6);
+  }
+  
+  80% {
+    color: hsl(0, 100%, 70%);
+    text-shadow:
+      0 0 1em hsla(0, 100%, 60%, 0.8),
+      0 0 0.5em hsla(0, 100%, 70%, 0.6),
+      0.75em -0.125em 0.5em hsla(60, 100%, 60%, 0.6),
+      -0.75em 0.125em 0.5em hsla(300, 100%, 60%, 0.6),
+      0 0 2em hsla(330, 100%, 70%, 0.5);
   }
   
   100% {
-    color: hsl(230, 40%, 80%);
+    color: hsl(300, 100%, 70%);
     text-shadow:
-      0 0 1em hsla(320, 100%, 50%, 0.2),
-      0 0 0.125em hsla(320, 100%, 60%, 0.3),
-      1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
-      -1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
+      0 0 1em hsla(300, 100%, 60%, 0.8),
+      0 0 0.5em hsla(300, 100%, 70%, 0.6),
+      1em -0.125em 0.5em hsla(60, 100%, 60%, 0.4),
+      -1em 0.125em 0.5em hsla(180, 100%, 60%, 0.4),
+      0 0 2em hsla(330, 100%, 70%, 0.4);
   }
 }
 
