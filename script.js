@@ -440,10 +440,11 @@ function loop(t) {
     sectionEls.forEach((el, i) => {
       el.style.opacity = "0";
     });
-    // Hide all titles
+    // Hide all titles and disable their pointer events
     titleOverlayEls.forEach(titleEl => {
       if (titleEl) {
         titleEl.style.opacity = "0";
+        titleEl.style.pointerEvents = "none"; // Allow mouse events to pass through
       }
     });
   }
@@ -481,7 +482,8 @@ function loop(t) {
   for (const s of strings) {
     let tx = s.baseX;
 
-    if (pointer.active) {
+    // Only open strings if curtain is ready AND pointer is active
+    if (curtainReady && pointer.active) {
       const d = Math.abs(s.baseX - snapX);
       if (d < params.openRadius) {
         const f = 1 - d / params.openRadius;
@@ -490,7 +492,7 @@ function loop(t) {
       }
     }
 
-    s.x += (tx - s.x) * (pointer.active ? params.followEase : params.returnEase);
+    s.x += (tx - s.x) * (curtainReady && pointer.active ? params.followEase : params.returnEase);
   }
 
   ctx.globalCompositeOperation = "lighter";
