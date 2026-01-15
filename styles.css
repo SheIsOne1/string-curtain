@@ -1,0 +1,195 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #07070b;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* ===== INTRO PAGE ===== */
+.intro-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07070b;
+  z-index: 100;
+  opacity: 1;
+  transition: opacity 1s ease-out, visibility 1s ease-out;
+  visibility: visible;
+}
+
+.intro-page.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.intro-title {
+  font-family: "Caveat Brush", cursive;
+  font-size: 120px;
+  font-weight: 400;
+  color: white;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(255,255,255,0.3);
+  margin: 0;
+  animation: fadeInScale 1.5s ease-out;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.intro-title:hover {
+  transform: scale(1.05);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== SECTIONS (behind curtain) ===== */
+.sections {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 0;
+
+  opacity: 0;
+  transition: opacity 160ms ease;
+
+  /* mask driven by JS */
+  --reveal-x: 50vw;
+  --reveal-w: 0px;
+
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent calc(var(--reveal-x) - var(--reveal-w)),
+    black calc(var(--reveal-x) - var(--reveal-w)),
+    black calc(var(--reveal-x) + var(--reveal-w)),
+    transparent calc(var(--reveal-x) + var(--reveal-w)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent calc(var(--reveal-x) - var(--reveal-w)),
+    black calc(var(--reveal-x) - var(--reveal-w)),
+    black calc(var(--reveal-x) + var(--reveal-w)),
+    transparent calc(var(--reveal-x) + var(--reveal-w)),
+    transparent 100%
+  );
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+.section {
+  height: 100%;
+  padding: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid rgba(255,255,255,0.08);
+
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.section h3 {
+  margin: 0;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  opacity: 1;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* pastel panels */
+.s1 { background: linear-gradient(180deg, rgba(255,209,220,0.92), rgba(255,209,220,0.55)); }
+.s2 { background: linear-gradient(180deg, rgba(205,233,255,0.92), rgba(205,233,255,0.55)); }
+.s3 { background: linear-gradient(180deg, rgba(209,255,224,0.92), rgba(209,255,224,0.55)); }
+.s4 { background: linear-gradient(180deg, rgba(233,216,255,0.92), rgba(233,216,255,0.55)); }
+
+/* ===== CANVAS ===== */
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2;
+}
+
+.hud {
+  position: fixed;
+  left: 14px;
+  top: 12px;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.debug {
+  position: fixed;
+  right: 14px;
+  top: 12px;
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 3;
+  background: rgba(0,0,0,0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* Titles overlay - above canvas */
+.titles-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.title-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+  font-family: "Caveat Brush", cursive;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 48px;
+  letter-spacing: 0.5px;
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
+  margin: 0;
+  position: relative;
+  cursor: pointer;
+  pointer-events: auto !important;
+  z-index: 10;
+}
+
+.title-item:hover {
+  transform: scale(1.05);
+}
+
