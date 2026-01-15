@@ -215,14 +215,24 @@ addEventListener("mousemove", handleMouseMove);
 // Also attach to canvas for better reliability
 canvas.addEventListener("mousemove", handleMouseMove);
 
-// Deactivate when mouse leaves
-function handleMouseLeave() {
-  pointer.active = false;
-  console.log("Mouse left - pointer.active set to false");
+// Deactivate when mouse leaves the window (not just the canvas)
+// Only deactivate if mouse actually leaves the browser window
+function handleMouseLeave(e) {
+  // Only deactivate if mouse left the window itself, not just moved to another element
+  if (e.target === document || e.target === document.body) {
+    pointer.active = false;
+    console.log("Mouse left window - pointer.active set to false");
+  }
 }
 
-addEventListener("mouseleave", handleMouseLeave);
-canvas.addEventListener("mouseleave", handleMouseLeave);
+// Deactivate when mouse leaves the canvas
+canvas.addEventListener("mouseleave", (e) => {
+  pointer.active = false;
+  console.log("Mouse left canvas - pointer.active set to false");
+});
+
+// Use document mouseleave for window leave detection
+document.addEventListener("mouseleave", handleMouseLeave);
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
@@ -375,11 +385,12 @@ function loop(t) {
 
   /* reveal logic */
   // Debug: log pointer state occasionally
-  if (t % 60 === 0) { // Log every ~1 second (assuming 60fps)
-    // console.log("Pointer active:", pointer.active, "curtainReady:", curtainReady, "pointer.x:", pointer.x, "pointer.y:", pointer.y);
+  if (t % 3600 === 0) { // Log every ~60 seconds (assuming 60fps)
+    console.log("Loop - Pointer active:", pointer.active, "curtainReady:", curtainReady, "pointer.x:", pointer.x, "pointer.y:", pointer.y);
   }
   
-  if (pointer.active) {
+  // Only reveal if curtain is ready AND pointer is active
+  if (curtainReady && pointer.active) {
     sectionsEl.style.opacity = "1";
     sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
     sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
