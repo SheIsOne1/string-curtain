@@ -98,6 +98,15 @@ function hideIntro() {
       document.removeEventListener("touchmove", blockAllInteractions, true);
       
       canvas.style.pointerEvents = "auto"; // Enable hover interactions
+      
+      // Trigger a fake mouseenter event to activate pointer if mouse is already over canvas
+      // This ensures hover works immediately if mouse is already in position
+      const mouseOverCanvas = pointer.x >= 0 && pointer.x <= innerWidth && 
+                              pointer.y >= 0 && pointer.y <= innerHeight;
+      if (mouseOverCanvas) {
+        pointer.active = true;
+      }
+      
       // Enable title interactions
       titleOverlayEls.forEach(titleEl => {
         if (titleEl) {
@@ -164,6 +173,8 @@ addEventListener("resize", resize);
 
 /* ===== POINTER ===== */
 const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
+
+// Track mouse position always
 addEventListener("mousemove", e => { 
   pointer.x = e.clientX; 
   pointer.y = e.clientY; 
@@ -172,7 +183,27 @@ addEventListener("mousemove", e => {
     pointer.active = true;
   }
 });
-addEventListener("mouseleave", () => pointer.active = false);
+
+// Use canvas-specific mouse events for better hover detection
+canvas.addEventListener("mouseenter", (e) => {
+  if (curtainReady) {
+    pointer.active = true;
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  pointer.active = false;
+});
+
+// Also handle mouseleave on document (when mouse leaves browser window)
+document.addEventListener("mouseleave", () => {
+  pointer.active = false;
+});
+
+// Ensure pointer is active when mouse is already over canvas when curtain becomes ready
+// This is handled by checking mouse position in the enableInteractions function
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on canvas to navigate (only if not clicking on a title)
