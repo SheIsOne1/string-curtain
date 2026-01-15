@@ -88,8 +88,12 @@ html, body {
   height: 100%;
   opacity: 0.6;
   z-index: 0;
-  mix-blend-mode: screen;
   pointer-events: none;
+}
+
+.particle-portrait canvas {
+  display: block;
+  mix-blend-mode: screen;
 }
 
 .intro-page.hidden {
