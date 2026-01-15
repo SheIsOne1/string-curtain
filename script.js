@@ -176,10 +176,14 @@ if (introPage) {
   }
 }
 
-// Debug: Log title overlay elements
+// Debug: Log title overlay elements and ensure they start with pointer-events: none
 console.log("Title overlay elements:", titleOverlayEls);
 titleOverlayEls.forEach((title, i) => {
   console.log(`Title overlay ${i}:`, title, title ? title.textContent : "null");
+  // Force pointer-events to none initially to allow mouse events to pass through to canvas
+  if (title) {
+    title.style.pointerEvents = "none";
+  }
 });
 
 /* ===== CANVAS SETUP ===== */
