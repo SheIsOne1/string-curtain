@@ -67,19 +67,23 @@ function hideIntro() {
   
   // Show curtain animation after intro fades out
   setTimeout(() => {
+    console.log("Showing canvas, opacity set to 1");
     canvas.style.opacity = "1";
     canvas.style.transition = "opacity 0.5s ease-in";
     if (debugEl) debugEl.style.opacity = "1";
     
     // Enable interactions ONLY after BOTH Bella animation AND curtain fade-in completes
     const enableInteractions = () => {
+      console.log("enableInteractions called, introAnimationComplete:", introAnimationComplete);
       // Double-check that both animations are complete before enabling interactions
       if (!introAnimationComplete) {
+        console.log("Intro animation not complete yet, retrying in 100ms...");
         // If for some reason intro isn't complete, wait a bit more
         setTimeout(enableInteractions, 100);
         return;
       }
       
+      console.log("Setting curtainReady = true");
       curtainReady = true;
       console.log("Curtain ready! Hover interactions enabled. pointer.active:", pointer.active);
       
@@ -127,7 +131,11 @@ function hideIntro() {
       });
     };
     
-    setTimeout(enableInteractions, 500); // Wait for the 0.5s fade-in transition to complete
+    console.log("Scheduling enableInteractions in 500ms...");
+    setTimeout(() => {
+      console.log("Calling enableInteractions now...");
+      enableInteractions();
+    }, 500); // Wait for the 0.5s fade-in transition to complete
   }, 500);
 }
 
