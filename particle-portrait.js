@@ -83,31 +83,43 @@ function createParticles() {
   console.log("Creating particles from image:", portraitImg.width, "x", portraitImg.height);
   particles = [];
   
-  // Calculate dimensions to fit image
-  const maxWidth = width * 0.7;
-  const maxHeight = height * 0.8;
+  // Calculate dimensions to fit image - ensure it fits well on screen
+  const maxWidth = width * 0.6;
+  const maxHeight = height * 0.7;
   const imgAspect = portraitImg.width / portraitImg.height;
   let drawWidth = maxWidth;
   let drawHeight = maxWidth / imgAspect;
   
+  // If image is too tall, constrain by height instead
   if (drawHeight > maxHeight) {
     drawHeight = maxHeight;
     drawWidth = maxHeight * imgAspect;
   }
   
+  // Ensure minimum size
+  if (drawWidth < 200) {
+    drawWidth = 200;
+    drawHeight = drawWidth / imgAspect;
+  }
+  
   const offsetX = (width - drawWidth) / 2;
   const offsetY = (height - drawHeight) / 2;
   
+  console.log("Original image:", portraitImg.width, "x", portraitImg.height);
   console.log("Draw dimensions:", drawWidth, "x", drawHeight);
+  console.log("Canvas size:", width, "x", height);
   console.log("Offset:", offsetX, offsetY);
   
   // Create a temporary graphics to resize and sample
-  let tempImg = portraitImg.get();
-  tempImg.resize(drawWidth, drawHeight);
+  let tempImg = createGraphics(floor(drawWidth), floor(drawHeight));
+  tempImg.image(portraitImg, 0, 0, floor(drawWidth), floor(drawHeight));
   
   // Load pixels - the warning about willReadFrequently is just a performance hint
   // It's safe to ignore for one-time operations like this
   tempImg.loadPixels();
+  
+  console.log("Temp image pixels length:", tempImg.pixels.length);
+  console.log("Expected pixels:", floor(drawWidth) * floor(drawHeight) * 4);
   
   const pixelSize = 2; // Sample every 2nd pixel for many more particles
   const colors = [
@@ -124,12 +136,15 @@ function createParticles() {
   // Make sure pixels are loaded
   tempImg.loadPixels();
   
-  for (let y = 0; y < drawHeight; y += pixelSize) {
-    for (let x = 0; x < drawWidth; x += pixelSize) {
+  const actualWidth = floor(drawWidth);
+  const actualHeight = floor(drawHeight);
+  
+  for (let y = 0; y < actualHeight; y += pixelSize) {
+    for (let x = 0; x < actualWidth; x += pixelSize) {
       pixelsProcessed++;
-      const index = (y * drawWidth + x) * 4;
+      const index = (y * actualWidth + x) * 4;
       
-      if (index >= tempImg.pixels.length - 3) continue;
+      if (index >= tempImg.pixels.length - 3 || index < 0) continue;
       
       const r = tempImg.pixels[index];
       const g = tempImg.pixels[index + 1];
@@ -166,12 +181,16 @@ function createParticles() {
   }
   
   console.log(`Processed ${pixelsProcessed} pixels, created ${pixelsWithParticles} particle positions`);
+  console.log(`Particle X range: ${Math.min(...particles.map(p => p.x))} to ${Math.max(...particles.map(p => p.x))}`);
+  console.log(`Particle Y range: ${Math.min(...particles.map(p => p.y))} to ${Math.max(...particles.map(p => p.y))}`);
   
   particlesCreated = true;
   console.log(`Created ${particles.length} particles`);
   
   if (particles.length === 0) {
     console.warn("No particles were created! Check brightness threshold or image content.");
+  } else if (particles.length < 100) {
+    console.warn(`Only ${particles.length} particles created - might not form a clear portrait. Consider lowering brightness threshold.`);
   }
 }
 
