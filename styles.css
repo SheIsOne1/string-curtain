@@ -30,12 +30,17 @@ html, body {
   font-family: "Caveat Brush", cursive;
   font-size: 120px;
   font-weight: 400;
-  color: white;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 40px rgba(255,255,255,0.3);
   margin: 0;
-  animation: fadeInScale 1.5s ease-out, lights 5s 2.25s linear forwards;
+  animation: fadeInScale 1.5s ease-out, lights 5s 2.25s linear both;
   cursor: pointer;
   transition: transform 0.3s ease;
+  /* Initial color and text-shadow will be set by lights animation at 0% */
+  color: hsl(230, 40%, 80%);
+  text-shadow:
+    0 0 1em hsla(320, 100%, 50%, 0.2),
+    0 0 0.125em hsla(320, 100%, 60%, 0.3),
+    -1em -0.125em 0.5em hsla(40, 100%, 60%, 0),
+    1em 0.125em 0.5em hsla(200, 100%, 60%, 0);
 }
 
 .intro-title:hover {

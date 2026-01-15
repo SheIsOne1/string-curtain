@@ -19,7 +19,9 @@ const debugEl = document.getElementById("debug");
 
 // Initially hide the curtain animation
 let introShown = true;
+let curtainReady = false; // Track when curtain is ready for interaction
 canvas.style.opacity = "0";
+canvas.style.pointerEvents = "none"; // Disable interactions until curtain is ready
 sectionsEl.style.opacity = "0";
 if (debugEl) debugEl.style.opacity = "0";
 
@@ -37,6 +39,18 @@ function hideIntro() {
     canvas.style.opacity = "1";
     canvas.style.transition = "opacity 0.5s ease-in";
     if (debugEl) debugEl.style.opacity = "1";
+    
+    // Enable interactions after curtain fade-in completes
+    setTimeout(() => {
+      curtainReady = true;
+      canvas.style.pointerEvents = "auto"; // Enable hover interactions
+      // Enable title interactions
+      titleOverlayEls.forEach(titleEl => {
+        if (titleEl) {
+          titleEl.style.pointerEvents = "auto";
+        }
+      });
+    }, 500); // Wait for the 0.5s fade-in transition to complete
   }, 500);
 }
 
@@ -77,7 +91,14 @@ addEventListener("resize", resize);
 
 /* ===== POINTER ===== */
 const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
-addEventListener("mousemove", e => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; });
+addEventListener("mousemove", e => { 
+  pointer.x = e.clientX; 
+  pointer.y = e.clientY; 
+  // Only activate pointer if curtain is ready
+  if (curtainReady) {
+    pointer.active = true;
+  }
+});
 addEventListener("mouseleave", () => pointer.active = false);
 
 /* ===== CLICK NAVIGATION ===== */
@@ -86,6 +107,12 @@ addEventListener("mouseleave", () => pointer.active = false);
 // should hit titles first. This check is just a safety measure.
 let lastClickTime = 0;
 canvas.addEventListener("click", (e) => {
+  // Prevent clicks if curtain is not ready
+  if (!curtainReady) {
+    e.preventDefault();
+    return;
+  }
+  
   const now = Date.now();
   if (now - lastClickTime < 300) return;
   lastClickTime = now;
@@ -106,11 +133,18 @@ canvas.addEventListener("click", (e) => {
 // We use stopPropagation to prevent the click from bubbling to canvas
 titleOverlayEls.forEach((titleEl, idx) => {
   if (titleEl) {
-    // Make sure title is always clickable, even when opacity is 0
-    titleEl.style.pointerEvents = "auto";
+    // Initially disable interactions until curtain is ready
+    titleEl.style.pointerEvents = "none";
     titleEl.style.cursor = "pointer";
     
     titleEl.addEventListener("click", (e) => {
+      // Prevent clicks if curtain is not ready
+      if (!curtainReady) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      
       e.preventDefault();
       e.stopPropagation(); // Stop the click from reaching the canvas below
       console.log(`Title ${idx} (${titleEl.textContent}) clicked!`);
