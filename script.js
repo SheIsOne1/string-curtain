@@ -128,12 +128,8 @@ function hideIntro() {
         console.log("Curtain ready - pointer activated directly, mouse is over canvas at", pointer.x, pointer.y);
       }
       
-      // Enable title interactions
-      titleOverlayEls.forEach(titleEl => {
-        if (titleEl) {
-          titleEl.style.pointerEvents = "auto";
-        }
-      });
+      // Title interactions will be enabled individually when they become visible
+      // They start with pointer-events: none in CSS to allow mouse events to pass through to canvas
     };
     
     console.log("Scheduling enableInteractions in 500ms...");
@@ -298,7 +294,7 @@ canvas.addEventListener("click", (e) => {
 titleOverlayEls.forEach((titleEl, idx) => {
   if (titleEl) {
     // Initially disable interactions until curtain is ready
-    titleEl.style.pointerEvents = "none";
+    // CSS already sets pointer-events: none, so mouse events pass through to canvas
     titleEl.style.cursor = "pointer";
     
     titleEl.addEventListener("click", (e) => {
@@ -431,7 +427,10 @@ function loop(t) {
     // Show title in overlay (above canvas)
     titleOverlayEls.forEach((titleEl, i) => {
       if (titleEl) {
-        titleEl.style.opacity = i === idx ? "1" : "0";
+        const isVisible = i === idx;
+        titleEl.style.opacity = isVisible ? "1" : "0";
+        // Only enable pointer events when visible - allows mouse events to pass through to canvas when hidden
+        titleEl.style.pointerEvents = isVisible ? "auto" : "none";
       }
     });
     

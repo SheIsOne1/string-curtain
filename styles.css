@@ -346,8 +346,15 @@ canvas {
   margin: 0;
   position: relative;
   cursor: pointer;
-  pointer-events: auto !important;
+  /* Only allow pointer events when visible - let events pass through to canvas otherwise */
+  pointer-events: none;
   z-index: 10;
+}
+
+/* Only enable pointer events when title is visible */
+.title-item[style*="opacity: 1"],
+.title-item[style*="opacity:1"] {
+  pointer-events: auto;
 }
 
 .title-item:hover {
