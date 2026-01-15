@@ -232,7 +232,11 @@ canvas.addEventListener("click", (e) => {
   lastClickTime = now;
 
   const clickedIdx = sectionIndex(e.clientX);
-  const contentSection = document.getElementById(`content${clickedIdx}`);
+  // Sections are fixed position and already visible, so clicking just highlights them
+  // If you want to add scrollable content sections later, uncomment this:
+  /*
+  const contentSection = document.getElementById(`content${clickedIdx}`) || 
+                        document.getElementById(`sec${clickedIdx}`);
   
   if (contentSection) {
     contentSection.scrollIntoView({ 
@@ -240,6 +244,7 @@ canvas.addEventListener("click", (e) => {
       block: "start"
     });
   }
+  */
 });
 
 // Click on title to navigate
@@ -263,17 +268,23 @@ titleOverlayEls.forEach((titleEl, idx) => {
       e.stopPropagation(); // Stop the click from reaching the canvas below
       console.log(`Title ${idx} (${titleEl.textContent}) clicked!`);
       
-      const contentSection = document.getElementById(`content${idx}`);
+      // Sections are fixed position behind the curtain, so they're already visible
+      // If you want to add scrollable content sections later, you can uncomment this:
+      /*
+      const contentSection = document.getElementById(`content${idx}`) || 
+                            document.getElementById(`sec${idx}`);
       
       if (contentSection) {
-        console.log(`Scrolling to content section ${idx}`);
+        console.log(`Scrolling to section ${idx}`);
         contentSection.scrollIntoView({ 
           behavior: "smooth",
           block: "start"
         });
-      } else {
-        console.error(`Content section ${idx} not found!`);
       }
+      */
+      
+      // For now, clicking on a title just keeps the hover state active
+      // You could add other actions here if needed
     });
   } else {
     console.error(`Title element ${idx} is null!`);
