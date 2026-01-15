@@ -231,12 +231,23 @@ function handleMouseLeave(e) {
 }
 
 // Deactivate when mouse leaves the canvas
-canvas.addEventListener("mouseleave", (e) => {
-  // Only deactivate if mouse actually left the canvas area
-  // Check if mouse is still within window bounds
-  if (e.clientX < 0 || e.clientY < 0 || e.clientX > innerWidth || e.clientY > innerHeight) {
-    pointer.active = false;
-    console.log("Mouse left canvas area - pointer.active set to false");
+// Use mouseout instead of mouseleave for more reliable detection
+canvas.addEventListener("mouseout", (e) => {
+  // Check if the mouse is actually leaving the canvas
+  // relatedTarget is the element the mouse is moving to
+  const relatedTarget = e.relatedTarget;
+  
+  // If relatedTarget is null or not a child of canvas, mouse left canvas
+  if (!relatedTarget || !canvas.contains(relatedTarget)) {
+    // Double-check mouse is actually outside canvas bounds
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      pointer.active = false;
+      console.log("Mouse left canvas area - pointer.active set to false", "x:", x, "y:", y);
+    }
   }
 });
 
@@ -438,20 +449,33 @@ function loop(t) {
     });
   }
   
-  // Always update debug display with current state
+  // Always update debug display with current state - read values directly
   if (debugEl) {
     const titleEl = titleOverlayEls[idx];
-    const status = isHovering ? "HOVERING ✓" : "Not hovering";
+    // Read values directly from the variables to ensure we get current state
+    const currentPointerActive = pointer.active;
+    const currentCurtainReady = curtainReady;
+    const currentIsHovering = currentCurtainReady && currentPointerActive;
+    const status = currentIsHovering ? "HOVERING ✓" : "Not hovering";
+    
     debugEl.innerHTML = `
       Status: ${status}<br>
-      Pointer active: ${pointer.active} (${typeof pointer.active})<br>
-      Curtain ready: ${curtainReady} (${typeof curtainReady})<br>
+      Pointer active: ${currentPointerActive} (type: ${typeof currentPointerActive})<br>
+      Curtain ready: ${currentCurtainReady} (type: ${typeof currentCurtainReady})<br>
+      isHovering: ${currentIsHovering}<br>
       Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}<br>
       Active section: ${idx}<br>
       ${titleEl ? `Title: "${titleEl.textContent}"` : 'Title: NOT FOUND'}<br>
       Snap X: ${Math.floor(snapX)}<br>
       Target snap: ${Math.floor(targetSnap)}
     `;
+    
+    // Log if values don't match what we expect
+    if (currentCurtainReady === false && t > 5000) { // After 5 seconds, curtain should be ready
+      if (t % 180 === 0) { // Log occasionally
+        console.warn("WARNING: curtainReady is false but should be true! t:", t);
+      }
+    }
   }
 
   /* update strings */
