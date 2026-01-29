@@ -365,21 +365,19 @@ const params = {
 };
 
 function drawString(x, t, s) {
-  const seg = 26;
+  const seg = 40; // More segments for smoother, more flexible curves
   const segH = innerHeight / seg;
 
   // ORGANIC ROPE TEXTURE: Draw multiple overlapping strokes with natural variations
   const ropeStrands = 3; // number of strands in the rope
   
   for (let strand = 0; strand < ropeStrands; strand++) {
-    ctx.beginPath();
     const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.5; // offset for each strand
-    ctx.moveTo(x + strandOffset, 0);
 
-    // Store points for thickness/color variation
+    // Store points for smooth curve calculation
     const points = [];
     
-    for (let i = 1; i <= seg; i++) {
+    for (let i = 0; i <= seg; i++) {
       const y = i * segH;
       const progress = i / seg; // 0 to 1 down the string
       
@@ -407,16 +405,23 @@ function drawString(x, t, s) {
       const px = x + wave * (i / seg) + strandOffset;
       
       points.push({ x: px, y, progress });
-      ctx.lineTo(px, y);
     }
 
-    // Draw with organic thickness and color variation
+    // Draw with smooth curves and organic thickness/color variation
     const baseThickness = s.thickness * (0.5 + strand * 0.2);
     
-    // Draw segments with varying thickness and color for organic rope feel
-    for (let i = 0; i < points.length - 1; i++) {
+    // Draw with smooth quadratic curves for flexible, flowing appearance
+    for (let i = 0; i < points.length - 2; i++) {
+      const p0 = i > 0 ? points[i - 1] : points[i];
       const p1 = points[i];
       const p2 = points[i + 1];
+      const p3 = points[i + 2];
+      
+      // Calculate control points for smooth curves
+      const cp1x = p1.x + (p2.x - p0.x) * 0.2; // smooth control point
+      const cp1y = p1.y + (p2.y - p0.y) * 0.2;
+      const cp2x = p2.x - (p3.x - p1.x) * 0.2;
+      const cp2y = p2.y - (p3.y - p1.y) * 0.2;
       
       // ORGANIC THICKNESS VARIATION: natural bumps and variations
       const thicknessVar = 1 + Math.sin(p1.y * 0.15 + s.phase + strand) * 0.35 +
@@ -428,10 +433,20 @@ function drawString(x, t, s) {
       const strandLight = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar));
       const strandAlpha = s.alpha * (0.7 + strand * 0.15) * (0.85 + Math.sin(p1.y * 0.08) * 0.15);
       
-      // Draw segment
+      // Draw smooth curve segment
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
+      ctx.quadraticCurveTo(cp1x, cp1y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+      ctx.lineWidth = segmentThickness;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
+      ctx.stroke();
+      
+      // Draw second half of curve
+      ctx.beginPath();
+      ctx.moveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+      ctx.quadraticCurveTo(cp2x, cp2y, p2.x, p2.y);
       ctx.lineWidth = segmentThickness;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
