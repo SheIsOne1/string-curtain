@@ -198,6 +198,7 @@ function resize() {
   canvas.width = innerWidth * dpr;
   canvas.height = innerHeight * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  params.centerX = innerWidth / 2; // Update center on resize
   seed();
 }
 addEventListener("resize", resize);
@@ -372,10 +373,11 @@ function seed() {
 }
 
 const params = {
-  openRadius: 260,   // wider opening
-  openStrength: 190, // stronger pull to the sides
+  openRadius: 300,   // wider opening radius
+  openStrength: 250, // stronger pull to the sides for dramatic theatre effect
   followEase: 0.22,
-  returnEase: 0.10
+  returnEase: 0.10,
+  centerX: innerWidth / 2  // center point where curtain splits
 };
 
 function drawString(s) {
@@ -425,10 +427,12 @@ function loop(t) {
   }
   
   // Only reveal if curtain is ready AND pointer is active
+  // Theatre curtain opens from center
   if (isHovering) {
     sectionsEl.style.opacity = "1";
-    sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
-    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
+    const centerX = innerWidth / 2;
+    sectionsEl.style.setProperty("--reveal-x", `${centerX}px`);
+    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.5}px`);
 
     sectionEls.forEach((el, i) => {
       el.style.opacity = i === idx ? "1" : "0";
@@ -493,18 +497,23 @@ function loop(t) {
     }
   }
 
-  /* update strings with simple mass–spring physics */
+  /* update strings with theatre curtain physics - opens from center */
   for (let step = 0; step < PHYSICS_STEPS; step++) {
     for (const s of strings) {
       const pts = s.points;
 
-      // Determine how far this string should be pulled left/right by the "opening"
+      // THEATRE CURTAIN: Determine opening based on distance from CENTER
+      // Left side pulls left, right side pulls right
       let targetTopX = s.baseX;
       if (curtainReady && pointer.active) {
-        const d = Math.abs(s.baseX - snapX);
-        if (d < params.openRadius) {
-          const f = 1 - d / params.openRadius;
-          const dir = s.baseX < snapX ? -1 : 1;
+        const centerX = innerWidth / 2;
+        const distFromCenter = Math.abs(s.baseX - centerX);
+        
+        // If string is within opening radius of center, pull it outward
+        if (distFromCenter < params.openRadius) {
+          const f = 1 - distFromCenter / params.openRadius;
+          // Left side goes left, right side goes right
+          const dir = s.baseX < centerX ? -1 : 1;
           targetTopX = s.baseX + dir * params.openStrength * f * f;
         }
       }
