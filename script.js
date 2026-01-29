@@ -198,7 +198,7 @@ function seed() {
       phase: Math.random() * 1000,
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
-      alpha: 0.4 + Math.random() * 0.3, // more opaque for richer colors
+      alpha: 0.7 + Math.random() * 0.25, // higher opacity for better visibility
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -300,12 +300,13 @@ function drawString(x, t, s) {
     
     // Apply organic thickness and color variation along the path
     const gradient = ctx.createLinearGradient(x - 50, 0, x + 50, innerHeight);
-    const colorVar1 = Math.sin(s.phase * 0.3 + strand * 0.5) * 8;
-    const colorVar2 = Math.sin(s.phase * 0.3 + strand * 0.5 + 1) * 8;
-    const light1 = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar1));
-    const light2 = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar2));
-    gradient.addColorStop(0, `hsla(${s.hue},${s.sat}%,${light1}%,${s.alpha * (0.7 + strand * 0.15)})`);
-    gradient.addColorStop(1, `hsla(${s.hue},${s.sat}%,${light2}%,${s.alpha * (0.7 + strand * 0.15)})`);
+    const colorVar1 = Math.sin(s.phase * 0.3 + strand * 0.5) * 5;
+    const colorVar2 = Math.sin(s.phase * 0.3 + strand * 0.5 + 1) * 5;
+    // Use actual lightness values from palette (60-95), not reduced to 15-40
+    const light1 = Math.max(60, Math.min(95, s.light - strand * 1 + colorVar1));
+    const light2 = Math.max(60, Math.min(95, s.light - strand * 1 + colorVar2));
+    gradient.addColorStop(0, `hsla(${s.hue},${s.sat}%,${light1}%,${s.alpha * (0.8 + strand * 0.1)})`);
+    gradient.addColorStop(1, `hsla(${s.hue},${s.sat}%,${light2}%,${s.alpha * (0.8 + strand * 0.1)})`);
     
     // Thickness variation
     const thicknessVar = 1 + Math.sin(t * 0.0003 + s.phase) * 0.3;
