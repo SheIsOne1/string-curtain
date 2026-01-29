@@ -324,10 +324,10 @@ let strings = [];
 
 // Simple mass–spring params
 const STRING_SEGMENTS = 18;      // number of points per string
-const GRAVITY = 0.25;            // downward pull
-const DAMPING = 0.97;            // velocity damping
-const SPRING_STIFFNESS = 0.15;   // how stiff the vertical springs are
-const HANG_STIFFNESS = 0.08;     // how strongly points try to hang under the rod
+const GRAVITY = 0.4;             // downward pull (stronger for heavier curtain feel)
+const DAMPING = 0.94;            // velocity damping (more swing, then settle)
+const SPRING_STIFFNESS = 0.12;   // how stiff the vertical springs are
+const HANG_STIFFNESS = 0.16;     // how strongly points try to hang under the rod
 const PHYSICS_STEPS = 2;         // small substeps per frame for stability
 
 function seed() {
@@ -372,9 +372,9 @@ function seed() {
 }
 
 const params = {
-  openRadius: 220,
-  openStrength: 140,
-  followEase: 0.18,
+  openRadius: 260,   // wider opening
+  openStrength: 190, // stronger pull to the sides
+  followEase: 0.22,
   returnEase: 0.10
 };
 
@@ -515,7 +515,7 @@ function loop(t) {
       pts[0].vx = 0;
       pts[0].vy = 0;
 
-      // Apply gravity and horizontal "hang" towards the rod under the top point
+      // Apply gravity, a bit of side "wind", and horizontal "hang" towards the rod under the top point
       for (let i = 1; i < pts.length; i++) {
         const p = pts[i];
         p.vy += GRAVITY;
@@ -523,6 +523,11 @@ function loop(t) {
         // Gentle pull under the rod horizontally, so strings line up beneath the top
         const hangTargetX = targetTopX;
         p.vx += (hangTargetX - p.x) * HANG_STIFFNESS;
+
+        // Subtle wind so the curtain is never perfectly still
+        const wind =
+          Math.sin((t * 0.0015) + (s.baseX * 0.02) + i * 0.25) * 0.08;
+        p.vx += wind;
       }
 
       // Vertical springs between neighbouring points
