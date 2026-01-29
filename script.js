@@ -332,6 +332,7 @@ function seed() {
     strings.push({
       baseX: (i + 0.5) * gap,
       x: (i + 0.5) * gap,
+      vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
@@ -347,7 +348,10 @@ const params = {
   openRadius: 220,
   openStrength: 140,
   followEase: 0.18,
-  returnEase: 0.10
+  returnEase: 0.10,
+  clothDamping: 0.85, // cloth-like damping (lower = more resistance)
+  clothInertia: 0.12, // how much momentum strings keep
+  clothCoupling: 0.08 // how much neighboring strings influence each other (cloth folds)
 };
 
 function drawString(x, t, s) {
@@ -359,9 +363,22 @@ function drawString(x, t, s) {
 
   for (let i = 1; i <= seg; i++) {
     const y = i * segH;
-    const wave =
+    const progress = i / seg; // 0 to 1 down the string
+    
+    // Base playful wave (keeps the fun appearance)
+    const baseWave =
       Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
       Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
+    
+    // Cloth-like sag: more sag lower down (gravity effect)
+    const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
+    
+    // Cloth-like folds: subtle variation based on position
+    const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
+    
+    // Combine: base wave + sag + folds for cloth-like appearance
+    const wave = baseWave + sag + fold;
+    
     ctx.lineTo(x + wave * (i / seg), y);
   }
 
@@ -472,8 +489,9 @@ function loop(t) {
     }
   }
 
-  /* update strings - THEATRE CURTAIN: opens from center */
-  for (const s of strings) {
+  /* update strings - THEATRE CURTAIN with CLOTH-LIKE physics */
+  for (let i = 0; i < strings.length; i++) {
+    const s = strings[i];
     let tx = s.baseX;
 
     // THEATRE CURTAIN: Opens from center when hovering
@@ -490,7 +508,42 @@ function loop(t) {
       }
     }
 
-    s.x += (tx - s.x) * (curtainReady && pointer.active ? params.followEase : params.returnEase);
+    // CLOTH-LIKE PHYSICS: Add momentum/inertia
+    const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
+    const force = (tx - s.x) * targetEase;
+    
+    // Apply force with momentum (cloth-like inertia)
+    s.vx += force * params.clothInertia;
+    s.vx *= params.clothDamping; // cloth damping
+    
+    // Clamp velocity to prevent wild movements
+    s.vx = Math.max(-8, Math.min(8, s.vx));
+    
+    // Update position with velocity
+    s.x += s.vx;
+    
+    // CLOTH-LIKE COUPLING: Neighboring strings influence each other (creates folds)
+    if (params.clothCoupling > 0) {
+      let neighborInfluence = 0;
+      let neighborCount = 0;
+      
+      // Check left neighbor
+      if (i > 0) {
+        neighborInfluence += strings[i - 1].x;
+        neighborCount++;
+      }
+      // Check right neighbor
+      if (i < strings.length - 1) {
+        neighborInfluence += strings[i + 1].x;
+        neighborCount++;
+      }
+      
+      if (neighborCount > 0) {
+        const avgNeighborX = neighborInfluence / neighborCount;
+        // Subtle pull toward neighbors (creates cloth-like folds)
+        s.x += (avgNeighborX - s.x) * params.clothCoupling;
+      }
+    }
   }
 
   ctx.globalCompositeOperation = "lighter";
