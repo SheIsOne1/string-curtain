@@ -336,10 +336,10 @@ function seed() {
       phase: Math.random() * 1000,
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
-      alpha: 0.35 + Math.random() * 0.25, // slightly more opaque
+      alpha: 0.4 + Math.random() * 0.3, // more opaque for richer colors
       hue: Math.random() * 360,
-      sat: 65 + Math.random() * 20, // more saturated for richer colors
-      light: 45 + Math.random() * 15 // lower lightness for less shine, more matte
+      sat: 70 + Math.random() * 25, // highly saturated for rich colors
+      light: 25 + Math.random() * 15 // much darker for matte, non-shiny look
     });
   }
 }
@@ -398,30 +398,11 @@ function drawString(x, t, s) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     
-    // Slightly darker for inner strands to create depth
-    const strandLight = s.light - strand * 3;
+    // Slightly darker for inner strands to create depth (but keep it matte)
+    const strandLight = Math.max(15, s.light - strand * 2); // ensure it doesn't go too dark
     ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
     ctx.stroke();
   }
-  
-  // Optional: Add a subtle highlight on top strand for rope shine
-  ctx.beginPath();
-  ctx.moveTo(x - 0.4, 0);
-  for (let i = 1; i <= seg; i++) {
-    const y = i * segH;
-    const progress = i / seg;
-    const baseWave =
-      Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
-      Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
-    const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
-    const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
-    const wave = baseWave + sag + fold;
-    ctx.lineTo(x + wave * (i / seg) - 0.4, y);
-  }
-  ctx.lineWidth = s.thickness * 0.3;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${Math.min(75, s.light + 15)}%,${s.alpha * 0.4})`;
-  ctx.stroke();
 }
 
 /* ===== LOOP ===== */
@@ -568,9 +549,9 @@ function loop(t) {
     }
   }
 
-  ctx.globalCompositeOperation = "lighter";
-  strings.forEach(s => drawString(s.x, t, s));
+  // Use source-over instead of lighter for matte, non-shiny appearance
   ctx.globalCompositeOperation = "source-over";
+  strings.forEach(s => drawString(s.x, t, s));
 
   requestAnimationFrame(loop);
 }
