@@ -323,13 +323,13 @@ const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
 /* ===== STRINGS (THEATRE-CURTAIN PHYSICS) ===== */
 let strings = [];
 
-// Simple mass–spring params
+// Simple mass–spring params - tuned for stable, smooth motion
 const STRING_SEGMENTS = 18;      // number of points per string
-const GRAVITY = 0.4;             // downward pull (stronger for heavier curtain feel)
-const DAMPING = 0.94;            // velocity damping (more swing, then settle)
-const SPRING_STIFFNESS = 0.12;   // how stiff the vertical springs are
-const HANG_STIFFNESS = 0.16;     // how strongly points try to hang under the rod
-const PHYSICS_STEPS = 2;         // small substeps per frame for stability
+const GRAVITY = 0.15;            // gentle downward pull
+const DAMPING = 0.88;            // stronger damping for stability
+const SPRING_STIFFNESS = 0.08;   // softer springs to prevent oscillations
+const HANG_STIFFNESS = 0.10;     // gentler horizontal pull
+const PHYSICS_STEPS = 1;         // single step for smoother motion
 
 function seed() {
   strings = [];
@@ -373,8 +373,8 @@ function seed() {
 }
 
 const params = {
-  openRadius: 300,   // wider opening radius
-  openStrength: 250, // stronger pull to the sides for dramatic theatre effect
+  openRadius: 280,   // opening radius
+  openStrength: 120, // gentler pull for smooth, controlled opening
   followEase: 0.22,
   returnEase: 0.10,
   centerX: innerWidth / 2  // center point where curtain splits
@@ -509,17 +509,22 @@ function loop(t) {
         const centerX = innerWidth / 2;
         const distFromCenter = Math.abs(s.baseX - centerX);
         
-        // If string is within opening radius of center, pull it outward
+        // If string is within opening radius of center, pull it outward smoothly
         if (distFromCenter < params.openRadius) {
           const f = 1 - distFromCenter / params.openRadius;
+          // Smooth easing curve for gradual opening
+          const eased = f * f * (3 - 2 * f); // smoothstep
           // Left side goes left, right side goes right
           const dir = s.baseX < centerX ? -1 : 1;
-          targetTopX = s.baseX + dir * params.openStrength * f * f;
+          targetTopX = s.baseX + dir * params.openStrength * eased;
         }
       }
+      
+      // Smoothly ease the top point to target (prevents sudden jumps)
+      const topEase = 0.15;
+      pts[0].x += (targetTopX - pts[0].x) * topEase;
 
-      // Pin top point to the rod (but allow the rod to slide open)
-      pts[0].x = targetTopX;
+      // Pin top point to the rod (y is fixed, x is eased above)
       pts[0].y = 0;
       pts[0].vx = 0;
       pts[0].vy = 0;
@@ -530,12 +535,12 @@ function loop(t) {
         p.vy += GRAVITY;
 
         // Gentle pull under the rod horizontally, so strings line up beneath the top
-        const hangTargetX = targetTopX;
+        const hangTargetX = pts[0].x; // Use actual top position
         p.vx += (hangTargetX - p.x) * HANG_STIFFNESS;
 
-        // Subtle wind so the curtain is never perfectly still
+        // Very subtle wind - much reduced to prevent chaos
         const wind =
-          Math.sin((t * 0.0015) + (s.baseX * 0.02) + i * 0.25) * 0.08;
+          Math.sin((t * 0.0008) + (s.baseX * 0.01) + i * 0.15) * 0.02;
         p.vx += wind;
       }
 
@@ -563,8 +568,14 @@ function loop(t) {
       // Integrate positions with damping and simple floor collision
       for (let i = 1; i < pts.length; i++) {
         const p = pts[i];
+        
+        // Apply damping before integration for stability
         p.vx *= DAMPING;
         p.vy *= DAMPING;
+        
+        // Clamp velocities to prevent wild movements
+        p.vx = Math.max(-15, Math.min(15, p.vx));
+        p.vy = Math.max(-15, Math.min(15, p.vy));
 
         p.x += p.vx;
         p.y += p.vy;
@@ -572,8 +583,11 @@ function loop(t) {
         // Soft floor to keep curtain within view
         if (p.y > innerHeight) {
           p.y = innerHeight;
-          if (p.vy > 0) p.vy *= -0.25;
+          if (p.vy > 0) p.vy *= -0.3;
         }
+        
+        // Keep points within reasonable bounds
+        p.x = Math.max(-50, Math.min(innerWidth + 50, p.x));
       }
     }
   }
