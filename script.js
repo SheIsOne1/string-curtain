@@ -337,8 +337,18 @@ function seed() {
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
       alpha: 0.4 + Math.random() * 0.3, // more opaque for richer colors
-      hue: Math.random() * 360,
-      sat: 70 + Math.random() * 25, // highly saturated for rich colors
+      // Warm colors: reds (0-30, 330-360), oranges (15-45), yellows (45-75), warm pinks (300-360)
+      hue: (() => {
+        const warmRanges = [
+          [0, 30],      // reds
+          [15, 45],    // oranges
+          [45, 75],    // yellows
+          [300, 360]   // warm pinks/magentas
+        ];
+        const range = warmRanges[Math.floor(Math.random() * warmRanges.length)];
+        return range[0] + Math.random() * (range[1] - range[0]);
+      })(),
+      sat: 70 + Math.random() * 25, // highly saturated for rich warm colors
       light: 25 + Math.random() * 15 // much darker for matte, non-shiny look
     });
   }
