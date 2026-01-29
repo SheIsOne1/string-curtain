@@ -419,12 +419,11 @@ function loop(t) {
   }
   
   // Only reveal if curtain is ready AND pointer is active
-  // Theatre curtain opens from center
+  // Curtain opens around the active section (4-section method)
   if (isHovering) {
     sectionsEl.style.opacity = "1";
-    const centerX = innerWidth / 2;
-    sectionsEl.style.setProperty("--reveal-x", `${centerX}px`);
-    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.5}px`);
+    sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
+    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
 
     sectionEls.forEach((el, i) => {
       el.style.opacity = i === idx ? "1" : "0";
@@ -489,21 +488,18 @@ function loop(t) {
     }
   }
 
-  /* update strings - THEATRE CURTAIN with CLOTH-LIKE physics */
+  /* update strings - CURTAIN with CLOTH-LIKE physics (4-section method) */
   for (let i = 0; i < strings.length; i++) {
     const s = strings[i];
     let tx = s.baseX;
 
-    // THEATRE CURTAIN: Opens from center when hovering
-    // Left side pulls left, right side pulls right
+    // CURTAIN: Opens around the active section (snapX) when hovering
+    // Strings near the section center pull outward (left/right)
     if (curtainReady && pointer.active) {
-      const centerX = innerWidth / 2;
-      const distFromCenter = Math.abs(s.baseX - centerX);
-      
-      if (distFromCenter < params.openRadius) {
-        const f = 1 - distFromCenter / params.openRadius;
-        // Left side goes left, right side goes right
-        const dir = s.baseX < centerX ? -1 : 1;
+      const d = Math.abs(s.baseX - snapX);
+      if (d < params.openRadius) {
+        const f = 1 - d / params.openRadius;
+        const dir = s.baseX < snapX ? -1 : 1;
         tx = s.baseX + dir * params.openStrength * f * f;
       }
     }
