@@ -376,6 +376,9 @@ function drawString(x, t, s) {
     const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.5; // offset for each strand
     ctx.moveTo(x + strandOffset, 0);
 
+    // Store points for thickness/color variation
+    const points = [];
+    
     for (let i = 1; i <= seg; i++) {
       const y = i * segH;
       const progress = i / seg; // 0 to 1 down the string
@@ -395,70 +398,46 @@ function drawString(x, t, s) {
       const twistPhase = y * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
       const twist = Math.sin(twistPhase) * 0.5 + Math.cos(twistPhase * 1.3) * 0.2;
       
-      // ORGANIC IRREGULARITIES: natural bumps and variations
-      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.3 +
-                           Math.cos(y * 0.07 + t * 0.0005) * 0.2;
+      // ORGANIC IRREGULARITIES: natural bumps and variations like real rope
+      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.4 +
+                           Math.cos(y * 0.07 + t * 0.0005) * 0.25;
       
       // Combine: base wave + sag + folds + twist + irregularities for organic rope
       const wave = baseWave + sag + fold + twist + irregularity;
+      const px = x + wave * (i / seg) + strandOffset;
       
-      ctx.lineTo(x + wave * (i / seg) + strandOffset, y);
+      points.push({ x: px, y, progress });
+      ctx.lineTo(px, y);
     }
 
-    // ORGANIC THICKNESS VARIATION: rope gets thicker/thinner naturally along its length
+    // Draw with organic thickness and color variation
     const baseThickness = s.thickness * (0.5 + strand * 0.2);
     
-    // Draw with varying thickness for organic feel
-    for (let i = 0; i < seg; i++) {
-      const y = i * segH;
-      const progress = i / seg;
+    // Draw segments with varying thickness and color for organic rope feel
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
       
-      // Thickness variation: thicker in middle, thinner at ends, with natural bumps
-      const thicknessVar = 1 + Math.sin(y * 0.15 + s.phase + strand) * 0.3 +
-                          Math.cos(y * 0.09 + t * 0.0003) * 0.2;
+      // ORGANIC THICKNESS VARIATION: natural bumps and variations
+      const thicknessVar = 1 + Math.sin(p1.y * 0.15 + s.phase + strand) * 0.35 +
+                          Math.cos(p1.y * 0.09 + t * 0.0003) * 0.25;
       const segmentThickness = baseThickness * thicknessVar;
       
-      // ORGANIC COLOR VARIATION: natural color shifts along the rope
-      const colorVar = Math.sin(y * 0.1 + s.phase * 0.3 + strand * 0.5) * 8;
+      // ORGANIC COLOR VARIATION: natural color shifts along the rope (like weathered rope)
+      const colorVar = Math.sin(p1.y * 0.1 + s.phase * 0.3 + strand * 0.5) * 10;
       const strandLight = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar));
-      const strandAlpha = s.alpha * (0.7 + strand * 0.15) * (0.9 + Math.sin(y * 0.08) * 0.1);
+      const strandAlpha = s.alpha * (0.7 + strand * 0.15) * (0.85 + Math.sin(p1.y * 0.08) * 0.15);
       
-      // Draw small segment with its own thickness and color
+      // Draw segment
       ctx.beginPath();
-      ctx.moveTo(x + (i > 0 ? (Math.sin(t * 0.0014 + (i-1) * segH * 0.018 + s.phase) * s.wobble) * ((i-1) / seg) : 0), (i-1) * segH);
-      ctx.lineTo(x + (Math.sin(t * 0.0014 + i * segH * 0.018 + s.phase) * s.wobble) * (i / seg), i * segH);
-      
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
       ctx.lineWidth = segmentThickness;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
       ctx.stroke();
     }
-    
-    // Also draw the main path for continuity
-    ctx.beginPath();
-    ctx.moveTo(x + strandOffset, 0);
-    for (let i = 1; i <= seg; i++) {
-      const y = i * segH;
-      const progress = i / seg;
-      const baseWave =
-        Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
-        Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
-      const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
-      const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
-      const twistPhase = y * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
-      const twist = Math.sin(twistPhase) * 0.5 + Math.cos(twistPhase * 1.3) * 0.2;
-      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.3 +
-                           Math.cos(y * 0.07 + t * 0.0005) * 0.2;
-      const wave = baseWave + sag + fold + twist + irregularity;
-      ctx.lineTo(x + wave * (i / seg) + strandOffset, y);
-    }
-    ctx.lineWidth = baseThickness;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    const avgStrandLight = Math.max(15, s.light - strand * 2);
-    ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${avgStrandLight}%,${s.alpha * (0.7 + strand * 0.15)})`;
-    ctx.stroke();
   }
 }
 
