@@ -1,7 +1,6 @@
 // Updated: Removed content section errors - cache bust: 2024-01
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d", { alpha: true });
-const introPage = document.getElementById("introPage");
 const sectionsEl = document.getElementById("sections");
 const sectionEls = [
   document.getElementById("sec0"),
@@ -18,169 +17,32 @@ const titleOverlayEls = [
 ];
 const debugEl = document.getElementById("debug");
 
-// Initially hide the curtain animation
-let introShown = true;
-let introAnimationComplete = false; // Track when intro animation is complete
-let curtainReady = false; // Track when curtain is ready for interaction
+// Start directly with curtain - no intro page
+let introShown = false;
+let introAnimationComplete = true; // Skip intro animation
+let curtainReady = true; // Curtain is ready immediately
 
-// Disable all interactions initially
-canvas.style.opacity = "0";
-canvas.style.pointerEvents = "none";
+// Show curtain immediately
+canvas.style.opacity = "1";
+canvas.style.pointerEvents = "auto";
 sectionsEl.style.opacity = "0";
-if (debugEl) debugEl.style.opacity = "0";
+if (debugEl) debugEl.style.opacity = "1";
 
-// Block all interactions on the page until curtain is ready
-document.body.style.pointerEvents = "none";
-document.body.style.userSelect = "none";
-document.body.style.cursor = "wait";
+// Enable interactions immediately
+document.body.style.pointerEvents = "auto";
+document.body.style.userSelect = "auto";
+document.body.style.cursor = "default";
 
-// Block keyboard events
-function blockAllInteractions(e) {
-  if (!curtainReady) {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  }
-}
+// No blocking needed - curtain starts immediately
 
-// Add event listeners to block all interactions
-document.addEventListener("keydown", blockAllInteractions, true);
-document.addEventListener("keyup", blockAllInteractions, true);
-document.addEventListener("keypress", blockAllInteractions, true);
-document.addEventListener("contextmenu", blockAllInteractions, true);
-document.addEventListener("mousedown", blockAllInteractions, true);
-document.addEventListener("mouseup", blockAllInteractions, true);
-document.addEventListener("touchstart", blockAllInteractions, true);
-document.addEventListener("touchend", blockAllInteractions, true);
-document.addEventListener("touchmove", blockAllInteractions, true);
-
-// Handle intro page transition
-function hideIntro() {
-  // Prevent skipping animation - only allow after animation completes
-  if (!introAnimationComplete) return;
-  if (!introShown) return;
-  introShown = false;
-  
-  if (introPage) {
-    introPage.classList.add("hidden");
-  }
-  
-  // Show curtain animation after intro fades out
-  setTimeout(() => {
-    console.log("Showing canvas, opacity set to 1");
-    canvas.style.opacity = "1";
-    canvas.style.transition = "opacity 0.5s ease-in";
-    if (debugEl) debugEl.style.opacity = "1";
-    
-    // Enable interactions ONLY after BOTH Bella animation AND curtain fade-in completes
-    const enableInteractions = () => {
-      console.log("enableInteractions called, introAnimationComplete:", introAnimationComplete);
-      // Double-check that both animations are complete before enabling interactions
-      if (!introAnimationComplete) {
-        console.log("Intro animation not complete yet, retrying in 100ms...");
-        // If for some reason intro isn't complete, wait a bit more
-        setTimeout(enableInteractions, 100);
-        return;
-      }
-      
-      console.log("Setting curtainReady = true");
-      curtainReady = true;
-      console.log("Curtain ready! Hover interactions enabled. pointer.active:", pointer.active, "curtainReady:", curtainReady);
-      
-      // Verify curtainReady was set correctly
-      if (curtainReady !== true) {
-        console.error("ERROR: curtainReady was not set correctly! Value:", curtainReady);
-      } else {
-        console.log("✓ curtainReady successfully set to true, value verified:", curtainReady);
-      }
-      
-      // Force debug display to update by reading curtainReady again
-      // This ensures any potential scope issues are resolved
-      window.curtainReady = curtainReady; // Also store on window for debugging
-      
-      // Re-enable all interactions on the page
-      document.body.style.pointerEvents = "auto";
-      document.body.style.userSelect = "auto";
-      document.body.style.cursor = "default";
-      
-      // Remove blocking event listeners
-      document.removeEventListener("keydown", blockAllInteractions, true);
-      document.removeEventListener("keyup", blockAllInteractions, true);
-      document.removeEventListener("keypress", blockAllInteractions, true);
-      document.removeEventListener("contextmenu", blockAllInteractions, true);
-      document.removeEventListener("mousedown", blockAllInteractions, true);
-      document.removeEventListener("mouseup", blockAllInteractions, true);
-      document.removeEventListener("touchstart", blockAllInteractions, true);
-      document.removeEventListener("touchend", blockAllInteractions, true);
-      document.removeEventListener("touchmove", blockAllInteractions, true);
-      
-      canvas.style.pointerEvents = "auto"; // Enable hover interactions
-      console.log("Canvas pointer-events set to auto");
-      
-      // Force a mouse move check to activate pointer if mouse is already over canvas
-      // Create a synthetic mousemove event to trigger activation
-      const syntheticEvent = new MouseEvent("mousemove", {
-        clientX: pointer.x,
-        clientY: pointer.y,
-        bubbles: true
-      });
-      handleMouseMove(syntheticEvent);
-      
-      // Also directly activate if mouse is within bounds
-      const mouseOverCanvas = pointer.x >= 0 && pointer.x <= innerWidth && 
-                              pointer.y >= 0 && pointer.y <= innerHeight;
-      if (mouseOverCanvas) {
-        pointer.active = true;
-        console.log("Curtain ready - pointer activated directly, mouse is over canvas at", pointer.x, pointer.y);
-      }
-      
-      // Title interactions will be enabled individually when they become visible
-      // They start with pointer-events: none in CSS to allow mouse events to pass through to canvas
-    };
-    
-    console.log("Scheduling enableInteractions in 500ms...");
-    setTimeout(() => {
-      console.log("Calling enableInteractions now...");
-      enableInteractions();
-    }, 500); // Wait for the 0.5s fade-in transition to complete
-  }, 500);
-}
+// Intro page removed - curtain starts immediately
+// No hideIntro function needed
 
 /* ===== PARTICLE PORTRAIT ===== */
 // Moved to separate file: particle-portrait.js
 
-// Click on intro page to proceed (only after animation completes)
-if (introPage) {
-  // Block intro page clicks until animation completes
-  introPage.addEventListener("click", (e) => {
-    if (!introAnimationComplete) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    hideIntro();
-  });
-  
-  // Mark animation as complete and allow transitions
-  // fadeInScale (0.8s) + delay (0.3s) + lights (2.5s) = 3.6s total
-  setTimeout(() => {
-    introAnimationComplete = true;
-    // Auto-transition after a short pause
-    setTimeout(hideIntro, 300);
-  }, 3600);
-  
-  // Also listen for animation end event as a backup
-  const introTitle = introPage.querySelector('.intro-title');
-  if (introTitle) {
-    introTitle.addEventListener('animationend', (e) => {
-      if (e.animationName === 'lights' && introShown) {
-        introAnimationComplete = true;
-        // Wait a bit after animation ends, then allow transition
-        setTimeout(hideIntro, 300);
-      }
-    });
-  }
-}
+// Intro page removed - curtain starts immediately
+// No intro page logic needed
 
 // Debug: Log title overlay elements and ensure they start with pointer-events: none
 console.log("Title overlay elements:", titleOverlayEls);
@@ -337,21 +199,21 @@ function seed() {
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
       alpha: 0.4 + Math.random() * 0.3, // more opaque for richer colors
-      // Custom color palette: #2F597D #6CB1CA #B67321 #D6AE42 #D9CA8B
-      // Converted to HSL: dark blue, light blue, brown/orange, gold, beige
+      // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
+      // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
         const palette = [
-          { h: 210, s: 45, l: 35 },  // #2F597D - dark blue
-          { h: 198, s: 50, l: 60 },  // #6CB1CA - light blue
-          { h: 33, s: 70, l: 43 },   // #B67321 - brown/orange
-          { h: 43, s: 65, l: 55 },   // #D6AE42 - gold/yellow
-          { h: 48, s: 50, l: 70 }    // #D9CA8B - beige/cream
+          { h: 48, s: 94, l: 67 },  // #F9DC5C - bright yellow
+          { h: 48, s: 92, l: 75 },  // #FAE588 - light yellow
+          { h: 48, s: 90, l: 85 },  // #FCEFB4 - pale yellow
+          { h: 48, s: 88, l: 90 },  // #FDF4CB - very pale yellow
+          { h: 48, s: 85, l: 93 }   // #FDF8E1 - almost white yellow
         ];
         const color = palette[Math.floor(Math.random() * palette.length)];
         // Add slight variation to make it more organic
-        const hue = color.h + (Math.random() - 0.5) * 5;
-        const sat = color.s + (Math.random() - 0.5) * 10;
-        const light = color.l + (Math.random() - 0.5) * 8;
+        const hue = color.h + (Math.random() - 0.5) * 3;
+        const sat = color.s + (Math.random() - 0.5) * 5;
+        const light = color.l + (Math.random() - 0.5) * 4;
         return { hue, sat, light };
       })()
     });

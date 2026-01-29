@@ -30,10 +30,10 @@ html, body {
   background: 
     linear-gradient(90deg, 
       transparent 0%,
-      hsla(210, 45%, 35%, 0.15) 20%,  /* #2F597D dark blue */
-      hsla(198, 50%, 60%, 0.15) 40%,  /* #6CB1CA light blue */
-      hsla(33, 70%, 43%, 0.15) 60%,   /* #B67321 brown/orange */
-      hsla(43, 65%, 55%, 0.15) 80%,   /* #D6AE42 gold */
+      hsla(48, 94%, 67%, 0.15) 20%,  /* #F9DC5C bright yellow */
+      hsla(48, 92%, 75%, 0.15) 40%,  /* #FAE588 light yellow */
+      hsla(48, 90%, 85%, 0.15) 60%,  /* #FCEFB4 pale yellow */
+      hsla(48, 88%, 90%, 0.15) 80%,  /* #FDF4CB very pale yellow */
       transparent 100%
     );
   background-size: 200% 100%;
@@ -54,14 +54,14 @@ html, body {
   position: absolute;
   inset: 0;
   background-image: 
-    radial-gradient(2px 2px at 20% 30%, hsla(210, 45%, 35%, 0.3), transparent),  /* #2F597D */
-    radial-gradient(2px 2px at 60% 70%, hsla(198, 50%, 60%, 0.3), transparent),  /* #6CB1CA */
-    radial-gradient(1px 1px at 50% 50%, hsla(33, 70%, 43%, 0.3), transparent),    /* #B67321 */
-    radial-gradient(1px 1px at 80% 10%, hsla(43, 65%, 55%, 0.3), transparent),    /* #D6AE42 */
-    radial-gradient(2px 2px at 90% 60%, hsla(48, 50%, 70%, 0.3), transparent),    /* #D9CA8B */
-    radial-gradient(1px 1px at 30% 80%, hsla(210, 45%, 35%, 0.3), transparent),  /* #2F597D */
-    radial-gradient(2px 2px at 10% 40%, hsla(198, 50%, 60%, 0.3), transparent),  /* #6CB1CA */
-    radial-gradient(1px 1px at 70% 20%, hsla(33, 70%, 43%, 0.3), transparent);   /* #B67321 */
+    radial-gradient(2px 2px at 20% 30%, hsla(48, 94%, 67%, 0.3), transparent),  /* #F9DC5C */
+    radial-gradient(2px 2px at 60% 70%, hsla(48, 92%, 75%, 0.3), transparent),  /* #FAE588 */
+    radial-gradient(1px 1px at 50% 50%, hsla(48, 90%, 85%, 0.3), transparent),    /* #FCEFB4 */
+    radial-gradient(1px 1px at 80% 10%, hsla(48, 88%, 90%, 0.3), transparent),    /* #FDF4CB */
+    radial-gradient(2px 2px at 90% 60%, hsla(48, 85%, 93%, 0.3), transparent),    /* #FDF8E1 */
+    radial-gradient(1px 1px at 30% 80%, hsla(48, 94%, 67%, 0.3), transparent),  /* #F9DC5C */
+    radial-gradient(2px 2px at 10% 40%, hsla(48, 92%, 75%, 0.3), transparent),  /* #FAE588 */
+    radial-gradient(1px 1px at 70% 20%, hsla(48, 90%, 85%, 0.3), transparent);   /* #FCEFB4 */
   background-size: 200% 200%;
   animation: particleFloat 20s ease-in-out infinite;
   opacity: 0.4;
@@ -120,13 +120,13 @@ html, body {
   position: relative;
   z-index: 1;
   /* Initial color and text-shadow will be set by lights animation at 0% */
-  color: hsl(198, 50%, 60%); /* #6CB1CA light blue */
+  color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
   text-shadow:
-    0 0 1em hsla(210, 45%, 35%, 0.8),  /* #2F597D dark blue */
-    0 0 0.5em hsla(198, 50%, 60%, 0.6), /* #6CB1CA light blue */
-    -1em -0.125em 0.5em hsla(43, 65%, 55%, 0.4), /* #D6AE42 gold */
-    1em 0.125em 0.5em hsla(33, 70%, 43%, 0.4),   /* #B67321 brown/orange */
-    0 0 2em hsla(48, 50%, 70%, 0.4);             /* #D9CA8B beige */
+    0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
+    0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
+    -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
+    1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),   /* #FDF4CB very pale yellow */
+    0 0 2em hsla(48, 85%, 93%, 0.4);             /* #FDF8E1 almost white yellow */
 }
 
 @keyframes titleFloat {
@@ -155,63 +155,63 @@ html, body {
 
 @keyframes lights {
   0% {
-    color: hsl(198, 50%, 60%); /* #6CB1CA light blue */
+    color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
     text-shadow:
-      0 0 1em hsla(210, 45%, 35%, 0.8),  /* #2F597D dark blue */
-      0 0 0.5em hsla(198, 50%, 60%, 0.6), /* #6CB1CA light blue */
-      -1em -0.125em 0.5em hsla(43, 65%, 55%, 0.4), /* #D6AE42 gold */
-      1em 0.125em 0.5em hsla(33, 70%, 43%, 0.4),   /* #B67321 brown/orange */
-      0 0 2em hsla(48, 50%, 70%, 0.4);             /* #D9CA8B beige */
+      0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
+      0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
+      -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
+      1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),   /* #FDF4CB very pale yellow */
+      0 0 2em hsla(48, 85%, 93%, 0.4);             /* #FDF8E1 almost white yellow */
   }
   
   20% { 
-    color: hsl(43, 65%, 55%); /* #D6AE42 gold */
+    color: hsl(48, 92%, 75%); /* #FAE588 light yellow */
     text-shadow:
-      0 0 1em hsla(43, 65%, 55%, 0.8),
-      0 0 0.5em hsla(48, 50%, 70%, 0.6), /* #D9CA8B beige */
-      -0.5em -0.125em 0.5em hsla(33, 70%, 43%, 0.6), /* #B67321 brown/orange */
-      0.5em 0.125em 0.5em hsla(198, 50%, 60%, 0.6),  /* #6CB1CA light blue */
-      0 0 2em hsla(210, 45%, 35%, 0.5);             /* #2F597D dark blue */
+      0 0 1em hsla(48, 92%, 75%, 0.8),
+      0 0 0.5em hsla(48, 90%, 85%, 0.6), /* #FCEFB4 pale yellow */
+      -0.5em -0.125em 0.5em hsla(48, 94%, 67%, 0.6), /* #F9DC5C bright yellow */
+      0.5em 0.125em 0.5em hsla(48, 88%, 90%, 0.6),  /* #FDF4CB very pale yellow */
+      0 0 2em hsla(48, 85%, 93%, 0.5);             /* #FDF8E1 almost white yellow */
   }
   
   40% { 
-    color: hsl(210, 45%, 35%); /* #2F597D dark blue */
+    color: hsl(48, 90%, 85%); /* #FCEFB4 pale yellow */
     text-shadow:
-      0 0 1em hsla(210, 45%, 35%, 0.9),
-      0 0 0.5em hsla(198, 50%, 60%, 0.7), /* #6CB1CA light blue */
-      -0.25em -0.125em 0.5em hsla(33, 70%, 43%, 0.7), /* #B67321 brown/orange */
-      0.25em 0.125em 0.5em hsla(43, 65%, 55%, 0.7),   /* #D6AE42 gold */
-      0 0 2em hsla(48, 50%, 70%, 0.6);               /* #D9CA8B beige */
+      0 0 1em hsla(48, 90%, 85%, 0.9),
+      0 0 0.5em hsla(48, 88%, 90%, 0.7), /* #FDF4CB very pale yellow */
+      -0.25em -0.125em 0.5em hsla(48, 92%, 75%, 0.7), /* #FAE588 light yellow */
+      0.25em 0.125em 0.5em hsla(48, 94%, 67%, 0.7),   /* #F9DC5C bright yellow */
+      0 0 2em hsla(48, 85%, 93%, 0.6);               /* #FDF8E1 almost white yellow */
   }
   
   60% {
-    color: hsl(33, 70%, 43%); /* #B67321 brown/orange */
+    color: hsl(48, 88%, 90%); /* #FDF4CB very pale yellow */
     text-shadow:
-      0 0 1em hsla(33, 70%, 43%, 0.9),
-      0 0 0.5em hsla(43, 65%, 55%, 0.7), /* #D6AE42 gold */
-      0.5em -0.125em 0.5em hsla(48, 50%, 70%, 0.7),  /* #D9CA8B beige */
-      -0.5em 0.125em 0.5em hsla(198, 50%, 60%, 0.7),  /* #6CB1CA light blue */
-      0 0 2em hsla(210, 45%, 35%, 0.6);              /* #2F597D dark blue */
+      0 0 1em hsla(48, 88%, 90%, 0.9),
+      0 0 0.5em hsla(48, 85%, 93%, 0.7), /* #FDF8E1 almost white yellow */
+      0.5em -0.125em 0.5em hsla(48, 90%, 85%, 0.7),  /* #FCEFB4 pale yellow */
+      -0.5em 0.125em 0.5em hsla(48, 92%, 75%, 0.7),  /* #FAE588 light yellow */
+      0 0 2em hsla(48, 94%, 67%, 0.6);              /* #F9DC5C bright yellow */
   }
   
   80% {
-    color: hsl(48, 50%, 70%); /* #D9CA8B beige */
+    color: hsl(48, 85%, 93%); /* #FDF8E1 almost white yellow */
     text-shadow:
-      0 0 1em hsla(48, 50%, 70%, 0.8),
-      0 0 0.5em hsla(43, 65%, 55%, 0.6), /* #D6AE42 gold */
-      0.75em -0.125em 0.5em hsla(33, 70%, 43%, 0.6), /* #B67321 brown/orange */
-      -0.75em 0.125em 0.5em hsla(210, 45%, 35%, 0.6),  /* #2F597D dark blue */
-      0 0 2em hsla(198, 50%, 60%, 0.5);              /* #6CB1CA light blue */
+      0 0 1em hsla(48, 85%, 93%, 0.8),
+      0 0 0.5em hsla(48, 88%, 90%, 0.6), /* #FDF4CB very pale yellow */
+      0.75em -0.125em 0.5em hsla(48, 90%, 85%, 0.6), /* #FCEFB4 pale yellow */
+      -0.75em 0.125em 0.5em hsla(48, 94%, 67%, 0.6),  /* #F9DC5C bright yellow */
+      0 0 2em hsla(48, 92%, 75%, 0.5);              /* #FAE588 light yellow */
   }
   
   100% {
-    color: hsl(198, 50%, 60%); /* #6CB1CA light blue */
+    color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
     text-shadow:
-      0 0 1em hsla(210, 45%, 35%, 0.8),  /* #2F597D dark blue */
-      0 0 0.5em hsla(198, 50%, 60%, 0.6), /* #6CB1CA light blue */
-      1em -0.125em 0.5em hsla(43, 65%, 55%, 0.4), /* #D6AE42 gold */
-      -1em 0.125em 0.5em hsla(33, 70%, 43%, 0.4), /* #B67321 brown/orange */
-      0 0 2em hsla(48, 50%, 70%, 0.4);            /* #D9CA8B beige */
+      0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
+      0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
+      1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
+      -1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4), /* #FDF4CB very pale yellow */
+      0 0 2em hsla(48, 85%, 93%, 0.4);            /* #FDF8E1 almost white yellow */
   }
 }
 
@@ -283,10 +283,10 @@ html, body {
 }
 
 /* Section panels using custom color palette */
-.s1 { background: linear-gradient(180deg, rgba(47,89,125,0.92), rgba(47,89,125,0.55)); }  /* #2F597D dark blue */
-.s2 { background: linear-gradient(180deg, rgba(108,177,202,0.92), rgba(108,177,202,0.55)); }  /* #6CB1CA light blue */
-.s3 { background: linear-gradient(180deg, rgba(182,115,33,0.92), rgba(182,115,33,0.55)); }  /* #B67321 brown/orange */
-.s4 { background: linear-gradient(180deg, rgba(214,174,66,0.92), rgba(214,174,66,0.55)); }  /* #D6AE42 gold */
+.s1 { background: linear-gradient(180deg, rgba(249,220,92,0.92), rgba(249,220,92,0.55)); }  /* #F9DC5C bright yellow */
+.s2 { background: linear-gradient(180deg, rgba(250,229,136,0.92), rgba(250,229,136,0.55)); }  /* #FAE588 light yellow */
+.s3 { background: linear-gradient(180deg, rgba(252,239,180,0.92), rgba(252,239,180,0.55)); }  /* #FCEFB4 pale yellow */
+.s4 { background: linear-gradient(180deg, rgba(253,244,203,0.92), rgba(253,244,203,0.55)); }  /* #FDF4CB very pale yellow */
 
 /* ===== CANVAS ===== */
 canvas {
