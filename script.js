@@ -504,41 +504,26 @@ function loop(t) {
       }
     }
 
-    // CLOTH-LIKE PHYSICS: Add momentum/inertia
+    // Cloth-like physics: accumulate velocity for momentum
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Apply force with momentum (cloth-like inertia)
+    // Add force to velocity (momentum)
     s.vx += force * params.clothInertia;
-    s.vx *= params.clothDamping; // cloth damping
+    // Apply damping
+    s.vx *= params.clothDamping;
     
     // Clamp velocity to prevent wild movements
-    s.vx = Math.max(-8, Math.min(8, s.vx));
+    s.vx = Math.max(-10, Math.min(10, s.vx));
     
-    // Update position with velocity
+    // Update position
     s.x += s.vx;
     
-    // CLOTH-LIKE COUPLING: Neighboring strings influence each other (creates folds)
-    if (params.clothCoupling > 0) {
-      let neighborInfluence = 0;
-      let neighborCount = 0;
-      
-      // Check left neighbor
-      if (i > 0) {
-        neighborInfluence += strings[i - 1].x;
-        neighborCount++;
-      }
-      // Check right neighbor
-      if (i < strings.length - 1) {
-        neighborInfluence += strings[i + 1].x;
-        neighborCount++;
-      }
-      
-      if (neighborCount > 0) {
-        const avgNeighborX = neighborInfluence / neighborCount;
-        // Subtle pull toward neighbors (creates cloth-like folds)
-        s.x += (avgNeighborX - s.x) * params.clothCoupling;
-      }
+    // Subtle neighbor coupling for cloth folds (only when opening)
+    if (curtainReady && pointer.active && params.clothCoupling > 0 && i > 0 && i < strings.length - 1) {
+      const avgNeighborX = (strings[i - 1].x + strings[i + 1].x) / 2;
+      // Very subtle pull toward neighbors
+      s.x += (avgNeighborX - s.x) * params.clothCoupling * 0.3;
     }
   }
 
