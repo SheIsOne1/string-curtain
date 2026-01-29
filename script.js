@@ -18,9 +18,6 @@ const titleOverlayEls = [
 ];
 const debugEl = document.getElementById("debug");
 
-// Completely hide the curtain canvas so no particle/string effect appears behind the Bella title
-canvas.style.display = "none";
-
 // Initially hide the curtain animation
 let introShown = true;
 let introAnimationComplete = false; // Track when intro animation is complete
