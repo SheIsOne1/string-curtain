@@ -337,19 +337,23 @@ function seed() {
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
       alpha: 0.4 + Math.random() * 0.3, // more opaque for richer colors
-      // Warm colors: reds (0-30, 330-360), oranges (15-45), yellows (45-75), warm pinks (300-360)
-      hue: (() => {
-        const warmRanges = [
-          [0, 30],      // reds
-          [15, 45],    // oranges
-          [45, 75],    // yellows
-          [300, 360]   // warm pinks/magentas
+      // Custom color palette: #2F597D #6CB1CA #B67321 #D6AE42 #D9CA8B
+      // Converted to HSL: dark blue, light blue, brown/orange, gold, beige
+      ...(function() {
+        const palette = [
+          { h: 210, s: 45, l: 35 },  // #2F597D - dark blue
+          { h: 198, s: 50, l: 60 },  // #6CB1CA - light blue
+          { h: 33, s: 70, l: 43 },   // #B67321 - brown/orange
+          { h: 43, s: 65, l: 55 },   // #D6AE42 - gold/yellow
+          { h: 48, s: 50, l: 70 }    // #D9CA8B - beige/cream
         ];
-        const range = warmRanges[Math.floor(Math.random() * warmRanges.length)];
-        return range[0] + Math.random() * (range[1] - range[0]);
-      })(),
-      sat: 70 + Math.random() * 25, // highly saturated for rich warm colors
-      light: 25 + Math.random() * 15 // much darker for matte, non-shiny look
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        // Add slight variation to make it more organic
+        const hue = color.h + (Math.random() - 0.5) * 5;
+        const sat = color.s + (Math.random() - 0.5) * 10;
+        const light = color.l + (Math.random() - 0.5) * 8;
+        return { hue, sat, light };
+      })()
     });
   }
 }
