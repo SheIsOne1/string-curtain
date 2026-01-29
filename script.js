@@ -320,74 +320,49 @@ function sectionCenter(i) {
 let snapX = innerWidth / 2;
 const SNAP_EASE = 0.12; // lower = softer, higher = stronger magnet
 
-/* ===== STRINGS (THEATRE-CURTAIN PHYSICS) ===== */
+/* ===== STRINGS (THEATRE-CURTAIN) ===== */
 let strings = [];
-
-// Simple mass–spring params - tuned for stable, smooth motion
-const STRING_SEGMENTS = 18;      // number of points per string
-const GRAVITY = 0.15;            // gentle downward pull
-const DAMPING = 0.88;            // stronger damping for stability
-const SPRING_STIFFNESS = 0.08;   // softer springs to prevent oscillations
-const HANG_STIFFNESS = 0.10;     // gentler horizontal pull
-const PHYSICS_STEPS = 1;         // single step for smoother motion
 
 function seed() {
   strings = [];
-  const count = Math.max(70, Math.floor(innerWidth / 11)); // slightly fewer but thicker
+  const count = Math.max(90, Math.floor(innerWidth / 10));
   const gap = innerWidth / count;
-  const restLen = innerHeight / (STRING_SEGMENTS - 1);
 
   for (let i = 0; i < count; i++) {
-    const baseX = (i + 0.5) * gap;
-
-    // Pre-calc color / style
-    const thickness = 1.4 + Math.random() * 1.6;
-    const alpha = 0.3 + Math.random() * 0.3;
-    const hue = Math.random() * 360;
-    const sat = 55 + Math.random() * 15;
-    const light = 72 + Math.random() * 12;
-
-    // Build a vertical chain of points
-    const points = [];
-    for (let j = 0; j < STRING_SEGMENTS; j++) {
-      const y = (j / (STRING_SEGMENTS - 1)) * innerHeight;
-      points.push({
-        x: baseX,
-        y,
-        vx: 0,
-        vy: 0
-      });
-    }
-
     strings.push({
-      baseX,
-      points,
-      restLen,
-      thickness,
-      alpha,
-      hue,
-      sat,
-      light
+      baseX: (i + 0.5) * gap,
+      x: (i + 0.5) * gap,
+      phase: Math.random() * 1000,
+      wobble: 0.7 + Math.random() * 1.3,
+      thickness: 1.3 + Math.random() * 1.4,
+      alpha: 0.28 + Math.random() * 0.28,
+      hue: Math.random() * 360,
+      sat: 55 + Math.random() * 15,
+      light: 72 + Math.random() * 12
     });
   }
 }
 
 const params = {
-  openRadius: 280,   // opening radius
-  openStrength: 120, // gentler pull for smooth, controlled opening
-  followEase: 0.22,
-  returnEase: 0.10,
-  centerX: innerWidth / 2  // center point where curtain splits
+  openRadius: 220,
+  openStrength: 140,
+  followEase: 0.18,
+  returnEase: 0.10
 };
 
-function drawString(s) {
-  const pts = s.points;
-  if (!pts.length) return;
+function drawString(x, t, s) {
+  const seg = 26;
+  const segH = innerHeight / seg;
 
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.moveTo(x, 0);
+
+  for (let i = 1; i <= seg; i++) {
+    const y = i * segH;
+    const wave =
+      Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
+      Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
+    ctx.lineTo(x + wave * (i / seg), y);
   }
 
   ctx.lineWidth = s.thickness;
@@ -497,103 +472,29 @@ function loop(t) {
     }
   }
 
-  /* update strings with theatre curtain physics - opens from center */
-  for (let step = 0; step < PHYSICS_STEPS; step++) {
-    for (const s of strings) {
-      const pts = s.points;
+  /* update strings - THEATRE CURTAIN: opens from center */
+  for (const s of strings) {
+    let tx = s.baseX;
 
-      // THEATRE CURTAIN: Determine opening based on distance from CENTER
-      // Left side pulls left, right side pulls right
-      let targetTopX = s.baseX;
-      if (curtainReady && pointer.active) {
-        const centerX = innerWidth / 2;
-        const distFromCenter = Math.abs(s.baseX - centerX);
-        
-        // If string is within opening radius of center, pull it outward smoothly
-        if (distFromCenter < params.openRadius) {
-          const f = 1 - distFromCenter / params.openRadius;
-          // Smooth easing curve for gradual opening
-          const eased = f * f * (3 - 2 * f); // smoothstep
-          // Left side goes left, right side goes right
-          const dir = s.baseX < centerX ? -1 : 1;
-          targetTopX = s.baseX + dir * params.openStrength * eased;
-        }
-      }
+    // THEATRE CURTAIN: Opens from center when hovering
+    // Left side pulls left, right side pulls right
+    if (curtainReady && pointer.active) {
+      const centerX = innerWidth / 2;
+      const distFromCenter = Math.abs(s.baseX - centerX);
       
-      // Smoothly ease the top point to target (prevents sudden jumps)
-      const topEase = 0.15;
-      pts[0].x += (targetTopX - pts[0].x) * topEase;
-
-      // Pin top point to the rod (y is fixed, x is eased above)
-      pts[0].y = 0;
-      pts[0].vx = 0;
-      pts[0].vy = 0;
-
-      // Apply gravity, a bit of side "wind", and horizontal "hang" towards the rod under the top point
-      for (let i = 1; i < pts.length; i++) {
-        const p = pts[i];
-        p.vy += GRAVITY;
-
-        // Gentle pull under the rod horizontally, so strings line up beneath the top
-        const hangTargetX = pts[0].x; // Use actual top position
-        p.vx += (hangTargetX - p.x) * HANG_STIFFNESS;
-
-        // Very subtle wind - much reduced to prevent chaos
-        const wind =
-          Math.sin((t * 0.0008) + (s.baseX * 0.01) + i * 0.15) * 0.02;
-        p.vx += wind;
-      }
-
-      // Vertical springs between neighbouring points
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p1 = pts[i];
-        const p2 = pts[i + 1];
-
-        let dx = p2.x - p1.x;
-        let dy = p2.y - p1.y;
-        let dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
-        const diff = (dist - s.restLen) / dist;
-        const forceX = dx * diff * SPRING_STIFFNESS;
-        const forceY = dy * diff * SPRING_STIFFNESS;
-
-        // Top point is pinned; only move the lower one
-        if (i > 0) {
-          p1.vx += forceX * 0.5;
-          p1.vy += forceY * 0.5;
-        }
-        p2.vx -= forceX * 0.5;
-        p2.vy -= forceY * 0.5;
-      }
-
-      // Integrate positions with damping and simple floor collision
-      for (let i = 1; i < pts.length; i++) {
-        const p = pts[i];
-        
-        // Apply damping before integration for stability
-        p.vx *= DAMPING;
-        p.vy *= DAMPING;
-        
-        // Clamp velocities to prevent wild movements
-        p.vx = Math.max(-15, Math.min(15, p.vx));
-        p.vy = Math.max(-15, Math.min(15, p.vy));
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Soft floor to keep curtain within view
-        if (p.y > innerHeight) {
-          p.y = innerHeight;
-          if (p.vy > 0) p.vy *= -0.3;
-        }
-        
-        // Keep points within reasonable bounds
-        p.x = Math.max(-50, Math.min(innerWidth + 50, p.x));
+      if (distFromCenter < params.openRadius) {
+        const f = 1 - distFromCenter / params.openRadius;
+        // Left side goes left, right side goes right
+        const dir = s.baseX < centerX ? -1 : 1;
+        tx = s.baseX + dir * params.openStrength * f * f;
       }
     }
+
+    s.x += (tx - s.x) * (curtainReady && pointer.active ? params.followEase : params.returnEase);
   }
 
   ctx.globalCompositeOperation = "lighter";
-  strings.forEach(s => drawString(s));
+  strings.forEach(s => drawString(s.x, t, s));
   ctx.globalCompositeOperation = "source-over";
 
   requestAnimationFrame(loop);
