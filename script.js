@@ -336,17 +336,17 @@ function seed() {
       phase: Math.random() * 1000,
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
-      alpha: 0.28 + Math.random() * 0.28,
+      alpha: 0.35 + Math.random() * 0.25, // slightly more opaque
       hue: Math.random() * 360,
-      sat: 55 + Math.random() * 15,
-      light: 72 + Math.random() * 12
+      sat: 65 + Math.random() * 20, // more saturated for richer colors
+      light: 45 + Math.random() * 15 // lower lightness for less shine, more matte
     });
   }
 }
 
 const params = {
-  openRadius: 220,
-  openStrength: 140,
+  openRadius: 280, // wider opening to cover more of each section
+  openStrength: 180, // stronger pull for more visible opening
   followEase: 0.18,
   returnEase: 0.10,
   clothDamping: 0.85, // cloth-like damping (lower = more resistance)
@@ -358,33 +358,69 @@ function drawString(x, t, s) {
   const seg = 26;
   const segH = innerHeight / seg;
 
-  ctx.beginPath();
-  ctx.moveTo(x, 0);
+  // ROPE TEXTURE: Draw multiple overlapping strokes to simulate twisted rope
+  const ropeStrands = 3; // number of strands in the rope
+  
+  for (let strand = 0; strand < ropeStrands; strand++) {
+    ctx.beginPath();
+    const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.4; // slight offset for each strand
+    ctx.moveTo(x + strandOffset, 0);
 
+    for (let i = 1; i <= seg; i++) {
+      const y = i * segH;
+      const progress = i / seg; // 0 to 1 down the string
+      
+      // Base playful wave (keeps the fun appearance)
+      const baseWave =
+        Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
+        Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
+      
+      // Cloth-like sag: more sag lower down (gravity effect)
+      const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
+      
+      // Cloth-like folds: subtle variation based on position
+      const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
+      
+      // Rope twist: add subtle spiral effect for rope texture
+      const twist = Math.sin(y * 0.05 + t * 0.001 + strand * 2.1) * 0.3;
+      
+      // Combine: base wave + sag + folds + twist for rope-like appearance
+      const wave = baseWave + sag + fold + twist;
+      
+      ctx.lineTo(x + wave * (i / seg) + strandOffset, y);
+    }
+
+    // Rope texture: slightly thinner strands with varying opacity
+    const strandThickness = s.thickness * (0.5 + strand * 0.2);
+    const strandAlpha = s.alpha * (0.7 + strand * 0.15);
+    
+    ctx.lineWidth = strandThickness;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    // Slightly darker for inner strands to create depth
+    const strandLight = s.light - strand * 3;
+    ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
+    ctx.stroke();
+  }
+  
+  // Optional: Add a subtle highlight on top strand for rope shine
+  ctx.beginPath();
+  ctx.moveTo(x - 0.4, 0);
   for (let i = 1; i <= seg; i++) {
     const y = i * segH;
-    const progress = i / seg; // 0 to 1 down the string
-    
-    // Base playful wave (keeps the fun appearance)
+    const progress = i / seg;
     const baseWave =
       Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
       Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
-    
-    // Cloth-like sag: more sag lower down (gravity effect)
     const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
-    
-    // Cloth-like folds: subtle variation based on position
     const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
-    
-    // Combine: base wave + sag + folds for cloth-like appearance
     const wave = baseWave + sag + fold;
-    
-    ctx.lineTo(x + wave * (i / seg), y);
+    ctx.lineTo(x + wave * (i / seg) - 0.4, y);
   }
-
-  ctx.lineWidth = s.thickness;
+  ctx.lineWidth = s.thickness * 0.3;
   ctx.lineCap = "round";
-  ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${s.light}%,${s.alpha})`;
+  ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${Math.min(75, s.light + 15)}%,${s.alpha * 0.4})`;
   ctx.stroke();
 }
 
@@ -423,7 +459,8 @@ function loop(t) {
   if (isHovering) {
     sectionsEl.style.opacity = "1";
     sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
-    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.45}px`);
+    // Match reveal width to opening radius for better alignment
+    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.6}px`);
 
     sectionEls.forEach((el, i) => {
       el.style.opacity = i === idx ? "1" : "0";
@@ -495,12 +532,16 @@ function loop(t) {
 
     // CURTAIN: Opens around the active section (snapX) when hovering
     // Strings near the section center pull outward (left/right)
+    // This creates an opening that follows the 4-section system
     if (curtainReady && pointer.active) {
       const d = Math.abs(s.baseX - snapX);
       if (d < params.openRadius) {
+        // Smooth falloff curve
         const f = 1 - d / params.openRadius;
+        const eased = f * f * (3 - 2 * f); // smoothstep for smoother opening
+        // Left side of section goes left, right side goes right
         const dir = s.baseX < snapX ? -1 : 1;
-        tx = s.baseX + dir * params.openStrength * f * f;
+        tx = s.baseX + dir * params.openStrength * eased;
       }
     }
 
