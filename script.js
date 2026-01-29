@@ -210,10 +210,10 @@ function seed() {
           { h: 48, s: 85, l: 93 }   // #FDF8E1 - almost white yellow
         ];
         const color = palette[Math.floor(Math.random() * palette.length)];
-        // Add slight variation to make it more organic
-        const hue = color.h + (Math.random() - 0.5) * 3;
-        const sat = color.s + (Math.random() - 0.5) * 5;
-        const light = color.l + (Math.random() - 0.5) * 4;
+        // Add very slight variation to make it more organic while keeping colors true to palette
+        const hue = color.h + (Math.random() - 0.5) * 2; // Reduced variation
+        const sat = Math.max(80, Math.min(100, color.s + (Math.random() - 0.5) * 3)); // Keep saturation high
+        const light = Math.max(60, Math.min(95, color.l + (Math.random() - 0.5) * 3)); // Keep lightness in range
         return { hue, sat, light };
       })()
     });
