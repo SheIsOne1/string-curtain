@@ -365,94 +365,89 @@ const params = {
 };
 
 function drawString(x, t, s) {
-  const seg = 40; // More segments for smoother, more flexible curves
+  const seg = 50; // More segments for very smooth, flexible curves
   const segH = innerHeight / seg;
 
   // ORGANIC ROPE TEXTURE: Draw multiple overlapping strokes with natural variations
   const ropeStrands = 3; // number of strands in the rope
   
   for (let strand = 0; strand < ropeStrands; strand++) {
-    const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.5; // offset for each strand
-
-    // Store points for smooth curve calculation
-    const points = [];
+    const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.5;
+    const baseThickness = s.thickness * (0.5 + strand * 0.2);
+    
+    // Draw entire string as one smooth, flexible curve
+    ctx.beginPath();
+    let firstPoint = true;
     
     for (let i = 0; i <= seg; i++) {
       const y = i * segH;
-      const progress = i / seg; // 0 to 1 down the string
+      const progress = i / seg;
       
-      // Base playful wave (keeps the fun appearance)
+      // Base playful wave - INCREASED for more visible flexibility
       const baseWave =
-        Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble +
-        Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.6;
+        Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble * 1.3 +
+        Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.8;
       
       // Cloth-like sag: more sag lower down (gravity effect)
-      const sag = Math.sin(progress * Math.PI) * 2 * progress * progress;
+      const sag = Math.sin(progress * Math.PI) * 2.5 * progress * progress;
       
       // Cloth-like folds: subtle variation based on position
-      const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 1.5 * progress;
+      const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 2 * progress;
       
-      // ORGANIC ROPE TWIST: more pronounced spiral with natural variation
+      // ORGANIC ROPE TWIST: more pronounced spiral
       const twistPhase = y * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
-      const twist = Math.sin(twistPhase) * 0.5 + Math.cos(twistPhase * 1.3) * 0.2;
+      const twist = Math.sin(twistPhase) * 0.6 + Math.cos(twistPhase * 1.3) * 0.3;
       
-      // ORGANIC IRREGULARITIES: natural bumps and variations like real rope
-      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.4 +
-                           Math.cos(y * 0.07 + t * 0.0005) * 0.25;
+      // ORGANIC IRREGULARITIES: natural bumps
+      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.5 +
+                           Math.cos(y * 0.07 + t * 0.0005) * 0.3;
       
-      // Combine: base wave + sag + folds + twist + irregularities for organic rope
+      // Combine all effects for flexible, organic rope
       const wave = baseWave + sag + fold + twist + irregularity;
       const px = x + wave * (i / seg) + strandOffset;
       
-      points.push({ x: px, y, progress });
+      if (firstPoint) {
+        ctx.moveTo(px, y);
+        firstPoint = false;
+      } else {
+        // Use smooth curves - calculate control point for bezier
+        const prevY = (i - 1) * segH;
+        const prevProgress = (i - 1) / seg;
+        const prevBaseWave = Math.sin(t * 0.0014 + prevY * 0.018 + s.phase) * s.wobble * 1.3 +
+                            Math.cos(t * 0.0011 + prevY * 0.012) * s.wobble * 0.8;
+        const prevSag = Math.sin(prevProgress * Math.PI) * 2.5 * prevProgress * prevProgress;
+        const prevFold = Math.sin(t * 0.0008 + s.baseX * 0.015 + prevProgress * 2) * 2 * prevProgress;
+        const prevTwistPhase = prevY * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
+        const prevTwist = Math.sin(prevTwistPhase) * 0.6 + Math.cos(prevTwistPhase * 1.3) * 0.3;
+        const prevIrregularity = Math.sin(prevY * 0.12 + s.phase * 0.5 + strand) * 0.5 +
+                                 Math.cos(prevY * 0.07 + t * 0.0005) * 0.3;
+        const prevWave = prevBaseWave + prevSag + prevFold + prevTwist + prevIrregularity;
+        const prevPx = x + prevWave * ((i - 1) / seg) + strandOffset;
+        
+        // Control point for smooth curve
+        const cpx = (prevPx + px) / 2;
+        const cpy = (prevY + y) / 2;
+        
+        ctx.quadraticCurveTo(prevPx, prevY, cpx, cpy);
+      }
     }
-
-    // Draw with smooth curves and organic thickness/color variation
-    const baseThickness = s.thickness * (0.5 + strand * 0.2);
     
-    // Draw with smooth quadratic curves for flexible, flowing appearance
-    for (let i = 0; i < points.length - 2; i++) {
-      const p0 = i > 0 ? points[i - 1] : points[i];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[i + 2];
-      
-      // Calculate control points for smooth curves
-      const cp1x = p1.x + (p2.x - p0.x) * 0.2; // smooth control point
-      const cp1y = p1.y + (p2.y - p0.y) * 0.2;
-      const cp2x = p2.x - (p3.x - p1.x) * 0.2;
-      const cp2y = p2.y - (p3.y - p1.y) * 0.2;
-      
-      // ORGANIC THICKNESS VARIATION: natural bumps and variations
-      const thicknessVar = 1 + Math.sin(p1.y * 0.15 + s.phase + strand) * 0.35 +
-                          Math.cos(p1.y * 0.09 + t * 0.0003) * 0.25;
-      const segmentThickness = baseThickness * thicknessVar;
-      
-      // ORGANIC COLOR VARIATION: natural color shifts along the rope (like weathered rope)
-      const colorVar = Math.sin(p1.y * 0.1 + s.phase * 0.3 + strand * 0.5) * 10;
-      const strandLight = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar));
-      const strandAlpha = s.alpha * (0.7 + strand * 0.15) * (0.85 + Math.sin(p1.y * 0.08) * 0.15);
-      
-      // Draw smooth curve segment
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.quadraticCurveTo(cp1x, cp1y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-      ctx.lineWidth = segmentThickness;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
-      ctx.stroke();
-      
-      // Draw second half of curve
-      ctx.beginPath();
-      ctx.moveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-      ctx.quadraticCurveTo(cp2x, cp2y, p2.x, p2.y);
-      ctx.lineWidth = segmentThickness;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = `hsla(${s.hue},${s.sat}%,${strandLight}%,${strandAlpha})`;
-      ctx.stroke();
-    }
+    // Apply organic thickness and color variation along the path
+    const gradient = ctx.createLinearGradient(x - 50, 0, x + 50, innerHeight);
+    const colorVar1 = Math.sin(s.phase * 0.3 + strand * 0.5) * 8;
+    const colorVar2 = Math.sin(s.phase * 0.3 + strand * 0.5 + 1) * 8;
+    const light1 = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar1));
+    const light2 = Math.max(15, Math.min(40, s.light - strand * 2 + colorVar2));
+    gradient.addColorStop(0, `hsla(${s.hue},${s.sat}%,${light1}%,${s.alpha * (0.7 + strand * 0.15)})`);
+    gradient.addColorStop(1, `hsla(${s.hue},${s.sat}%,${light2}%,${s.alpha * (0.7 + strand * 0.15)})`);
+    
+    // Thickness variation
+    const thicknessVar = 1 + Math.sin(t * 0.0003 + s.phase) * 0.3;
+    ctx.lineWidth = baseThickness * thicknessVar;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = gradient;
+    ctx.stroke();
   }
 }
 
