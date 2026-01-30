@@ -137,14 +137,14 @@ function seed() {
       x: (i + 0.5) * gap,
       vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
-      wobble: 0.7 + Math.random() * 1.3,
-      thickness: 1.3 + Math.random() * 1.4,
-      alpha: 0.85 + Math.random() * 0.15, // high opacity for visibility
-      // Organic movement properties - each string unique
-      waveSpeed: 0.8 + Math.random() * 0.4, // unique wave speed per string
-      waveFreq: 0.015 + Math.random() * 0.008, // unique frequency
+      wobble: 1.2 + Math.random() * 1.8, // More variation for hair-like movement
+      thickness: 0.8 + Math.random() * 0.6, // Thinner like hair strands
+      alpha: 0.75 + Math.random() * 0.2, // Slightly more variation for hair
+      // Hair-like movement properties - each strand very unique
+      waveSpeed: 1.2 + Math.random() * 0.8, // Faster, more responsive waves
+      waveFreq: 0.02 + Math.random() * 0.015, // Higher frequency for finer movement
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
-      mass: 0.8 + Math.random() * 0.4, // unique mass affects response
+      mass: 0.3 + Math.random() * 0.3, // Much lighter like hair (was 0.8-1.2)
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -169,11 +169,11 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.18,
-  returnEase: 0.10,
-  clothDamping: 0.85, // cloth-like damping (lower = more resistance)
-  clothInertia: 0.12, // how much momentum strings keep
-  clothCoupling: 0.08 // how much neighboring strings influence each other (cloth folds)
+  followEase: 0.25, // More responsive like hair (was 0.18)
+  returnEase: 0.15, // Faster return like hair (was 0.10)
+  clothDamping: 0.92, // Higher damping for hair (air resistance) (was 0.85)
+  clothInertia: 0.20, // More momentum for hair-like bounce (was 0.12)
+  clothCoupling: 0.03 // Less coupling - hair moves more independently (was 0.08)
 };
 
 function drawString(x, t, s) {
@@ -195,32 +195,34 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // ORGANIC WAVE PROPAGATION - waves travel down the string naturally
-      const waveTravel = (t * s.waveSpeed * 0.001) + (y * s.waveFreq);
+      // HAIR-LIKE WAVE PROPAGATION - finer, faster waves like hair
+      const waveTravel = (t * s.waveSpeed * 0.0015) + (y * s.waveFreq); // Faster wave travel
       const baseWave =
-        Math.sin(waveTravel + s.phase) * s.wobble * 1.3 +
-        Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.8 +
-        Math.sin(waveTravel * 1.5 + s.naturalSway) * s.wobble * 0.4; // natural sway
+        Math.sin(waveTravel + s.phase) * s.wobble * 1.5 +
+        Math.cos(waveTravel * 0.6 + s.phase * 0.7) * s.wobble * 1.0 +
+        Math.sin(waveTravel * 2.0 + s.naturalSway) * s.wobble * 0.6 + // More harmonics
+        Math.sin(waveTravel * 0.3 + s.phase * 0.5) * s.wobble * 0.3; // Subtle long waves
       
-      // ORGANIC GRAVITY SAG - more realistic sag with variation
-      const sagAmount = 2.5 + Math.sin(t * 0.0003 + s.phase) * 0.5; // varying gravity
+      // HAIR-LIKE GRAVITY SAG - lighter, more subtle sag
+      const sagAmount = 1.8 + Math.sin(t * 0.0005 + s.phase) * 0.4; // Lighter sag
       const sag = Math.sin(progress * Math.PI) * sagAmount * progress * progress;
       
-      // ORGANIC FOLDS - respond to movement and position
-      const foldPhase = t * 0.0008 + s.baseX * 0.015 + progress * 2;
-      const fold = Math.sin(foldPhase) * 2 * progress +
-                   Math.cos(foldPhase * 1.3) * 1.2 * progress; // more complex fold
+      // HAIR-LIKE FOLDS - finer, more individual movement
+      const foldPhase = t * 0.0012 + s.baseX * 0.02 + progress * 2.5;
+      const fold = Math.sin(foldPhase) * 1.5 * progress +
+                   Math.cos(foldPhase * 1.5) * 1.0 * progress; // Finer folds
       
-      // ORGANIC ROPE TWIST - natural spiral with variation
-      const twistPhase = y * 0.08 + t * s.waveSpeed * 0.001 + strand * 2.1 + s.phase * 0.01;
-      const twist = Math.sin(twistPhase) * 0.6 + 
-                   Math.cos(twistPhase * 1.3) * 0.3 +
-                   Math.sin(twistPhase * 0.5) * 0.2; // additional twist harmonics
+      // HAIR-LIKE TWIST - more subtle, individual strand twist
+      const twistPhase = y * 0.12 + t * s.waveSpeed * 0.0015 + strand * 3.0 + s.phase * 0.02;
+      const twist = Math.sin(twistPhase) * 0.4 + 
+                   Math.cos(twistPhase * 1.5) * 0.25 +
+                   Math.sin(twistPhase * 0.7) * 0.15; // More subtle twist
       
-      // ORGANIC IRREGULARITIES - natural bumps and texture
-      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.5 +
-                           Math.cos(y * 0.07 + t * 0.0005) * 0.3 +
-                           Math.sin(y * 0.2 + t * 0.0003 + s.phase) * 0.2; // more texture
+      // HAIR-LIKE IRREGULARITIES - finer texture, more individual variation
+      const irregularity = Math.sin(y * 0.18 + s.phase * 0.7 + strand) * 0.4 +
+                           Math.cos(y * 0.11 + t * 0.0008) * 0.25 +
+                           Math.sin(y * 0.25 + t * 0.0005 + s.phase) * 0.2 +
+                           Math.sin(y * 0.05 + t * 0.0002) * 0.15; // More fine detail
       
       // ORGANIC RESPONSE - strings respond to their position relative to opening
       let responseWave = 0;
@@ -410,49 +412,50 @@ function loop(t) {
       }
     }
 
-    // ORGANIC PHYSICS: More natural cloth-like movement
+    // HAIR-LIKE PHYSICS: Light, responsive, individual movement
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Mass affects how strings respond (heavier strings move slower)
-    const effectiveInertia = params.clothInertia / s.mass;
+    // Mass affects how hair responds (lighter hair moves faster and more)
+    const effectiveInertia = params.clothInertia / s.mass; // Lighter = more responsive
     s.vx += force * effectiveInertia;
     
-    // Organic damping - varies slightly per string
-    const damping = params.clothDamping + (s.mass - 1) * 0.02;
+    // Hair-like damping - air resistance, varies per strand
+    const damping = params.clothDamping + (s.mass - 0.3) * 0.03; // Higher damping for hair
     s.vx *= damping;
     
-    // Natural velocity limits (not too rigid)
-    const maxVel = 8 + s.wobble * 2; // more flexible strings can move faster
+    // Hair velocity limits - can move faster (lighter)
+    const maxVel = 12 + s.wobble * 3; // Hair can move faster
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
     // Update position
     s.x += s.vx;
     
-    // ORGANIC NEIGHBOR COUPLING - creates natural ripple effects
+    // HAIR-LIKE NEIGHBOR COUPLING - minimal coupling, more independent movement
     if (i > 0 && i < strings.length - 1) {
       const left = strings[i - 1];
       const right = strings[i + 1];
       
-      // Calculate neighbor influence (stronger when curtain is active)
+      // Calculate neighbor influence (much weaker for hair - more independent)
       const couplingStrength = curtainReady && pointer.active 
-        ? params.clothCoupling * 0.5 
-        : params.clothCoupling * 0.2;
+        ? params.clothCoupling * 0.3 // Even less when active
+        : params.clothCoupling * 0.1; // Very minimal coupling
       
-      // Average neighbor position creates natural folds
+      // Average neighbor position - subtle influence
       const avgNeighborX = (left.x + right.x) / 2;
       const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
       
-      // Also consider neighbor velocities for wave propagation
+      // Neighbor velocities - subtle wave propagation
       const avgNeighborVx = (left.vx + right.vx) / 2;
-      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.3;
+      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.2;
       
       s.x += neighborInfluence;
       s.vx += velocityInfluence;
     }
     
-    // ORGANIC DRIFT - subtle natural drift for more life
-    const drift = Math.sin(t * 0.0002 + s.phase * 0.01) * 0.1;
+    // HAIR-LIKE DRIFT - more individual, subtle movement
+    const drift = Math.sin(t * 0.0003 + s.phase * 0.02) * 0.15 +
+                  Math.cos(t * 0.00015 + s.phase * 0.015) * 0.08; // More variation
     s.x += drift;
   }
 
