@@ -315,7 +315,7 @@ canvas {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 2;
+  z-index: 2; /* Below header (z-index: 10) */
 }
 
 .hud {
@@ -344,25 +344,31 @@ canvas {
 
 /* Titles overlay - header menu at top */
 .titles-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  z-index: 3;
-  pointer-events: auto; /* Always allow pointer events for header menu */
-  background: rgba(7, 7, 11, 0.3); /* Subtle background for header */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 80px !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  z-index: 10 !important; /* Higher than canvas (z-index: 2) to ensure visibility */
+  pointer-events: auto !important; /* Always allow pointer events for header menu */
+  background: rgba(7, 7, 11, 0.7) !important; /* More visible background for header */
   backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  /* Ensure header is always at top, never centered */
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
 }
 
 .title-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 1; /* Always visible in header */
-  transition: opacity 200ms ease, transform 200ms ease, color 200ms ease;
+  opacity: 1 !important; /* Always visible in header - force with !important */
+  transition: transform 200ms ease, color 200ms ease;
   font-family: "Imperial Script", cursive;
   font-weight: 400;
   font-style: normal;
@@ -371,10 +377,13 @@ canvas {
   color: rgba(255, 255, 255, 0.7) !important;
   text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3);
   margin: 0;
+  padding: 0;
   position: relative;
   cursor: pointer;
-  pointer-events: auto; /* Always allow pointer events in header */
+  pointer-events: auto !important; /* Always allow pointer events in header */
   z-index: 10;
+  /* Ensure titles are at top of header, not centered vertically on page */
+  align-self: flex-start;
 }
 
 /* Title hover state in header */
