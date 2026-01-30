@@ -145,6 +145,7 @@ function seed() {
       waveFreq: 0.014 + Math.random() * 0.010, // Natural frequency
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
       mass: 0.4 + Math.random() * 0.25, // Natural weight for smooth flow
+      curlAmount: 0.6 + Math.random() * 0.4, // Individual curl intensity (0.6-1.0)
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -195,12 +196,18 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // SMOOTH HAND-DRAWN WAVES - flowing, natural waves
+      // SMOOTH HAND-DRAWN WAVES - flowing, natural waves with curl
       const waveTravel = (t * s.waveSpeed * 0.0008) + (y * s.waveFreq); // Smooth wave travel
       const baseWave =
         Math.sin(waveTravel + s.phase) * s.wobble * 1.2 +
         Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.8 +
         Math.sin(waveTravel * 1.6 + s.naturalSway) * s.wobble * 0.5; // Natural harmonics
+      
+      // HAIR CURL - spiral/curl effect like natural hair
+      const curlPhase = y * 0.15 + t * s.waveSpeed * 0.0006 + s.phase * 0.5;
+      const curl = (Math.sin(curlPhase) * 0.8 * progress +
+                   Math.cos(curlPhase * 1.2) * 0.6 * progress +
+                   Math.sin(curlPhase * 0.5) * 0.4 * progress) * s.curlAmount; // Individual curl intensity
       
       // SMOOTH SAG - natural, flowing sag
       const sagAmount = 1.5 + Math.sin(t * 0.00025 + s.phase) * 0.3; // Natural sag
@@ -211,10 +218,11 @@ function drawString(x, t, s) {
       const fold = Math.sin(foldPhase) * 1.1 * progress +
                    Math.cos(foldPhase * 1.35) * 0.8 * progress; // Natural folds
       
-      // SMOOTH TWIST - natural strand twist
-      const twistPhase = y * 0.09 + t * s.waveSpeed * 0.0008 + strand * 2.6 + s.phase * 0.016;
-      const twist = Math.sin(twistPhase) * 0.3 + 
-                   Math.cos(twistPhase * 1.35) * 0.18; // Natural twist
+      // HAIR CURL TWIST - stronger spiral twist for curly hair
+      const twistPhase = y * 0.12 + t * s.waveSpeed * 0.0008 + strand * 2.8 + s.phase * 0.02;
+      const twist = Math.sin(twistPhase) * 0.5 * progress + 
+                   Math.cos(twistPhase * 1.4) * 0.35 * progress +
+                   Math.sin(twistPhase * 0.7) * 0.25 * progress; // Stronger curl effect
       
       // SMOOTH IRREGULARITIES - natural texture
       const irregularity = Math.sin(y * 0.13 + s.phase * 0.55 + strand) * 0.3 +
@@ -232,8 +240,8 @@ function drawString(x, t, s) {
         }
       }
       
-      // Combine all effects for flexible, organic rope
-      const wave = baseWave + sag + fold + twist + irregularity + responseWave;
+      // Combine all effects with curl for curly hair
+      const wave = baseWave + sag + fold + twist + curl + irregularity + responseWave;
       const px = x + wave * (i / seg) + strandOffset;
       
       ctx.lineTo(px, y);
