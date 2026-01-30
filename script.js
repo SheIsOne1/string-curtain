@@ -137,14 +137,14 @@ function seed() {
       x: (i + 0.5) * gap,
       vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
-      wobble: 1.0 + Math.random() * 1.5, // Gentle variation for natural movement
+      wobble: 0.6 + Math.random() * 0.8, // Subtle variation for smooth hand-drawn feel
       thickness: 0.8 + Math.random() * 0.6, // Thinner like hair strands
       alpha: 0.70 + Math.random() * 0.18, // Gentler opacity variation
-      // Hair-like movement properties - each strand very unique
-      waveSpeed: 0.8 + Math.random() * 0.5, // Gentle wave speed
-      waveFreq: 0.016 + Math.random() * 0.012, // Gentle frequency for natural movement
+      // Hand-drawn animation properties - smooth, flowing
+      waveSpeed: 0.4 + Math.random() * 0.3, // Slow, smooth waves like animation
+      waveFreq: 0.010 + Math.random() * 0.008, // Low frequency for smooth movement
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
-      mass: 0.35 + Math.random() * 0.25, // Gentle weight for natural flow
+      mass: 0.5 + Math.random() * 0.2, // Moderate weight for stable, smooth flow
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -169,11 +169,11 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.12, // Gentle, smooth response
-  returnEase: 0.08, // Gentle, smooth return
-  clothDamping: 0.91, // Gentle damping for smooth movement
-  clothInertia: 0.18, // Gentle momentum for natural flow
-  clothCoupling: 0.025 // Gentle coupling - natural independence
+  followEase: 0.06, // Very smooth, hand-drawn animation feel
+  returnEase: 0.04, // Very smooth return, like keyframe animation
+  clothDamping: 0.96, // High damping for stable, smooth movement (no bounce)
+  clothInertia: 0.08, // Low inertia - smooth, no bouncy physics
+  clothCoupling: 0.02 // Minimal coupling for smooth independence
 };
 
 function drawString(x, t, s) {
@@ -195,33 +195,30 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // HAIR-LIKE WAVE PROPAGATION - gentle, natural, flowing waves
-      const waveTravel = (t * s.waveSpeed * 0.001) + (y * s.waveFreq); // Gentle wave travel
+      // HAND-DRAWN ANIMATION WAVES - smooth, flowing, stable waves
+      const waveTravel = (t * s.waveSpeed * 0.0006) + (y * s.waveFreq); // Slow, smooth wave travel
       const baseWave =
-        Math.sin(waveTravel + s.phase) * s.wobble * 1.3 +
-        Math.cos(waveTravel * 0.65 + s.phase * 0.75) * s.wobble * 0.9 +
-        Math.sin(waveTravel * 1.9 + s.naturalSway) * s.wobble * 0.6 + // Natural harmonics
-        Math.sin(waveTravel * 0.35 + s.phase * 0.45) * s.wobble * 0.35; // Subtle long waves
+        Math.sin(waveTravel + s.phase) * s.wobble * 1.0 +
+        Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.7 +
+        Math.sin(waveTravel * 1.5 + s.naturalSway) * s.wobble * 0.4; // Smooth harmonics only
       
-      // HAIR-LIKE GRAVITY SAG - gentle, natural sag
-      const sagAmount = 1.6 + Math.sin(t * 0.0003 + s.phase) * 0.35; // Gentle sag
+      // HAND-DRAWN ANIMATION SAG - smooth, stable sag
+      const sagAmount = 1.4 + Math.sin(t * 0.0002 + s.phase) * 0.25; // Smooth, stable sag
       const sag = Math.sin(progress * Math.PI) * sagAmount * progress * progress;
       
-      // HAIR-LIKE FOLDS - gentle, natural individual movement
-      const foldPhase = t * 0.0008 + s.baseX * 0.017 + progress * 2.2;
-      const fold = Math.sin(foldPhase) * 1.3 * progress +
-                   Math.cos(foldPhase * 1.4) * 0.9 * progress; // Gentle, natural folds
+      // HAND-DRAWN ANIMATION FOLDS - smooth, flowing movement
+      const foldPhase = t * 0.0005 + s.baseX * 0.015 + progress * 2.0;
+      const fold = Math.sin(foldPhase) * 1.0 * progress +
+                   Math.cos(foldPhase * 1.3) * 0.7 * progress; // Smooth, stable folds
       
-      // HAIR-LIKE TWIST - gentle, natural strand twist
-      const twistPhase = y * 0.10 + t * s.waveSpeed * 0.001 + strand * 2.8 + s.phase * 0.018;
-      const twist = Math.sin(twistPhase) * 0.35 + 
-                   Math.cos(twistPhase * 1.4) * 0.22 +
-                   Math.sin(twistPhase * 0.65) * 0.12; // Gentle, natural twist
+      // HAND-DRAWN ANIMATION TWIST - subtle, smooth twist
+      const twistPhase = y * 0.08 + t * s.waveSpeed * 0.0006 + strand * 2.5 + s.phase * 0.015;
+      const twist = Math.sin(twistPhase) * 0.25 + 
+                   Math.cos(twistPhase * 1.3) * 0.15; // Smooth, subtle twist only
       
-      // HAIR-LIKE IRREGULARITIES - gentle texture, individual variation
-      const irregularity = Math.sin(y * 0.14 + s.phase * 0.6 + strand) * 0.35 +
-                           Math.cos(y * 0.09 + t * 0.0004) * 0.22 +
-                           Math.sin(y * 0.20 + t * 0.00025 + s.phase) * 0.18; // Gentle detail
+      // HAND-DRAWN ANIMATION IRREGULARITIES - minimal, smooth texture
+      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.25 +
+                           Math.cos(y * 0.08 + t * 0.0003) * 0.15; // Smooth, minimal detail
       
       // ORGANIC RESPONSE - strings respond to their position relative to opening
       let responseWave = 0;
@@ -411,21 +408,27 @@ function loop(t) {
       }
     }
 
-    // HAIR-LIKE PHYSICS: Gentle, smooth, flowing movement
+    // HAND-DRAWN ANIMATION PHYSICS: Smooth, stable, no bounce
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
-    const force = (tx - s.x) * targetEase;
     
-    // Mass affects how hair responds (gentle weight for smooth flow)
-    const effectiveInertia = params.clothInertia / s.mass; // Gentle responsiveness
-    s.vx += force * effectiveInertia; // Gentle, smooth acceleration
+    // Smooth interpolation like keyframe animation (ease in/out)
+    const diff = tx - s.x;
+    const smoothStep = diff * targetEase;
     
-    // Hair-like damping - gentle damping for smooth movement
-    const damping = params.clothDamping + (s.mass - 0.35) * 0.018; // Gentle damping = smooth
+    // Very low inertia for smooth, stable movement (no bounce)
+    const effectiveInertia = params.clothInertia / s.mass;
+    s.vx += smoothStep * effectiveInertia;
+    
+    // High damping for stable, smooth movement (eliminates bounce)
+    const damping = params.clothDamping + (s.mass - 0.5) * 0.01;
     s.vx *= damping;
     
-    // Hair velocity limits - gentle speed for natural movement
-    const maxVel = 8 + s.wobble * 2; // Gentle speed for natural flow
+    // Low velocity limits for smooth, stable movement
+    const maxVel = 4 + s.wobble * 1.0; // Slow, stable speed
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
+    
+    // Additional smoothing to prevent jitter
+    s.vx *= 0.98; // Extra smoothing
     
     // Update position
     s.x += s.vx;
