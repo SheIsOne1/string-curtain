@@ -294,9 +294,15 @@ function loop(t) {
     titleOverlayEls.forEach((titleEl, i) => {
       if (titleEl) {
         const isVisible = i === idx;
-        titleEl.style.opacity = isVisible ? "1" : "0";
-        // Only enable pointer events when visible - allows mouse events to pass through to canvas when hidden
-        titleEl.style.pointerEvents = isVisible ? "auto" : "none";
+        if (isVisible) {
+          titleEl.style.opacity = "1";
+          titleEl.style.visibility = "visible";
+          titleEl.style.pointerEvents = "auto";
+        } else {
+          titleEl.style.opacity = "0";
+          titleEl.style.visibility = "hidden";
+          titleEl.style.pointerEvents = "none";
+        }
       }
     });
     
@@ -310,6 +316,7 @@ function loop(t) {
     titleOverlayEls.forEach(titleEl => {
       if (titleEl) {
         titleEl.style.opacity = "0";
+        titleEl.style.visibility = "hidden";
         titleEl.style.pointerEvents = "none"; // Allow mouse events to pass through
       }
     });
