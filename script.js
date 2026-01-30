@@ -170,11 +170,12 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.05, // Very smooth brush stroke response
-  returnEase: 0.04, // Very smooth brush stroke return
-  clothDamping: 0.97, // Very high damping for smooth brush stroke (no bounce)
-  clothInertia: 0.06, // Very low inertia for smooth brush stroke
-  clothCoupling: 0.02 // Minimal coupling for smooth independence
+  followEase: 0.07, // Organic brush-through-hair response
+  returnEase: 0.05, // Natural hair return after brush passes
+  clothDamping: 0.96, // High damping for smooth hair flow
+  clothInertia: 0.10, // Natural inertia for organic hair movement
+  clothCoupling: 0.03, // Natural coupling - hair strands influence each other
+  brushResistance: 0.15 // Natural resistance when brush moves through hair
 };
 
 function drawString(x, t, s) {
@@ -228,15 +229,16 @@ function drawString(x, t, s) {
       const irregularity = Math.sin(y * 0.13 + s.phase * 0.55 + strand) * 0.3 +
                            Math.cos(y * 0.085 + t * 0.00035) * 0.18; // Natural detail
       
-      // ORGANIC RESPONSE - strings respond to their position relative to opening
+      // ORGANIC BRUSH RESPONSE - hair responds organically to brush movement
       let responseWave = 0;
       if (curtainReady && pointer.active) {
         const distFromSnap = Math.abs(s.baseX - snapX);
         if (distFromSnap < params.openRadius * 1.5) {
-          const response = (1 - distFromSnap / (params.openRadius * 1.5)) * 0.3;
-          const responsePhase = t * 0.002 + s.baseX * 0.02;
-          // Strings near opening have more movement
-          responseWave = Math.sin(responsePhase) * response * progress;
+          const response = (1 - distFromSnap / (params.openRadius * 1.5)) * 0.4;
+          const responsePhase = t * 0.0015 + s.baseX * 0.025 + s.phase * 0.1;
+          // Organic hair response - flows and waves with brush
+          responseWave = Math.sin(responsePhase) * response * progress +
+                        Math.cos(responsePhase * 1.3) * response * 0.6 * progress; // More organic
         }
       }
       
@@ -401,76 +403,81 @@ function loop(t) {
     const s = strings[i];
     let tx = s.baseX;
 
-    // CURTAIN: Opens around the active section (snapX) when hovering
-    // Strings near the section center pull outward (left/right)
-    // This creates an opening that follows the 4-section system
+    // BRUSH THROUGH HAIR: Organic response to mouse/brush movement
     if (curtainReady && pointer.active) {
       const d = Math.abs(s.baseX - snapX);
       if (d < params.openRadius) {
-        // Smooth falloff curve
+        // Smooth falloff curve - like brush pressure
         const f = 1 - d / params.openRadius;
-        const eased = f * f * (3 - 2 * f); // smoothstep for smoother opening
-        // Left side of section goes left, right side goes right
+        const eased = f * f * (3 - 2 * f); // smoothstep for organic opening
+        
+        // Organic brush direction - hair flows with brush
         const dir = s.baseX < snapX ? -1 : 1;
-        tx = s.baseX + dir * params.openStrength * eased;
+        const brushPull = params.openStrength * eased;
+        
+        // Add organic variation - each hair responds slightly differently
+        const hairResistance = 1 - (params.brushResistance * (1 - f)); // Less resistance near brush
+        tx = s.baseX + dir * brushPull * hairResistance;
+        
+        // Organic flow - hair continues to move slightly after brush passes
+        const flowAftermath = Math.sin(t * 0.001 + s.phase) * 2 * eased;
+        tx += flowAftermath;
       }
     }
 
-    // BRUSH STROKE PHYSICS: Smooth, flowing, no bounce
+    // ORGANIC HAIR BRUSH PHYSICS: Natural hair flowing with brush
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     
-    // Direct smooth interpolation like brush stroke (no physics bounce)
+    // Organic interpolation - hair naturally follows brush
     const diff = tx - s.x;
-    const smoothMove = diff * targetEase;
+    const organicMove = diff * targetEase;
     
-    // Very low inertia for smooth brush stroke
+    // Natural hair inertia - each strand has its own response
     const effectiveInertia = params.clothInertia / s.mass;
-    s.vx += smoothMove * effectiveInertia;
+    s.vx += organicMove * effectiveInertia;
     
-    // Very high damping to eliminate all bounce (brush stroke smoothness)
-    const damping = params.clothDamping + (s.mass - 0.4) * 0.008;
+    // Natural hair damping - smooth flow with slight resistance
+    const damping = params.clothDamping + (s.mass - 0.4) * 0.012;
     s.vx *= damping;
     
-    // Low velocity for smooth brush stroke
-    const maxVel = 3.5 + s.wobble * 0.8; // Smooth brush stroke speed
+    // Organic velocity - natural hair movement speed
+    const maxVel = 4.5 + s.wobble * 1.0; // Natural hair flow speed
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
-    // Kill any tiny velocities that cause bounce/jitter
-    if (Math.abs(s.vx) < 0.05) {
-      s.vx = 0; // Complete stop for smooth brush stroke
+    // Organic settling - hair naturally comes to rest
+    if (Math.abs(s.vx) < 0.08) {
+      s.vx *= 0.92; // Gentle settling, not instant stop
     }
-    
-    // Additional smoothing for brush stroke feel
-    s.vx *= 0.98; // Extra smoothing
     
     // Update position
     s.x += s.vx;
     
-    // HAND-DRAWN ANIMATION COUPLING - smooth, minimal coupling
+    // ORGANIC HAIR COUPLING - hair strands naturally influence each other
     if (i > 0 && i < strings.length - 1) {
       const left = strings[i - 1];
       const right = strings[i + 1];
       
-      // Calculate neighbor influence (very weak for smooth independence)
+      // Natural hair coupling - strands flow together like real hair
       const couplingStrength = curtainReady && pointer.active 
-        ? params.clothCoupling * 0.2
-        : params.clothCoupling * 0.05; // Minimal coupling
+        ? params.clothCoupling * 0.4 // More coupling when brush is active
+        : params.clothCoupling * 0.15; // Natural coupling when at rest
       
-      // Smooth neighbor position influence
+      // Organic neighbor influence - hair flows with nearby strands
       const avgNeighborX = (left.x + right.x) / 2;
       const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
       
-      // Smooth neighbor velocity influence
+      // Organic velocity coupling - wave propagation through hair
       const avgNeighborVx = (left.vx + right.vx) / 2;
-      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.15;
+      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.25;
       
       s.x += neighborInfluence;
       s.vx += velocityInfluence;
     }
     
-    // SMOOTH DRIFT - natural individual movement
-    const drift = Math.sin(t * 0.0002 + s.phase * 0.02) * 0.15 +
-                  Math.cos(t * 0.0001 + s.phase * 0.016) * 0.1; // Natural variation
+    // ORGANIC HAIR DRIFT - natural, flowing movement
+    const drift = Math.sin(t * 0.00025 + s.phase * 0.025) * 0.18 +
+                  Math.cos(t * 0.00012 + s.phase * 0.02) * 0.12 +
+                  Math.sin(t * 0.00008 + s.phase * 0.015) * 0.08; // Organic variation
     s.x += drift;
   }
 
