@@ -285,11 +285,13 @@ function loop(t) {
   if (isHovering) {
     sectionsEl.style.opacity = "1";
     // Vertical reveal from top
+    const revealH = Math.min(innerHeight, params.openRadius * 2);
     sectionsEl.style.setProperty("--reveal-y", "0px"); // Start from top
-    sectionsEl.style.setProperty("--reveal-h", `${Math.min(innerHeight, params.openRadius * 2)}px`);
+    sectionsEl.style.setProperty("--reveal-h", `${revealH}px`);
     // Horizontal section selection
     sectionsEl.style.setProperty("--reveal-section-left", `${idx * 25}%`);
     sectionsEl.style.setProperty("--reveal-section-right", `${(idx + 1) * 25}%`);
+    
 
     sectionEls.forEach((el, i) => {
       el.style.opacity = i === idx ? "1" : "0";

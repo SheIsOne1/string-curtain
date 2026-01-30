@@ -342,14 +342,14 @@ canvas {
   font-family: monospace;
 }
 
-/* Titles overlay - behind curtain, appear on hover */
+/* Titles overlay - behind curtain, appear on hover in revealed area */
 .titles-overlay {
   position: fixed;
   inset: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  z-index: 1; /* Behind canvas (z-index: 2), above sections (z-index: 0) */
-  pointer-events: none; /* Allow mouse events to pass through to canvas */
+  z-index: 1; /* Behind canvas (z-index: 2), above sections (z-index: 0) - visible when curtain opens */
+  pointer-events: none; /* Allow mouse events to pass through to canvas when hidden */
   background: none; /* No background - completely transparent */
 }
 
@@ -372,9 +372,11 @@ canvas {
   position: relative;
   cursor: pointer;
   pointer-events: none; /* Disabled by default, JavaScript will enable when visible */
-  z-index: 1;
+  z-index: 1; /* Behind canvas strings, but visible when curtain opens */
   width: 100%;
   text-align: center;
+  /* Ensure titles are visible - they'll show through gaps when strings move apart */
+  will-change: opacity, visibility;
 }
 
 /* Only enable pointer events when title is visible - JavaScript controls this */
