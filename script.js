@@ -137,14 +137,14 @@ function seed() {
       x: (i + 0.5) * gap,
       vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
-      wobble: 1.2 + Math.random() * 1.8, // More variation for hair-like movement
+      wobble: 1.5 + Math.random() * 2.5, // Much more variation for fluid movement
       thickness: 0.8 + Math.random() * 0.6, // Thinner like hair strands
       alpha: 0.75 + Math.random() * 0.2, // Slightly more variation for hair
       // Hair-like movement properties - each strand very unique
-      waveSpeed: 1.2 + Math.random() * 0.8, // Faster, more responsive waves
-      waveFreq: 0.02 + Math.random() * 0.015, // Higher frequency for finer movement
+      waveSpeed: 1.5 + Math.random() * 1.2, // Much faster, more fluid waves
+      waveFreq: 0.025 + Math.random() * 0.020, // Higher frequency for finer, fluid movement
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
-      mass: 0.3 + Math.random() * 0.3, // Much lighter like hair (was 0.8-1.2)
+      mass: 0.2 + Math.random() * 0.25, // Even lighter for more fluid movement (was 0.3-0.6)
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -169,11 +169,11 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.25, // More responsive like hair (was 0.18)
-  returnEase: 0.15, // Faster return like hair (was 0.10)
-  clothDamping: 0.92, // Higher damping for hair (air resistance) (was 0.85)
-  clothInertia: 0.20, // More momentum for hair-like bounce (was 0.12)
-  clothCoupling: 0.03 // Less coupling - hair moves more independently (was 0.08)
+  followEase: 0.35, // Much more responsive and fluid (was 0.25)
+  returnEase: 0.20, // Faster, more fluid return (was 0.15)
+  clothDamping: 0.88, // Less damping = more fluid movement (was 0.92)
+  clothInertia: 0.30, // Much more momentum for fluid bounce (was 0.20)
+  clothCoupling: 0.015 // Minimal coupling - very independent movement (was 0.03)
 };
 
 function drawString(x, t, s) {
@@ -195,13 +195,14 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // HAIR-LIKE WAVE PROPAGATION - finer, faster waves like hair
-      const waveTravel = (t * s.waveSpeed * 0.0015) + (y * s.waveFreq); // Faster wave travel
+      // HAIR-LIKE WAVE PROPAGATION - much finer, faster, more fluid waves
+      const waveTravel = (t * s.waveSpeed * 0.002) + (y * s.waveFreq); // Even faster wave travel
       const baseWave =
-        Math.sin(waveTravel + s.phase) * s.wobble * 1.5 +
-        Math.cos(waveTravel * 0.6 + s.phase * 0.7) * s.wobble * 1.0 +
-        Math.sin(waveTravel * 2.0 + s.naturalSway) * s.wobble * 0.6 + // More harmonics
-        Math.sin(waveTravel * 0.3 + s.phase * 0.5) * s.wobble * 0.3; // Subtle long waves
+        Math.sin(waveTravel + s.phase) * s.wobble * 2.0 +
+        Math.cos(waveTravel * 0.5 + s.phase * 0.6) * s.wobble * 1.3 +
+        Math.sin(waveTravel * 2.5 + s.naturalSway) * s.wobble * 0.8 + // More harmonics
+        Math.sin(waveTravel * 0.25 + s.phase * 0.4) * s.wobble * 0.4 + // Subtle long waves
+        Math.sin(waveTravel * 3.0 + s.phase * 1.2) * s.wobble * 0.3; // Fine detail waves
       
       // HAIR-LIKE GRAVITY SAG - lighter, more subtle sag
       const sagAmount = 1.8 + Math.sin(t * 0.0005 + s.phase) * 0.4; // Lighter sag
@@ -412,50 +413,51 @@ function loop(t) {
       }
     }
 
-    // HAIR-LIKE PHYSICS: Light, responsive, individual movement
+    // HAIR-LIKE PHYSICS: Very light, fluid, responsive movement
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Mass affects how hair responds (lighter hair moves faster and more)
-    const effectiveInertia = params.clothInertia / s.mass; // Lighter = more responsive
-    s.vx += force * effectiveInertia;
+    // Mass affects how hair responds (lighter hair moves faster and more fluidly)
+    const effectiveInertia = params.clothInertia / s.mass; // Lighter = much more responsive
+    s.vx += force * effectiveInertia * 1.2; // Boost responsiveness
     
-    // Hair-like damping - air resistance, varies per strand
-    const damping = params.clothDamping + (s.mass - 0.3) * 0.03; // Higher damping for hair
+    // Hair-like damping - less resistance for more fluid movement
+    const damping = params.clothDamping + (s.mass - 0.2) * 0.02; // Less damping = more fluid
     s.vx *= damping;
     
-    // Hair velocity limits - can move faster (lighter)
-    const maxVel = 12 + s.wobble * 3; // Hair can move faster
+    // Hair velocity limits - can move much faster (more fluid)
+    const maxVel = 18 + s.wobble * 4; // Much faster for fluid movement
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
     // Update position
     s.x += s.vx;
     
-    // HAIR-LIKE NEIGHBOR COUPLING - minimal coupling, more independent movement
+    // HAIR-LIKE NEIGHBOR COUPLING - almost no coupling, very independent movement
     if (i > 0 && i < strings.length - 1) {
       const left = strings[i - 1];
       const right = strings[i + 1];
       
-      // Calculate neighbor influence (much weaker for hair - more independent)
+      // Calculate neighbor influence (very weak for fluid, independent movement)
       const couplingStrength = curtainReady && pointer.active 
-        ? params.clothCoupling * 0.3 // Even less when active
-        : params.clothCoupling * 0.1; // Very minimal coupling
+        ? params.clothCoupling * 0.2 // Minimal when active
+        : params.clothCoupling * 0.05; // Almost no coupling
       
-      // Average neighbor position - subtle influence
+      // Average neighbor position - very subtle influence
       const avgNeighborX = (left.x + right.x) / 2;
       const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
       
-      // Neighbor velocities - subtle wave propagation
+      // Neighbor velocities - very subtle wave propagation
       const avgNeighborVx = (left.vx + right.vx) / 2;
-      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.2;
+      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.15;
       
       s.x += neighborInfluence;
       s.vx += velocityInfluence;
     }
     
-    // HAIR-LIKE DRIFT - more individual, subtle movement
-    const drift = Math.sin(t * 0.0003 + s.phase * 0.02) * 0.15 +
-                  Math.cos(t * 0.00015 + s.phase * 0.015) * 0.08; // More variation
+    // HAIR-LIKE DRIFT - much more individual, fluid movement
+    const drift = Math.sin(t * 0.0005 + s.phase * 0.03) * 0.25 +
+                  Math.cos(t * 0.00025 + s.phase * 0.025) * 0.15 +
+                  Math.sin(t * 0.0001 + s.phase * 0.01) * 0.1; // More fluid variation
     s.x += drift;
   }
 
