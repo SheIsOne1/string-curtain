@@ -44,14 +44,11 @@ document.body.style.cursor = "default";
 // Intro page removed - curtain starts immediately
 // No intro page logic needed
 
-// Debug: Log title overlay elements and ensure they start with pointer-events: none
+// Debug: Log title overlay elements - they're now in header and always visible
 console.log("Title overlay elements:", titleOverlayEls);
 titleOverlayEls.forEach((title, i) => {
   console.log(`Title overlay ${i}:`, title, title ? title.textContent : "null");
-  // Force pointer-events to none initially to allow mouse events to pass through to canvas
-  if (title) {
-    title.style.pointerEvents = "none";
-  }
+  // Titles are now in header menu and always have pointer events enabled
 });
 
 /* ===== CANVAS SETUP ===== */
@@ -67,103 +64,35 @@ addEventListener("resize", resize);
 
 /* ===== POINTER ===== */
 const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
+let hoveredTitleIndex = -1; // Track which title is hovered (-1 = none)
 
-// Track mouse position - attach to both window and canvas for reliability
-function handleMouseMove(e) {
-  // Always update position, even if curtain not ready
-  pointer.x = e.clientX; 
-  pointer.y = e.clientY; 
-  
-  // Activate pointer if curtain is ready
-  if (curtainReady) {
-    if (!pointer.active) {
-      console.log("Mouse moved - pointer.active set to true", "x:", pointer.x, "y:", pointer.y, "curtainReady:", curtainReady);
-    }
-    pointer.active = true;
-  }
-}
-
-// Attach to window (global)
-addEventListener("mousemove", handleMouseMove);
-
-// Also attach to canvas for better reliability
-canvas.addEventListener("mousemove", handleMouseMove);
-
-// REMOVED all mouseleave/mouseout handlers - they were firing too frequently
-// We'll rely ONLY on periodic bounds checking in the loop
-// This prevents false positives when mouse moves between elements
-// pointer.active will be set to true on mousemove and only reset by the loop's bounds check
-
-/* ===== CLICK NAVIGATION ===== */
-// Click on canvas to navigate (only if not clicking on a title)
-// Note: Titles are above canvas (z-index 3 vs 2), so clicks on titles 
-// should hit titles first. This check is just a safety measure.
-let lastClickTime = 0;
-canvas.addEventListener("click", (e) => {
-  // Prevent clicks if curtain is not ready
-  if (!curtainReady) {
-    e.preventDefault();
-    return;
-  }
-  
-  const now = Date.now();
-  if (now - lastClickTime < 300) return;
-  lastClickTime = now;
-
-  const clickedIdx = sectionIndex(e.clientX);
-  // Sections are fixed position and already visible, so clicking just highlights them
-  // If you want to add scrollable content sections later, uncomment this:
-  /*
-  const contentSection = document.getElementById(`content${clickedIdx}`) || 
-                        document.getElementById(`sec${clickedIdx}`);
-  
-  if (contentSection) {
-    contentSection.scrollIntoView({ 
-      behavior: "smooth",
-      block: "start"
-    });
-  }
-  */
-});
-
-// Click on title to navigate
-// Titles are above the canvas, so they should receive clicks first
-// We use stopPropagation to prevent the click from bubbling to canvas
+// Track hover on title items in header menu
 titleOverlayEls.forEach((titleEl, idx) => {
   if (titleEl) {
-    // Initially disable interactions until curtain is ready
-    // CSS already sets pointer-events: none, so mouse events pass through to canvas
-    titleEl.style.cursor = "pointer";
+    titleEl.addEventListener("mouseenter", () => {
+      hoveredTitleIndex = idx;
+      pointer.active = true;
+      console.log(`Title ${idx} hovered`);
+    });
     
+    titleEl.addEventListener("mouseleave", () => {
+      hoveredTitleIndex = -1;
+      pointer.active = false;
+      console.log(`Title ${idx} unhovered`);
+    });
+  }
+});
+
+/* ===== CLICK NAVIGATION ===== */
+// Click on title in header to navigate (optional - hover already works)
+titleOverlayEls.forEach((titleEl, idx) => {
+  if (titleEl) {
     titleEl.addEventListener("click", (e) => {
-      // Prevent clicks if curtain is not ready
-      if (!curtainReady) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      
       e.preventDefault();
-      e.stopPropagation(); // Stop the click from reaching the canvas below
+      e.stopPropagation();
       console.log(`Title ${idx} (${titleEl.textContent}) clicked!`);
-      
-      // Sections are fixed position behind the curtain, so they're already visible
-      // If you want to add scrollable content sections later, you can uncomment this:
-      /*
-      const contentSection = document.getElementById(`content${idx}`) || 
-                            document.getElementById(`sec${idx}`);
-      
-      if (contentSection) {
-        console.log(`Scrolling to section ${idx}`);
-        contentSection.scrollIntoView({ 
-          behavior: "smooth",
-          block: "start"
-        });
-      }
-      */
-      
-      // For now, clicking on a title just keeps the hover state active
-      // You could add other actions here if needed
+      // Clicking a title can trigger additional actions if needed
+      // Hover already handles the reveal, so this is optional
     });
   } else {
     console.error(`Title element ${idx} is null!`);
@@ -323,118 +252,103 @@ function loop(t) {
   ctx.fillStyle = "rgba(7,7,11,0.22)";
   ctx.fillRect(0, 0, innerWidth, innerHeight);
 
-  const idx = sectionIndex(pointer.x);
-  const targetSnap = sectionCenter(idx);
+  // Use hovered title index instead of mouse position
+  const idx = hoveredTitleIndex >= 0 ? hoveredTitleIndex : -1;
+  const targetSnap = idx >= 0 ? sectionCenter(idx) : innerWidth / 2;
 
   /* soft magnetic snap */
   snapX += (targetSnap - snapX) * SNAP_EASE;
 
   /* reveal logic */
   // Always update debug display with current state
-  const isHovering = curtainReady && pointer.active;
+  const isHovering = curtainReady && pointer.active && idx >= 0;
   
-  // Periodically check if mouse is still within viewport bounds
-  // This acts as a fallback deactivation if mouse truly left the window
-  if (t % 60 === 0) { // Check every ~1 second
-    if (pointer.active && (pointer.x < -50 || pointer.x > innerWidth + 50 || 
-                           pointer.y < -50 || pointer.y > innerHeight + 50)) {
-      pointer.active = false;
-      console.log("Mouse out of bounds - pointer.active set to false", pointer.x, pointer.y);
-    }
-  }
-  
-  // Debug log when hovering state changes (but only occasionally to avoid spam)
-  if (t % 180 === 0 && isHovering) { // Log every ~3 seconds when hovering
-    console.log("HOVERING - Pointer active:", pointer.active, "Curtain ready:", curtainReady, "Mouse:", pointer.x, pointer.y);
-  }
-  
-  // Only reveal if curtain is ready AND pointer is active
-  // Curtain opens around the active section (4-section method)
+  // Only reveal if curtain is ready AND a title is hovered
+  // Curtain opens from top downward for the hovered section
   if (isHovering) {
     sectionsEl.style.opacity = "1";
-    sectionsEl.style.setProperty("--reveal-x", `${snapX}px`);
-    // Match reveal width to opening radius for better alignment
-    sectionsEl.style.setProperty("--reveal-w", `${params.openRadius * 0.6}px`);
+    // Vertical reveal from top
+    sectionsEl.style.setProperty("--reveal-y", "80px"); // Start below header
+    sectionsEl.style.setProperty("--reveal-h", `${Math.min(innerHeight - 80, params.openRadius * 2)}px`);
+    // Horizontal section selection
+    sectionsEl.style.setProperty("--reveal-section-left", `${idx * 25}%`);
+    sectionsEl.style.setProperty("--reveal-section-right", `${(idx + 1) * 25}%`);
 
     sectionEls.forEach((el, i) => {
       el.style.opacity = i === idx ? "1" : "0";
     });
     
-    // Show title in overlay (above canvas)
+    // Update title active states in header
     titleOverlayEls.forEach((titleEl, i) => {
       if (titleEl) {
-        const isVisible = i === idx;
-        titleEl.style.opacity = isVisible ? "1" : "0";
-        // Only enable pointer events when visible - allows mouse events to pass through to canvas when hidden
-        titleEl.style.pointerEvents = isVisible ? "auto" : "none";
+        if (i === idx) {
+          titleEl.classList.add("active");
+        } else {
+          titleEl.classList.remove("active");
+        }
       }
     });
     
   } else {
     sectionsEl.style.opacity = "0";
-    sectionsEl.style.setProperty("--reveal-w", "0px");
+    sectionsEl.style.setProperty("--reveal-h", "0px");
     sectionEls.forEach((el, i) => {
       el.style.opacity = "0";
     });
-    // Hide all titles and disable their pointer events
+    // Remove active state from all titles
     titleOverlayEls.forEach(titleEl => {
       if (titleEl) {
-        titleEl.style.opacity = "0";
-        titleEl.style.pointerEvents = "none"; // Allow mouse events to pass through
+        titleEl.classList.remove("active");
       }
     });
   }
   
   // Always update debug display with current state - read values directly
   if (debugEl) {
-    const titleEl = titleOverlayEls[idx];
+    const titleEl = idx >= 0 ? titleOverlayEls[idx] : null;
     // Read values directly from the variables to ensure we get current state
     const currentPointerActive = pointer.active;
     const currentCurtainReady = curtainReady;
-    const currentIsHovering = currentCurtainReady && currentPointerActive;
+    const currentIsHovering = currentCurtainReady && currentPointerActive && idx >= 0;
     const status = currentIsHovering ? "HOVERING ✓" : "Not hovering";
     
     debugEl.innerHTML = `
       Status: ${status}<br>
-      Pointer active: ${currentPointerActive} (type: ${typeof currentPointerActive})<br>
-      Curtain ready: ${currentCurtainReady} (type: ${typeof currentCurtainReady})<br>
-      isHovering: ${currentIsHovering}<br>
-      Mouse: ${Math.floor(pointer.x)}, ${Math.floor(pointer.y)}<br>
-      Active section: ${idx}<br>
-      ${titleEl ? `Title: "${titleEl.textContent}"` : 'Title: NOT FOUND'}<br>
+      Pointer active: ${currentPointerActive}<br>
+      Curtain ready: ${currentCurtainReady}<br>
+      Hovered title: ${idx >= 0 ? idx : "none"}<br>
+      Active section: ${idx >= 0 ? idx : "none"}<br>
+      ${titleEl ? `Title: "${titleEl.textContent}"` : 'Title: NOT HOVERED'}<br>
       Snap X: ${Math.floor(snapX)}<br>
       Target snap: ${Math.floor(targetSnap)}
     `;
-    
-    // Log if values don't match what we expect
-    if (currentCurtainReady === false && t > 5000) { // After 5 seconds, curtain should be ready
-      if (t % 180 === 0) { // Log occasionally
-        console.warn("WARNING: curtainReady is false but should be true! t:", t, "introAnimationComplete:", introAnimationComplete);
-      }
-    }
-    
-    // Also log current state every 3 seconds for debugging
-    if (t % 180 === 0) {
-      console.log("Debug display update - curtainReady:", curtainReady, "pointer.active:", pointer.active, "t:", t);
-    }
   }
 
-  /* update strings - CURTAIN with CLOTH-LIKE physics (4-section method) */
+  /* update strings - CURTAIN with CLOTH-LIKE physics (opens from top) */
   for (let i = 0; i < strings.length; i++) {
     const s = strings[i];
     let tx = s.baseX;
 
-    // CURTAIN: Opens around the active section (snapX) when hovering
-    // Strings near the section center pull outward (left/right)
-    // This creates an opening that follows the 4-section system
-    if (curtainReady && pointer.active) {
-      const d = Math.abs(s.baseX - snapX);
-      if (d < params.openRadius) {
-        // Smooth falloff curve
-        const f = 1 - d / params.openRadius;
-        const eased = f * f * (3 - 2 * f); // smoothstep for smoother opening
-        // Left side of section goes left, right side goes right
-        const dir = s.baseX < snapX ? -1 : 1;
+    // CURTAIN: Opens from top downward when hovering a title
+    // Strings in the active section pull outward (left/right) from the top
+    // This creates a vertical opening that reveals the section below
+    if (curtainReady && pointer.active && idx >= 0) {
+      const sectionLeft = idx * (innerWidth / 4);
+      const sectionRight = (idx + 1) * (innerWidth / 4);
+      const isInSection = s.baseX >= sectionLeft && s.baseX < sectionRight;
+      
+      if (isInSection) {
+        const sectionCenterX = (sectionLeft + sectionRight) / 2;
+        const distFromCenter = Math.abs(s.baseX - sectionCenterX);
+        const maxDist = (sectionRight - sectionLeft) / 2;
+        
+        // Strings closer to center open more (stronger pull)
+        const f = 1 - (distFromCenter / maxDist);
+        const eased = f * f * (3 - 2 * f); // smoothstep
+        
+        // Pull strings outward (left side goes left, right side goes right)
+        // This creates the opening effect from the top
+        const dir = s.baseX < sectionCenterX ? -1 : 1;
         tx = s.baseX + dir * params.openStrength * eased;
       }
     }

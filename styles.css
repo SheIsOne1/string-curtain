@@ -233,28 +233,33 @@ html, body {
   opacity: 0;
   transition: opacity 160ms ease;
 
-  /* mask driven by JS */
-  --reveal-x: 50vw;
-  --reveal-w: 0px;
+  /* mask driven by JS - vertical reveal from top for specific section */
+  --reveal-y: 80px;
+  --reveal-h: 0px;
+  --reveal-section-left: 0%;
+  --reveal-section-right: 25%;
 
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent calc(var(--reveal-x) - var(--reveal-w)),
-    black calc(var(--reveal-x) - var(--reveal-w)),
-    black calc(var(--reveal-x) + var(--reveal-w)),
-    transparent calc(var(--reveal-x) + var(--reveal-w)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent calc(var(--reveal-x) - var(--reveal-w)),
-    black calc(var(--reveal-x) - var(--reveal-w)),
-    black calc(var(--reveal-x) + var(--reveal-w)),
-    transparent calc(var(--reveal-x) + var(--reveal-w)),
-    transparent 100%
-  );
+  /* Vertical reveal from top - will be combined with section selection via opacity */
+  -webkit-mask-image: 
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent var(--reveal-y),
+      black var(--reveal-y),
+      black calc(var(--reveal-y) + var(--reveal-h)),
+      transparent calc(var(--reveal-y) + var(--reveal-h)),
+      transparent 100%
+    );
+  mask-image: 
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent var(--reveal-y),
+      black var(--reveal-y),
+      black calc(var(--reveal-y) + var(--reveal-h)),
+      transparent calc(var(--reveal-y) + var(--reveal-h)),
+      transparent 100%
+    );
 
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
@@ -337,44 +342,51 @@ canvas {
   font-family: monospace;
 }
 
-/* Titles overlay - above canvas */
+/* Titles overlay - header menu at top */
 .titles-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   z-index: 3;
-  pointer-events: none;
+  pointer-events: auto; /* Always allow pointer events for header menu */
+  background: rgba(7, 7, 11, 0.3); /* Subtle background for header */
+  backdrop-filter: blur(10px);
 }
 
 .title-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 200ms ease, transform 200ms ease;
+  opacity: 1; /* Always visible in header */
+  transition: opacity 200ms ease, transform 200ms ease, color 200ms ease;
   font-family: "Imperial Script", cursive;
   font-weight: 400;
   font-style: normal;
-  font-size: 48px;
+  font-size: 36px;
   letter-spacing: 0.5px;
-  color: white !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3);
   margin: 0;
   position: relative;
   cursor: pointer;
-  /* Only allow pointer events when visible - let events pass through to canvas otherwise */
-  pointer-events: none;
+  pointer-events: auto; /* Always allow pointer events in header */
   z-index: 10;
 }
 
-/* Only enable pointer events when title is visible */
-.title-item[style*="opacity: 1"],
-.title-item[style*="opacity:1"] {
-  pointer-events: auto;
-}
-
+/* Title hover state in header */
 .title-item:hover {
   transform: scale(1.05);
+  color: rgba(255, 255, 255, 1) !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 30px rgba(255,255,255,0.6);
+}
+
+/* Active title in header */
+.title-item.active {
+  color: rgba(255, 255, 255, 1) !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 30px rgba(255,255,255,0.6);
 }
 
