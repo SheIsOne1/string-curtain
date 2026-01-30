@@ -44,11 +44,16 @@ document.body.style.cursor = "default";
 // Intro page removed - curtain starts immediately
 // No intro page logic needed
 
-// Debug: Log title overlay elements - they're now in header and always visible
+// Debug: Log title overlay elements - initialize them as hidden
 console.log("Title overlay elements:", titleOverlayEls);
 titleOverlayEls.forEach((title, i) => {
   console.log(`Title overlay ${i}:`, title, title ? title.textContent : "null");
-  // Titles are now in header menu and always have pointer events enabled
+  // Initialize titles as hidden (behind curtain, appear on hover)
+  if (title) {
+    title.style.opacity = "0";
+    title.style.visibility = "hidden";
+    title.style.pointerEvents = "none";
+  }
 });
 
 /* ===== CANVAS SETUP ===== */

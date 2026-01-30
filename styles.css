@@ -358,8 +358,9 @@ canvas {
   align-items: flex-start; /* Align to top */
   justify-content: center;
   padding-top: 40px; /* Position at top with spacing */
-  opacity: 0 !important; /* Hidden by default - force with !important */
-  transition: opacity 200ms ease, transform 200ms ease;
+  opacity: 0; /* Hidden by default, JavaScript will control */
+  visibility: hidden; /* Hidden by default, JavaScript will control */
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
   font-family: "Imperial Script", cursive;
   font-weight: 400;
   font-style: normal;
@@ -370,18 +371,13 @@ canvas {
   margin: 0;
   position: relative;
   cursor: pointer;
-  pointer-events: none !important; /* Disabled by default, enabled when visible */
+  pointer-events: none; /* Disabled by default, JavaScript will enable when visible */
   z-index: 1;
   width: 100%;
   text-align: center;
-  visibility: hidden; /* Also hide with visibility for extra safety */
 }
 
-/* Only enable pointer events when title is visible */
-.title-item[style*="opacity: 1"],
-.title-item[style*="opacity:1"] {
-  pointer-events: auto;
-}
+/* Only enable pointer events when title is visible - JavaScript controls this */
 
 .title-item:hover {
   transform: scale(1.05);
