@@ -199,6 +199,11 @@ function seed() {
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
       alpha: 0.85 + Math.random() * 0.15, // high opacity for visibility
+      // Organic movement properties - each string unique
+      waveSpeed: 0.8 + Math.random() * 0.4, // unique wave speed per string
+      waveFreq: 0.015 + Math.random() * 0.008, // unique frequency
+      naturalSway: Math.random() * Math.PI * 2, // natural sway phase
+      mass: 0.8 + Math.random() * 0.4, // unique mass affects response
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -249,27 +254,47 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // Base playful wave - INCREASED for more visible flexibility
+      // ORGANIC WAVE PROPAGATION - waves travel down the string naturally
+      const waveTravel = (t * s.waveSpeed * 0.001) + (y * s.waveFreq);
       const baseWave =
-        Math.sin(t * 0.0014 + y * 0.018 + s.phase) * s.wobble * 1.3 +
-        Math.cos(t * 0.0011 + y * 0.012) * s.wobble * 0.8;
+        Math.sin(waveTravel + s.phase) * s.wobble * 1.3 +
+        Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.8 +
+        Math.sin(waveTravel * 1.5 + s.naturalSway) * s.wobble * 0.4; // natural sway
       
-      // Cloth-like sag: more sag lower down (gravity effect)
-      const sag = Math.sin(progress * Math.PI) * 2.5 * progress * progress;
+      // ORGANIC GRAVITY SAG - more realistic sag with variation
+      const sagAmount = 2.5 + Math.sin(t * 0.0003 + s.phase) * 0.5; // varying gravity
+      const sag = Math.sin(progress * Math.PI) * sagAmount * progress * progress;
       
-      // Cloth-like folds: subtle variation based on position
-      const fold = Math.sin(t * 0.0008 + s.baseX * 0.015 + progress * 2) * 2 * progress;
+      // ORGANIC FOLDS - respond to movement and position
+      const foldPhase = t * 0.0008 + s.baseX * 0.015 + progress * 2;
+      const fold = Math.sin(foldPhase) * 2 * progress +
+                   Math.cos(foldPhase * 1.3) * 1.2 * progress; // more complex fold
       
-      // ORGANIC ROPE TWIST: more pronounced spiral
-      const twistPhase = y * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
-      const twist = Math.sin(twistPhase) * 0.6 + Math.cos(twistPhase * 1.3) * 0.3;
+      // ORGANIC ROPE TWIST - natural spiral with variation
+      const twistPhase = y * 0.08 + t * s.waveSpeed * 0.001 + strand * 2.1 + s.phase * 0.01;
+      const twist = Math.sin(twistPhase) * 0.6 + 
+                   Math.cos(twistPhase * 1.3) * 0.3 +
+                   Math.sin(twistPhase * 0.5) * 0.2; // additional twist harmonics
       
-      // ORGANIC IRREGULARITIES: natural bumps
+      // ORGANIC IRREGULARITIES - natural bumps and texture
       const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.5 +
-                           Math.cos(y * 0.07 + t * 0.0005) * 0.3;
+                           Math.cos(y * 0.07 + t * 0.0005) * 0.3 +
+                           Math.sin(y * 0.2 + t * 0.0003 + s.phase) * 0.2; // more texture
+      
+      // ORGANIC RESPONSE - strings respond to their position relative to opening
+      let responseWave = 0;
+      if (curtainReady && pointer.active) {
+        const distFromSnap = Math.abs(s.baseX - snapX);
+        if (distFromSnap < params.openRadius * 1.5) {
+          const response = (1 - distFromSnap / (params.openRadius * 1.5)) * 0.3;
+          const responsePhase = t * 0.002 + s.baseX * 0.02;
+          // Strings near opening have more movement
+          responseWave = Math.sin(responsePhase) * response * progress;
+        }
+      }
       
       // Combine all effects for flexible, organic rope
-      const wave = baseWave + sag + fold + twist + irregularity;
+      const wave = baseWave + sag + fold + twist + irregularity + responseWave;
       const px = x + wave * (i / seg) + strandOffset;
       
       ctx.lineTo(px, y);
@@ -414,27 +439,50 @@ function loop(t) {
       }
     }
 
-    // Cloth-like physics: accumulate velocity for momentum
+    // ORGANIC PHYSICS: More natural cloth-like movement
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Add force to velocity (momentum)
-    s.vx += force * params.clothInertia;
-    // Apply damping
-    s.vx *= params.clothDamping;
+    // Mass affects how strings respond (heavier strings move slower)
+    const effectiveInertia = params.clothInertia / s.mass;
+    s.vx += force * effectiveInertia;
     
-    // Clamp velocity to prevent wild movements
-    s.vx = Math.max(-10, Math.min(10, s.vx));
+    // Organic damping - varies slightly per string
+    const damping = params.clothDamping + (s.mass - 1) * 0.02;
+    s.vx *= damping;
+    
+    // Natural velocity limits (not too rigid)
+    const maxVel = 8 + s.wobble * 2; // more flexible strings can move faster
+    s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
     // Update position
     s.x += s.vx;
     
-    // Subtle neighbor coupling for cloth folds (only when opening)
-    if (curtainReady && pointer.active && params.clothCoupling > 0 && i > 0 && i < strings.length - 1) {
-      const avgNeighborX = (strings[i - 1].x + strings[i + 1].x) / 2;
-      // Very subtle pull toward neighbors
-      s.x += (avgNeighborX - s.x) * params.clothCoupling * 0.3;
+    // ORGANIC NEIGHBOR COUPLING - creates natural ripple effects
+    if (i > 0 && i < strings.length - 1) {
+      const left = strings[i - 1];
+      const right = strings[i + 1];
+      
+      // Calculate neighbor influence (stronger when curtain is active)
+      const couplingStrength = curtainReady && pointer.active 
+        ? params.clothCoupling * 0.5 
+        : params.clothCoupling * 0.2;
+      
+      // Average neighbor position creates natural folds
+      const avgNeighborX = (left.x + right.x) / 2;
+      const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
+      
+      // Also consider neighbor velocities for wave propagation
+      const avgNeighborVx = (left.vx + right.vx) / 2;
+      const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.3;
+      
+      s.x += neighborInfluence;
+      s.vx += velocityInfluence;
     }
+    
+    // ORGANIC DRIFT - subtle natural drift for more life
+    const drift = Math.sin(t * 0.0002 + s.phase * 0.01) * 0.1;
+    s.x += drift;
   }
 
   // Use source-over instead of lighter for matte, non-shiny appearance
