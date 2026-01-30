@@ -137,14 +137,14 @@ function seed() {
       x: (i + 0.5) * gap,
       vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
-      wobble: 0.8 + Math.random() * 1.2, // Moderate variation for natural movement
+      wobble: 1.0 + Math.random() * 1.5, // Gentle variation for natural movement
       thickness: 0.8 + Math.random() * 0.6, // Thinner like hair strands
-      alpha: 0.75 + Math.random() * 0.2, // Slightly more variation for hair
+      alpha: 0.70 + Math.random() * 0.18, // Gentler opacity variation
       // Hair-like movement properties - each strand very unique
-      waveSpeed: 0.5 + Math.random() * 0.4, // Slower, more natural waves (was 1.5-2.7 - too fast)
-      waveFreq: 0.012 + Math.random() * 0.010, // Lower frequency for natural movement (was 0.025-0.045)
+      waveSpeed: 0.8 + Math.random() * 0.5, // Gentle wave speed
+      waveFreq: 0.016 + Math.random() * 0.012, // Gentle frequency for natural movement
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
-      mass: 0.4 + Math.random() * 0.3, // Moderate weight for natural flow (was 0.2-0.45 - too light)
+      mass: 0.35 + Math.random() * 0.25, // Gentle weight for natural flow
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -169,23 +169,23 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.08, // Slow, natural response like hair (was 0.35 - too fast)
-  returnEase: 0.05, // Very slow, natural return (was 0.20 - too fast)
-  clothDamping: 0.95, // High damping for natural, smooth movement (was 0.88)
-  clothInertia: 0.15, // Moderate momentum for natural flow (was 0.30 - too bouncy)
-  clothCoupling: 0.02 // Minimal coupling - independent but natural (was 0.015)
+  followEase: 0.12, // Gentle, smooth response
+  returnEase: 0.08, // Gentle, smooth return
+  clothDamping: 0.91, // Gentle damping for smooth movement
+  clothInertia: 0.18, // Gentle momentum for natural flow
+  clothCoupling: 0.025 // Gentle coupling - natural independence
 };
 
 function drawString(x, t, s) {
-  const seg = 50; // More segments for very smooth, flexible curves
+  const seg = 60; // More segments for very smooth, gentle curves
   const segH = innerHeight / seg;
 
-  // ORGANIC ROPE TEXTURE: Draw multiple overlapping strokes with natural variations
-  const ropeStrands = 3; // number of strands in the rope
+  // GENTLE HAIR TEXTURE: Draw soft, smooth strokes with gentle variations
+  const ropeStrands = 2; // Fewer strands for gentler appearance
   
   for (let strand = 0; strand < ropeStrands; strand++) {
-    const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.5;
-    const baseThickness = s.thickness * (0.5 + strand * 0.2);
+    const strandOffset = (strand - (ropeStrands - 1) / 2) * 0.3; // Closer strands for gentler look
+    const baseThickness = s.thickness * (0.6 + strand * 0.15); // Softer thickness variation
     
     // Draw entire string as one smooth, flexible curve
     ctx.beginPath();
@@ -195,33 +195,33 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // HAIR-LIKE WAVE PROPAGATION - slow, natural, flowing waves
-      const waveTravel = (t * s.waveSpeed * 0.0008) + (y * s.waveFreq); // Slower, natural wave travel
+      // HAIR-LIKE WAVE PROPAGATION - gentle, natural, flowing waves
+      const waveTravel = (t * s.waveSpeed * 0.001) + (y * s.waveFreq); // Gentle wave travel
       const baseWave =
-        Math.sin(waveTravel + s.phase) * s.wobble * 1.2 +
-        Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.8 +
-        Math.sin(waveTravel * 1.8 + s.naturalSway) * s.wobble * 0.5 + // Natural harmonics
-        Math.sin(waveTravel * 0.4 + s.phase * 0.5) * s.wobble * 0.3; // Subtle long waves
+        Math.sin(waveTravel + s.phase) * s.wobble * 1.3 +
+        Math.cos(waveTravel * 0.65 + s.phase * 0.75) * s.wobble * 0.9 +
+        Math.sin(waveTravel * 1.9 + s.naturalSway) * s.wobble * 0.6 + // Natural harmonics
+        Math.sin(waveTravel * 0.35 + s.phase * 0.45) * s.wobble * 0.35; // Subtle long waves
       
-      // HAIR-LIKE GRAVITY SAG - natural, gradual sag
-      const sagAmount = 1.5 + Math.sin(t * 0.0002 + s.phase) * 0.3; // Natural, slow sag
+      // HAIR-LIKE GRAVITY SAG - gentle, natural sag
+      const sagAmount = 1.6 + Math.sin(t * 0.0003 + s.phase) * 0.35; // Gentle sag
       const sag = Math.sin(progress * Math.PI) * sagAmount * progress * progress;
       
-      // HAIR-LIKE FOLDS - slow, natural individual movement
-      const foldPhase = t * 0.0006 + s.baseX * 0.015 + progress * 2.0;
-      const fold = Math.sin(foldPhase) * 1.2 * progress +
-                   Math.cos(foldPhase * 1.3) * 0.8 * progress; // Natural, slow folds
+      // HAIR-LIKE FOLDS - gentle, natural individual movement
+      const foldPhase = t * 0.0008 + s.baseX * 0.017 + progress * 2.2;
+      const fold = Math.sin(foldPhase) * 1.3 * progress +
+                   Math.cos(foldPhase * 1.4) * 0.9 * progress; // Gentle, natural folds
       
-      // HAIR-LIKE TWIST - subtle, natural strand twist
-      const twistPhase = y * 0.08 + t * s.waveSpeed * 0.0008 + strand * 2.5 + s.phase * 0.015;
-      const twist = Math.sin(twistPhase) * 0.3 + 
-                   Math.cos(twistPhase * 1.3) * 0.2 +
-                   Math.sin(twistPhase * 0.6) * 0.1; // Subtle, natural twist
+      // HAIR-LIKE TWIST - gentle, natural strand twist
+      const twistPhase = y * 0.10 + t * s.waveSpeed * 0.001 + strand * 2.8 + s.phase * 0.018;
+      const twist = Math.sin(twistPhase) * 0.35 + 
+                   Math.cos(twistPhase * 1.4) * 0.22 +
+                   Math.sin(twistPhase * 0.65) * 0.12; // Gentle, natural twist
       
-      // HAIR-LIKE IRREGULARITIES - natural texture, individual variation
-      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.3 +
-                           Math.cos(y * 0.08 + t * 0.0003) * 0.2 +
-                           Math.sin(y * 0.18 + t * 0.0002 + s.phase) * 0.15; // Natural detail
+      // HAIR-LIKE IRREGULARITIES - gentle texture, individual variation
+      const irregularity = Math.sin(y * 0.14 + s.phase * 0.6 + strand) * 0.35 +
+                           Math.cos(y * 0.09 + t * 0.0004) * 0.22 +
+                           Math.sin(y * 0.20 + t * 0.00025 + s.phase) * 0.18; // Gentle detail
       
       // ORGANIC RESPONSE - strings respond to their position relative to opening
       let responseWave = 0;
@@ -242,20 +242,20 @@ function drawString(x, t, s) {
       ctx.lineTo(px, y);
     }
     
-    // Draw with solid color for better visibility - make it bright!
-    const colorVar = Math.sin(s.phase * 0.3 + strand * 0.5) * 2;
-    // Keep lightness high for visibility (65-90 range)
-    const light = Math.max(65, Math.min(90, s.light - strand * 0.3 + colorVar));
-    // High alpha for visibility
-    const alpha = Math.min(1.0, s.alpha * (0.95 + strand * 0.03));
+    // Draw with gentle, soft colors
+    const colorVar = Math.sin(s.phase * 0.2 + strand * 0.4) * 1.5; // Gentler color variation
+    // Softer lightness for gentle appearance (70-88 range)
+    const light = Math.max(70, Math.min(88, s.light - strand * 0.2 + colorVar));
+    // Softer alpha for gentle appearance
+    const alpha = Math.min(0.85, s.alpha * (0.88 + strand * 0.02));
     
-    // Thickness variation
-    const thicknessVar = 1 + Math.sin(t * 0.0003 + s.phase) * 0.2;
+    // Gentle thickness variation
+    const thicknessVar = 1 + Math.sin(t * 0.0002 + s.phase) * 0.15; // Gentler variation
     ctx.lineWidth = baseThickness * thicknessVar;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    // Use bright yellow colors with high opacity
-    ctx.strokeStyle = `hsla(${s.hue},${Math.max(85, s.sat)}%,${light}%,${alpha})`;
+    // Use softer, gentler yellow colors
+    ctx.strokeStyle = `hsla(${s.hue},${Math.max(82, Math.min(95, s.sat - 3))}%,${light}%,${alpha})`;
     ctx.stroke();
   }
 }
@@ -411,20 +411,20 @@ function loop(t) {
       }
     }
 
-    // HAIR-LIKE PHYSICS: Natural, smooth, flowing movement
+    // HAIR-LIKE PHYSICS: Gentle, smooth, flowing movement
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Mass affects how hair responds (natural weight for smooth flow)
-    const effectiveInertia = params.clothInertia / s.mass; // Natural responsiveness
-    s.vx += force * effectiveInertia; // Natural, smooth acceleration
+    // Mass affects how hair responds (gentle weight for smooth flow)
+    const effectiveInertia = params.clothInertia / s.mass; // Gentle responsiveness
+    s.vx += force * effectiveInertia; // Gentle, smooth acceleration
     
-    // Hair-like damping - high damping for smooth, natural movement
-    const damping = params.clothDamping + (s.mass - 0.4) * 0.015; // High damping = smooth
+    // Hair-like damping - gentle damping for smooth movement
+    const damping = params.clothDamping + (s.mass - 0.35) * 0.018; // Gentle damping = smooth
     s.vx *= damping;
     
-    // Hair velocity limits - moderate speed for natural movement
-    const maxVel = 6 + s.wobble * 1.5; // Moderate speed for natural flow
+    // Hair velocity limits - gentle speed for natural movement
+    const maxVel = 8 + s.wobble * 2; // Gentle speed for natural flow
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
     // Update position
@@ -452,14 +452,14 @@ function loop(t) {
       s.vx += velocityInfluence;
     }
     
-    // HAIR-LIKE DRIFT - slow, natural individual movement
-    const drift = Math.sin(t * 0.00015 + s.phase * 0.02) * 0.12 +
-                  Math.cos(t * 0.00008 + s.phase * 0.015) * 0.08 +
-                  Math.sin(t * 0.00005 + s.phase * 0.01) * 0.05; // Slow, natural variation
+    // HAIR-LIKE DRIFT - gentle, natural individual movement
+    const drift = Math.sin(t * 0.00025 + s.phase * 0.022) * 0.18 +
+                  Math.cos(t * 0.00012 + s.phase * 0.018) * 0.12 +
+                  Math.sin(t * 0.00008 + s.phase * 0.012) * 0.08; // Gentle, natural variation
     s.x += drift;
   }
 
-  // Use source-over instead of lighter for matte, non-shiny appearance
+  // Use source-over for gentle, soft appearance
   ctx.globalCompositeOperation = "source-over";
   
   // Draw all strings
