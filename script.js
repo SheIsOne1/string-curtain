@@ -198,7 +198,7 @@ function seed() {
       phase: Math.random() * 1000,
       wobble: 0.7 + Math.random() * 1.3,
       thickness: 1.3 + Math.random() * 1.4,
-      alpha: 0.7 + Math.random() * 0.25, // higher opacity for better visibility
+      alpha: 0.85 + Math.random() * 0.15, // high opacity for visibility
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -243,9 +243,9 @@ function drawString(x, t, s) {
     
     // Draw entire string as one smooth, flexible curve
     ctx.beginPath();
-    let firstPoint = true;
+    ctx.moveTo(x + strandOffset, 0);
     
-    for (let i = 0; i <= seg; i++) {
+    for (let i = 1; i <= seg; i++) {
       const y = i * segH;
       const progress = i / seg;
       
@@ -272,48 +272,23 @@ function drawString(x, t, s) {
       const wave = baseWave + sag + fold + twist + irregularity;
       const px = x + wave * (i / seg) + strandOffset;
       
-      if (firstPoint) {
-        ctx.moveTo(px, y);
-        firstPoint = false;
-      } else {
-        // Use smooth curves - calculate control point for bezier
-        const prevY = (i - 1) * segH;
-        const prevProgress = (i - 1) / seg;
-        const prevBaseWave = Math.sin(t * 0.0014 + prevY * 0.018 + s.phase) * s.wobble * 1.3 +
-                            Math.cos(t * 0.0011 + prevY * 0.012) * s.wobble * 0.8;
-        const prevSag = Math.sin(prevProgress * Math.PI) * 2.5 * prevProgress * prevProgress;
-        const prevFold = Math.sin(t * 0.0008 + s.baseX * 0.015 + prevProgress * 2) * 2 * prevProgress;
-        const prevTwistPhase = prevY * 0.08 + t * 0.001 + strand * 2.1 + s.phase * 0.01;
-        const prevTwist = Math.sin(prevTwistPhase) * 0.6 + Math.cos(prevTwistPhase * 1.3) * 0.3;
-        const prevIrregularity = Math.sin(prevY * 0.12 + s.phase * 0.5 + strand) * 0.5 +
-                                 Math.cos(prevY * 0.07 + t * 0.0005) * 0.3;
-        const prevWave = prevBaseWave + prevSag + prevFold + prevTwist + prevIrregularity;
-        const prevPx = x + prevWave * ((i - 1) / seg) + strandOffset;
-        
-        // Control point for smooth curve
-        const cpx = (prevPx + px) / 2;
-        const cpy = (prevY + y) / 2;
-        
-        ctx.quadraticCurveTo(prevPx, prevY, cpx, cpy);
-      }
+      ctx.lineTo(px, y);
     }
     
-    // Apply organic thickness and color variation along the path
-    const gradient = ctx.createLinearGradient(x - 50, 0, x + 50, innerHeight);
-    const colorVar1 = Math.sin(s.phase * 0.3 + strand * 0.5) * 5;
-    const colorVar2 = Math.sin(s.phase * 0.3 + strand * 0.5 + 1) * 5;
-    // Use actual lightness values from palette (60-95), not reduced to 15-40
-    const light1 = Math.max(60, Math.min(95, s.light - strand * 1 + colorVar1));
-    const light2 = Math.max(60, Math.min(95, s.light - strand * 1 + colorVar2));
-    gradient.addColorStop(0, `hsla(${s.hue},${s.sat}%,${light1}%,${s.alpha * (0.8 + strand * 0.1)})`);
-    gradient.addColorStop(1, `hsla(${s.hue},${s.sat}%,${light2}%,${s.alpha * (0.8 + strand * 0.1)})`);
+    // Draw with solid color for better visibility - make it bright!
+    const colorVar = Math.sin(s.phase * 0.3 + strand * 0.5) * 2;
+    // Keep lightness high for visibility (65-90 range)
+    const light = Math.max(65, Math.min(90, s.light - strand * 0.3 + colorVar));
+    // High alpha for visibility
+    const alpha = Math.min(1.0, s.alpha * (0.95 + strand * 0.03));
     
     // Thickness variation
-    const thicknessVar = 1 + Math.sin(t * 0.0003 + s.phase) * 0.3;
+    const thicknessVar = 1 + Math.sin(t * 0.0003 + s.phase) * 0.2;
     ctx.lineWidth = baseThickness * thicknessVar;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = gradient;
+    // Use bright yellow colors with high opacity
+    ctx.strokeStyle = `hsla(${s.hue},${Math.max(85, s.sat)}%,${light}%,${alpha})`;
     ctx.stroke();
   }
 }
@@ -464,7 +439,13 @@ function loop(t) {
 
   // Use source-over instead of lighter for matte, non-shiny appearance
   ctx.globalCompositeOperation = "source-over";
-  strings.forEach(s => drawString(s.x, t, s));
+  
+  // Draw all strings
+  if (strings.length === 0) {
+    console.warn("No strings to draw! strings.length:", strings.length);
+  } else {
+    strings.forEach(s => drawString(s.x, t, s));
+  }
 
   requestAnimationFrame(loop);
 }
