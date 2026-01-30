@@ -297,19 +297,28 @@ function loop(t) {
       el.style.opacity = i === idx ? "1" : "0";
     });
     
-    // Show title in overlay (behind curtain, appears on hover)
+    // Show title in overlay (appears on hover)
     titleOverlayEls.forEach((titleEl, i) => {
       if (titleEl) {
         const isVisible = i === idx;
         if (isVisible) {
+          // Force show the title
           titleEl.style.opacity = "1";
           titleEl.style.visibility = "visible";
+          titleEl.style.display = "flex"; // Ensure it's displayed
           titleEl.style.pointerEvents = "auto";
+          console.log(`Showing title ${i}: "${titleEl.textContent}"`, {
+            opacity: titleEl.style.opacity,
+            visibility: titleEl.style.visibility,
+            display: titleEl.style.display
+          });
         } else {
           titleEl.style.opacity = "0";
           titleEl.style.visibility = "hidden";
           titleEl.style.pointerEvents = "none";
         }
+      } else {
+        console.error(`Title element ${i} is null!`);
       }
     });
     
