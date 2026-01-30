@@ -267,7 +267,7 @@ html, body {
   padding: 32px;
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   border-left: 1px solid rgba(255,255,255,0.08);
 
@@ -289,6 +289,9 @@ html, body {
   pointer-events: none;
   position: relative;
   z-index: 1;
+  /* Position at top/header of section */
+  align-self: flex-start;
+  margin-top: 0;
 }
 
 /* Section panels using custom color palette */
