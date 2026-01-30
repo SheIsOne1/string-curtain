@@ -170,11 +170,11 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.08, // Smooth, stable response
-  returnEase: 0.06, // Smooth, stable return
-  clothDamping: 0.95, // High damping to eliminate bounce
-  clothInertia: 0.09, // Low inertia to prevent bounce
-  clothCoupling: 0.025 // Gentle coupling for natural independence
+  followEase: 0.05, // Very smooth brush stroke response
+  returnEase: 0.04, // Very smooth brush stroke return
+  clothDamping: 0.97, // Very high damping for smooth brush stroke (no bounce)
+  clothInertia: 0.06, // Very low inertia for smooth brush stroke
+  clothCoupling: 0.02 // Minimal coupling for smooth independence
 };
 
 function drawString(x, t, s) {
@@ -416,26 +416,32 @@ function loop(t) {
       }
     }
 
-    // SMOOTH HAND-DRAWN PHYSICS: Stable, no bounce
+    // BRUSH STROKE PHYSICS: Smooth, flowing, no bounce
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
-    const force = (tx - s.x) * targetEase;
     
-    // Low inertia for stable movement (no bounce)
+    // Direct smooth interpolation like brush stroke (no physics bounce)
+    const diff = tx - s.x;
+    const smoothMove = diff * targetEase;
+    
+    // Very low inertia for smooth brush stroke
     const effectiveInertia = params.clothInertia / s.mass;
-    s.vx += force * effectiveInertia;
+    s.vx += smoothMove * effectiveInertia;
     
-    // High damping to eliminate all bounce
-    const damping = params.clothDamping + (s.mass - 0.4) * 0.01;
+    // Very high damping to eliminate all bounce (brush stroke smoothness)
+    const damping = params.clothDamping + (s.mass - 0.4) * 0.008;
     s.vx *= damping;
     
-    // Lower velocity for stable movement
-    const maxVel = 5 + s.wobble * 1.2; // Stable speed
+    // Low velocity for smooth brush stroke
+    const maxVel = 3.5 + s.wobble * 0.8; // Smooth brush stroke speed
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
-    // Extra smoothing to prevent any bounce
-    if (Math.abs(s.vx) < 0.1) {
-      s.vx *= 0.9; // Kill tiny velocities that cause jitter
+    // Kill any tiny velocities that cause bounce/jitter
+    if (Math.abs(s.vx) < 0.05) {
+      s.vx = 0; // Complete stop for smooth brush stroke
     }
+    
+    // Additional smoothing for brush stroke feel
+    s.vx *= 0.98; // Extra smoothing
     
     // Update position
     s.x += s.vx;
