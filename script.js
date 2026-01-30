@@ -302,15 +302,23 @@ function loop(t) {
       if (titleEl) {
         const isVisible = i === idx;
         if (isVisible) {
-          // Force show the title
+          // Force show the title - inline styles override CSS
           titleEl.style.opacity = "1";
           titleEl.style.visibility = "visible";
-          titleEl.style.display = "flex"; // Ensure it's displayed
+          titleEl.style.display = "flex";
           titleEl.style.pointerEvents = "auto";
-          console.log(`Showing title ${i}: "${titleEl.textContent}"`, {
+          titleEl.style.zIndex = "10";
+          // Remove any classes that might hide it
+          titleEl.classList.remove("hidden");
+          console.log(`✓ Showing title ${i}: "${titleEl.textContent}"`, {
             opacity: titleEl.style.opacity,
             visibility: titleEl.style.visibility,
-            display: titleEl.style.display
+            display: titleEl.style.display,
+            zIndex: titleEl.style.zIndex,
+            computed: {
+              opacity: getComputedStyle(titleEl).opacity,
+              visibility: getComputedStyle(titleEl).visibility
+            }
           });
         } else {
           titleEl.style.opacity = "0";
@@ -318,7 +326,7 @@ function loop(t) {
           titleEl.style.pointerEvents = "none";
         }
       } else {
-        console.error(`Title element ${i} is null!`);
+        console.error(`✗ Title element ${i} is null!`);
       }
     });
     

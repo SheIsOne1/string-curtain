@@ -372,7 +372,7 @@ canvas {
   position: relative;
   cursor: pointer;
   pointer-events: none; /* Disabled by default, JavaScript will enable when visible */
-  z-index: 3; /* Above canvas so titles are visible when shown */
+  z-index: 10 !important; /* Force above everything to test visibility */
   width: 100%;
   text-align: center;
   /* Ensure titles are visible when opacity and visibility are set */
