@@ -64,24 +64,27 @@ addEventListener("resize", resize);
 
 /* ===== POINTER ===== */
 const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
-let hoveredTitleIndex = -1; // Track which title is hovered (-1 = none)
 
-// Track hover on title items in header menu
-titleOverlayEls.forEach((titleEl, idx) => {
-  if (titleEl) {
-    titleEl.addEventListener("mouseenter", () => {
-      hoveredTitleIndex = idx;
-      pointer.active = true;
-      console.log(`Title ${idx} hovered`);
-    });
-    
-    titleEl.addEventListener("mouseleave", () => {
-      hoveredTitleIndex = -1;
-      pointer.active = false;
-      console.log(`Title ${idx} unhovered`);
-    });
+// Track mouse position - attach to both window and canvas for reliability
+function handleMouseMove(e) {
+  // Always update position, even if curtain not ready
+  pointer.x = e.clientX; 
+  pointer.y = e.clientY; 
+  
+  // Activate pointer if curtain is ready
+  if (curtainReady) {
+    if (!pointer.active) {
+      console.log("Mouse moved - pointer.active set to true", "x:", pointer.x, "y:", pointer.y, "curtainReady:", curtainReady);
+    }
+    pointer.active = true;
   }
-});
+}
+
+// Attach to window (global)
+addEventListener("mousemove", handleMouseMove);
+
+// Also attach to canvas for better reliability
+canvas.addEventListener("mousemove", handleMouseMove);
 
 /* ===== CLICK NAVIGATION ===== */
 // Click on title in header to navigate (optional - hover already works)
@@ -252,24 +255,33 @@ function loop(t) {
   ctx.fillStyle = "rgba(7,7,11,0.22)";
   ctx.fillRect(0, 0, innerWidth, innerHeight);
 
-  // Use hovered title index instead of mouse position
-  const idx = hoveredTitleIndex >= 0 ? hoveredTitleIndex : -1;
-  const targetSnap = idx >= 0 ? sectionCenter(idx) : innerWidth / 2;
+  const idx = sectionIndex(pointer.x);
+  const targetSnap = sectionCenter(idx);
 
   /* soft magnetic snap */
   snapX += (targetSnap - snapX) * SNAP_EASE;
 
   /* reveal logic */
   // Always update debug display with current state
-  const isHovering = curtainReady && pointer.active && idx >= 0;
+  const isHovering = curtainReady && pointer.active;
   
-  // Only reveal if curtain is ready AND a title is hovered
-  // Curtain opens from top downward for the hovered section
+  // Periodically check if mouse is still within viewport bounds
+  // This acts as a fallback deactivation if mouse truly left the window
+  if (t % 60 === 0) { // Check every ~1 second
+    if (pointer.active && (pointer.x < -50 || pointer.x > innerWidth + 50 || 
+                           pointer.y < -50 || pointer.y > innerHeight + 50)) {
+      pointer.active = false;
+      console.log("Mouse out of bounds - pointer.active set to false", pointer.x, pointer.y);
+    }
+  }
+  
+  // Only reveal if curtain is ready AND pointer is active
+  // Curtain opens around the active section (4-section method)
   if (isHovering) {
     sectionsEl.style.opacity = "1";
     // Vertical reveal from top
-    sectionsEl.style.setProperty("--reveal-y", "80px"); // Start below header
-    sectionsEl.style.setProperty("--reveal-h", `${Math.min(innerHeight - 80, params.openRadius * 2)}px`);
+    sectionsEl.style.setProperty("--reveal-y", "0px"); // Start from top
+    sectionsEl.style.setProperty("--reveal-h", `${Math.min(innerHeight, params.openRadius * 2)}px`);
     // Horizontal section selection
     sectionsEl.style.setProperty("--reveal-section-left", `${idx * 25}%`);
     sectionsEl.style.setProperty("--reveal-section-right", `${(idx + 1) * 25}%`);
@@ -278,14 +290,13 @@ function loop(t) {
       el.style.opacity = i === idx ? "1" : "0";
     });
     
-    // Update title active states in header
+    // Show title in overlay (behind curtain, appears on hover)
     titleOverlayEls.forEach((titleEl, i) => {
       if (titleEl) {
-        if (i === idx) {
-          titleEl.classList.add("active");
-        } else {
-          titleEl.classList.remove("active");
-        }
+        const isVisible = i === idx;
+        titleEl.style.opacity = isVisible ? "1" : "0";
+        // Only enable pointer events when visible - allows mouse events to pass through to canvas when hidden
+        titleEl.style.pointerEvents = isVisible ? "auto" : "none";
       }
     });
     
@@ -295,10 +306,11 @@ function loop(t) {
     sectionEls.forEach((el, i) => {
       el.style.opacity = "0";
     });
-    // Remove active state from all titles
+    // Hide all titles and disable their pointer events
     titleOverlayEls.forEach(titleEl => {
       if (titleEl) {
-        titleEl.classList.remove("active");
+        titleEl.style.opacity = "0";
+        titleEl.style.pointerEvents = "none"; // Allow mouse events to pass through
       }
     });
   }
@@ -329,26 +341,17 @@ function loop(t) {
     const s = strings[i];
     let tx = s.baseX;
 
-    // CURTAIN: Opens from top downward when hovering a title
-    // Strings in the active section pull outward (left/right) from the top
-    // This creates a vertical opening that reveals the section below
-    if (curtainReady && pointer.active && idx >= 0) {
-      const sectionLeft = idx * (innerWidth / 4);
-      const sectionRight = (idx + 1) * (innerWidth / 4);
-      const isInSection = s.baseX >= sectionLeft && s.baseX < sectionRight;
-      
-      if (isInSection) {
-        const sectionCenterX = (sectionLeft + sectionRight) / 2;
-        const distFromCenter = Math.abs(s.baseX - sectionCenterX);
-        const maxDist = (sectionRight - sectionLeft) / 2;
-        
-        // Strings closer to center open more (stronger pull)
-        const f = 1 - (distFromCenter / maxDist);
-        const eased = f * f * (3 - 2 * f); // smoothstep
-        
-        // Pull strings outward (left side goes left, right side goes right)
-        // This creates the opening effect from the top
-        const dir = s.baseX < sectionCenterX ? -1 : 1;
+    // CURTAIN: Opens around the active section (snapX) when hovering
+    // Strings near the section center pull outward (left/right)
+    // This creates an opening that follows the 4-section system
+    if (curtainReady && pointer.active) {
+      const d = Math.abs(s.baseX - snapX);
+      if (d < params.openRadius) {
+        // Smooth falloff curve
+        const f = 1 - d / params.openRadius;
+        const eased = f * f * (3 - 2 * f); // smoothstep for smoother opening
+        // Left side of section goes left, right side goes right
+        const dir = s.baseX < snapX ? -1 : 1;
         tx = s.baseX + dir * params.openStrength * eased;
       }
     }

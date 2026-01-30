@@ -342,60 +342,46 @@ canvas {
   font-family: monospace;
 }
 
-/* Titles overlay - header menu at top */
+/* Titles overlay - behind curtain, appear on hover */
 .titles-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  height: 80px !important;
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  z-index: 10 !important; /* Higher than canvas (z-index: 2) to ensure visibility */
-  pointer-events: auto !important; /* Always allow pointer events for header menu */
-  background: rgba(7, 7, 11, 0.7) !important; /* More visible background for header */
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  /* Ensure header is always at top, never centered */
-  margin: 0 !important;
-  padding: 0 !important;
-  transform: none !important;
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 1; /* Behind canvas (z-index: 2), above sections (z-index: 0) */
+  pointer-events: none; /* Allow mouse events to pass through to canvas */
 }
 
 .title-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Align to top */
   justify-content: center;
-  opacity: 1 !important; /* Always visible in header - force with !important */
-  transition: transform 200ms ease, color 200ms ease;
+  padding-top: 40px; /* Position at top with spacing */
+  opacity: 0; /* Hidden by default, shown on hover */
+  transition: opacity 200ms ease, transform 200ms ease;
   font-family: "Imperial Script", cursive;
   font-weight: 400;
   font-style: normal;
-  font-size: 36px;
+  font-size: 48px;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.7) !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.3);
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
   margin: 0;
-  padding: 0;
   position: relative;
   cursor: pointer;
-  pointer-events: auto !important; /* Always allow pointer events in header */
-  z-index: 10;
-  /* Ensure titles are at top of header, not centered vertically on page */
-  align-self: flex-start;
+  pointer-events: none; /* Disabled by default, enabled when visible */
+  z-index: 1;
+  width: 100%;
+  text-align: center;
 }
 
-/* Title hover state in header */
+/* Only enable pointer events when title is visible */
+.title-item[style*="opacity: 1"],
+.title-item[style*="opacity:1"] {
+  pointer-events: auto;
+}
+
 .title-item:hover {
   transform: scale(1.05);
-  color: rgba(255, 255, 255, 1) !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 30px rgba(255,255,255,0.6);
-}
-
-/* Active title in header */
-.title-item.active {
-  color: rgba(255, 255, 255, 1) !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 30px rgba(255,255,255,0.6);
 }
 
