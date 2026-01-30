@@ -433,21 +433,21 @@ function loop(t) {
     // Update position
     s.x += s.vx;
     
-    // HAIR-LIKE NEIGHBOR COUPLING - almost no coupling, very independent movement
+    // HAND-DRAWN ANIMATION COUPLING - smooth, minimal coupling
     if (i > 0 && i < strings.length - 1) {
       const left = strings[i - 1];
       const right = strings[i + 1];
       
-      // Calculate neighbor influence (very weak for fluid, independent movement)
+      // Calculate neighbor influence (very weak for smooth independence)
       const couplingStrength = curtainReady && pointer.active 
-        ? params.clothCoupling * 0.2 // Minimal when active
-        : params.clothCoupling * 0.05; // Almost no coupling
+        ? params.clothCoupling * 0.2
+        : params.clothCoupling * 0.05; // Minimal coupling
       
-      // Average neighbor position - very subtle influence
+      // Smooth neighbor position influence
       const avgNeighborX = (left.x + right.x) / 2;
       const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
       
-      // Neighbor velocities - very subtle wave propagation
+      // Smooth neighbor velocity influence
       const avgNeighborVx = (left.vx + right.vx) / 2;
       const velocityInfluence = (avgNeighborVx - s.vx) * couplingStrength * 0.15;
       
@@ -455,10 +455,9 @@ function loop(t) {
       s.vx += velocityInfluence;
     }
     
-    // HAIR-LIKE DRIFT - gentle, natural individual movement
-    const drift = Math.sin(t * 0.00025 + s.phase * 0.022) * 0.18 +
-                  Math.cos(t * 0.00012 + s.phase * 0.018) * 0.12 +
-                  Math.sin(t * 0.00008 + s.phase * 0.012) * 0.08; // Gentle, natural variation
+    // HAND-DRAWN ANIMATION DRIFT - smooth, minimal drift
+    const drift = Math.sin(t * 0.00015 + s.phase * 0.02) * 0.12 +
+                  Math.cos(t * 0.00008 + s.phase * 0.015) * 0.08; // Smooth, minimal variation
     s.x += drift;
   }
 
