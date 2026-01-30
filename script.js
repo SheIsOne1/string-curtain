@@ -170,10 +170,10 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.10, // Smooth, responsive like hand-drawn animation
-  returnEase: 0.07, // Smooth return with natural flow
-  clothDamping: 0.93, // Good damping for smooth movement without being too stiff
-  clothInertia: 0.12, // Moderate inertia for natural flow
+  followEase: 0.08, // Smooth, stable response
+  returnEase: 0.06, // Smooth, stable return
+  clothDamping: 0.95, // High damping to eliminate bounce
+  clothInertia: 0.09, // Low inertia to prevent bounce
   clothCoupling: 0.025 // Gentle coupling for natural independence
 };
 
@@ -416,21 +416,26 @@ function loop(t) {
       }
     }
 
-    // SMOOTH HAND-DRAWN PHYSICS: Natural, flowing, no bounce
+    // SMOOTH HAND-DRAWN PHYSICS: Stable, no bounce
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Natural responsiveness
+    // Low inertia for stable movement (no bounce)
     const effectiveInertia = params.clothInertia / s.mass;
     s.vx += force * effectiveInertia;
     
-    // Good damping for smooth movement without bounce
-    const damping = params.clothDamping + (s.mass - 0.4) * 0.016;
+    // High damping to eliminate all bounce
+    const damping = params.clothDamping + (s.mass - 0.4) * 0.01;
     s.vx *= damping;
     
-    // Moderate velocity for natural flow
-    const maxVel = 6 + s.wobble * 1.5; // Natural speed
+    // Lower velocity for stable movement
+    const maxVel = 5 + s.wobble * 1.2; // Stable speed
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
+    
+    // Extra smoothing to prevent any bounce
+    if (Math.abs(s.vx) < 0.1) {
+      s.vx *= 0.9; // Kill tiny velocities that cause jitter
+    }
     
     // Update position
     s.x += s.vx;
