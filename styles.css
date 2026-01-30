@@ -358,8 +358,7 @@ canvas {
   align-items: flex-start; /* Align to top */
   justify-content: center;
   padding-top: 40px; /* Position at top with spacing */
-  opacity: 0; /* Hidden by default, JavaScript will control */
-  visibility: hidden; /* Hidden by default, JavaScript will control */
+  /* Remove default hidden state - let JavaScript control completely */
   transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
   font-family: "Imperial Script", cursive;
   font-weight: 400;
@@ -385,3 +384,11 @@ canvas {
   transform: scale(1.05);
 }
 
+/* Class to force title visibility */
+.title-item.visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+}

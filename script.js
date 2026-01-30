@@ -53,6 +53,10 @@ titleOverlayEls.forEach((title, i) => {
     title.style.opacity = "0";
     title.style.visibility = "hidden";
     title.style.pointerEvents = "none";
+    // Ensure display is set
+    title.style.display = "flex";
+  } else {
+    console.error(`Title ${i} is null!`);
   }
 });
 
@@ -299,34 +303,53 @@ function loop(t) {
     
     // Show title in overlay (appears on hover)
     titleOverlayEls.forEach((titleEl, i) => {
-      if (titleEl) {
-        const isVisible = i === idx;
-        if (isVisible) {
-          // Force show the title - inline styles override CSS
-          titleEl.style.opacity = "1";
-          titleEl.style.visibility = "visible";
-          titleEl.style.display = "flex";
-          titleEl.style.pointerEvents = "auto";
-          titleEl.style.zIndex = "10";
-          // Remove any classes that might hide it
-          titleEl.classList.remove("hidden");
-          console.log(`✓ Showing title ${i}: "${titleEl.textContent}"`, {
+      if (!titleEl) {
+        console.error(`✗ Title element ${i} is null!`);
+        return;
+      }
+      
+      const isVisible = i === idx;
+      if (isVisible) {
+        // Force show the title using class + inline styles
+        titleEl.classList.add("visible");
+        titleEl.style.opacity = "1";
+        titleEl.style.visibility = "visible";
+        titleEl.style.display = "flex";
+        titleEl.style.pointerEvents = "auto";
+        titleEl.style.zIndex = "10";
+        
+        const computed = getComputedStyle(titleEl);
+        const rect = titleEl.getBoundingClientRect();
+        console.log(`✓ Showing title ${i}: "${titleEl.textContent}"`, {
+          element: titleEl,
+          textContent: titleEl.textContent,
+          hasVisibleClass: titleEl.classList.contains("visible"),
+          inlineStyles: {
             opacity: titleEl.style.opacity,
             visibility: titleEl.style.visibility,
-            display: titleEl.style.display,
-            zIndex: titleEl.style.zIndex,
-            computed: {
-              opacity: getComputedStyle(titleEl).opacity,
-              visibility: getComputedStyle(titleEl).visibility
-            }
-          });
-        } else {
-          titleEl.style.opacity = "0";
-          titleEl.style.visibility = "hidden";
-          titleEl.style.pointerEvents = "none";
-        }
+            display: titleEl.style.display
+          },
+          computedStyles: {
+            opacity: computed.opacity,
+            visibility: computed.visibility,
+            display: computed.display,
+            zIndex: computed.zIndex,
+            position: computed.position,
+            color: computed.color
+          },
+          boundingRect: {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            visible: rect.width > 0 && rect.height > 0
+          }
+        });
       } else {
-        console.error(`✗ Title element ${i} is null!`);
+        titleEl.classList.remove("visible");
+        titleEl.style.opacity = "0";
+        titleEl.style.visibility = "hidden";
+        titleEl.style.pointerEvents = "none";
       }
     });
     
