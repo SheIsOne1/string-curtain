@@ -137,14 +137,14 @@ function seed() {
       x: (i + 0.5) * gap,
       vx: 0, // velocity for cloth-like momentum
       phase: Math.random() * 1000,
-      wobble: 1.5 + Math.random() * 2.5, // Much more variation for fluid movement
+      wobble: 0.8 + Math.random() * 1.2, // Moderate variation for natural movement
       thickness: 0.8 + Math.random() * 0.6, // Thinner like hair strands
       alpha: 0.75 + Math.random() * 0.2, // Slightly more variation for hair
       // Hair-like movement properties - each strand very unique
-      waveSpeed: 1.5 + Math.random() * 1.2, // Much faster, more fluid waves
-      waveFreq: 0.025 + Math.random() * 0.020, // Higher frequency for finer, fluid movement
+      waveSpeed: 0.5 + Math.random() * 0.4, // Slower, more natural waves (was 1.5-2.7 - too fast)
+      waveFreq: 0.012 + Math.random() * 0.010, // Lower frequency for natural movement (was 0.025-0.045)
       naturalSway: Math.random() * Math.PI * 2, // natural sway phase
-      mass: 0.2 + Math.random() * 0.25, // Even lighter for more fluid movement (was 0.3-0.6)
+      mass: 0.4 + Math.random() * 0.3, // Moderate weight for natural flow (was 0.2-0.45 - too light)
       // Custom color palette: #F9DC5C #FAE588 #FCEFB4 #FDF4CB #FDF8E1
       // Converted to HSL: bright yellow, light yellow, pale yellow, very pale yellow, almost white yellow
       ...(function() {
@@ -169,11 +169,11 @@ function seed() {
 const params = {
   openRadius: 280, // wider opening to cover more of each section
   openStrength: 180, // stronger pull for more visible opening
-  followEase: 0.35, // Much more responsive and fluid (was 0.25)
-  returnEase: 0.20, // Faster, more fluid return (was 0.15)
-  clothDamping: 0.88, // Less damping = more fluid movement (was 0.92)
-  clothInertia: 0.30, // Much more momentum for fluid bounce (was 0.20)
-  clothCoupling: 0.015 // Minimal coupling - very independent movement (was 0.03)
+  followEase: 0.08, // Slow, natural response like hair (was 0.35 - too fast)
+  returnEase: 0.05, // Very slow, natural return (was 0.20 - too fast)
+  clothDamping: 0.95, // High damping for natural, smooth movement (was 0.88)
+  clothInertia: 0.15, // Moderate momentum for natural flow (was 0.30 - too bouncy)
+  clothCoupling: 0.02 // Minimal coupling - independent but natural (was 0.015)
 };
 
 function drawString(x, t, s) {
@@ -195,35 +195,33 @@ function drawString(x, t, s) {
       const y = i * segH;
       const progress = i / seg;
       
-      // HAIR-LIKE WAVE PROPAGATION - much finer, faster, more fluid waves
-      const waveTravel = (t * s.waveSpeed * 0.002) + (y * s.waveFreq); // Even faster wave travel
+      // HAIR-LIKE WAVE PROPAGATION - slow, natural, flowing waves
+      const waveTravel = (t * s.waveSpeed * 0.0008) + (y * s.waveFreq); // Slower, natural wave travel
       const baseWave =
-        Math.sin(waveTravel + s.phase) * s.wobble * 2.0 +
-        Math.cos(waveTravel * 0.5 + s.phase * 0.6) * s.wobble * 1.3 +
-        Math.sin(waveTravel * 2.5 + s.naturalSway) * s.wobble * 0.8 + // More harmonics
-        Math.sin(waveTravel * 0.25 + s.phase * 0.4) * s.wobble * 0.4 + // Subtle long waves
-        Math.sin(waveTravel * 3.0 + s.phase * 1.2) * s.wobble * 0.3; // Fine detail waves
+        Math.sin(waveTravel + s.phase) * s.wobble * 1.2 +
+        Math.cos(waveTravel * 0.7 + s.phase * 0.8) * s.wobble * 0.8 +
+        Math.sin(waveTravel * 1.8 + s.naturalSway) * s.wobble * 0.5 + // Natural harmonics
+        Math.sin(waveTravel * 0.4 + s.phase * 0.5) * s.wobble * 0.3; // Subtle long waves
       
-      // HAIR-LIKE GRAVITY SAG - lighter, more subtle sag
-      const sagAmount = 1.8 + Math.sin(t * 0.0005 + s.phase) * 0.4; // Lighter sag
+      // HAIR-LIKE GRAVITY SAG - natural, gradual sag
+      const sagAmount = 1.5 + Math.sin(t * 0.0002 + s.phase) * 0.3; // Natural, slow sag
       const sag = Math.sin(progress * Math.PI) * sagAmount * progress * progress;
       
-      // HAIR-LIKE FOLDS - finer, more individual movement
-      const foldPhase = t * 0.0012 + s.baseX * 0.02 + progress * 2.5;
-      const fold = Math.sin(foldPhase) * 1.5 * progress +
-                   Math.cos(foldPhase * 1.5) * 1.0 * progress; // Finer folds
+      // HAIR-LIKE FOLDS - slow, natural individual movement
+      const foldPhase = t * 0.0006 + s.baseX * 0.015 + progress * 2.0;
+      const fold = Math.sin(foldPhase) * 1.2 * progress +
+                   Math.cos(foldPhase * 1.3) * 0.8 * progress; // Natural, slow folds
       
-      // HAIR-LIKE TWIST - more subtle, individual strand twist
-      const twistPhase = y * 0.12 + t * s.waveSpeed * 0.0015 + strand * 3.0 + s.phase * 0.02;
-      const twist = Math.sin(twistPhase) * 0.4 + 
-                   Math.cos(twistPhase * 1.5) * 0.25 +
-                   Math.sin(twistPhase * 0.7) * 0.15; // More subtle twist
+      // HAIR-LIKE TWIST - subtle, natural strand twist
+      const twistPhase = y * 0.08 + t * s.waveSpeed * 0.0008 + strand * 2.5 + s.phase * 0.015;
+      const twist = Math.sin(twistPhase) * 0.3 + 
+                   Math.cos(twistPhase * 1.3) * 0.2 +
+                   Math.sin(twistPhase * 0.6) * 0.1; // Subtle, natural twist
       
-      // HAIR-LIKE IRREGULARITIES - finer texture, more individual variation
-      const irregularity = Math.sin(y * 0.18 + s.phase * 0.7 + strand) * 0.4 +
-                           Math.cos(y * 0.11 + t * 0.0008) * 0.25 +
-                           Math.sin(y * 0.25 + t * 0.0005 + s.phase) * 0.2 +
-                           Math.sin(y * 0.05 + t * 0.0002) * 0.15; // More fine detail
+      // HAIR-LIKE IRREGULARITIES - natural texture, individual variation
+      const irregularity = Math.sin(y * 0.12 + s.phase * 0.5 + strand) * 0.3 +
+                           Math.cos(y * 0.08 + t * 0.0003) * 0.2 +
+                           Math.sin(y * 0.18 + t * 0.0002 + s.phase) * 0.15; // Natural detail
       
       // ORGANIC RESPONSE - strings respond to their position relative to opening
       let responseWave = 0;
@@ -413,20 +411,20 @@ function loop(t) {
       }
     }
 
-    // HAIR-LIKE PHYSICS: Very light, fluid, responsive movement
+    // HAIR-LIKE PHYSICS: Natural, smooth, flowing movement
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     const force = (tx - s.x) * targetEase;
     
-    // Mass affects how hair responds (lighter hair moves faster and more fluidly)
-    const effectiveInertia = params.clothInertia / s.mass; // Lighter = much more responsive
-    s.vx += force * effectiveInertia * 1.2; // Boost responsiveness
+    // Mass affects how hair responds (natural weight for smooth flow)
+    const effectiveInertia = params.clothInertia / s.mass; // Natural responsiveness
+    s.vx += force * effectiveInertia; // Natural, smooth acceleration
     
-    // Hair-like damping - less resistance for more fluid movement
-    const damping = params.clothDamping + (s.mass - 0.2) * 0.02; // Less damping = more fluid
+    // Hair-like damping - high damping for smooth, natural movement
+    const damping = params.clothDamping + (s.mass - 0.4) * 0.015; // High damping = smooth
     s.vx *= damping;
     
-    // Hair velocity limits - can move much faster (more fluid)
-    const maxVel = 18 + s.wobble * 4; // Much faster for fluid movement
+    // Hair velocity limits - moderate speed for natural movement
+    const maxVel = 6 + s.wobble * 1.5; // Moderate speed for natural flow
     s.vx = Math.max(-maxVel, Math.min(maxVel, s.vx));
     
     // Update position
@@ -454,10 +452,10 @@ function loop(t) {
       s.vx += velocityInfluence;
     }
     
-    // HAIR-LIKE DRIFT - much more individual, fluid movement
-    const drift = Math.sin(t * 0.0005 + s.phase * 0.03) * 0.25 +
-                  Math.cos(t * 0.00025 + s.phase * 0.025) * 0.15 +
-                  Math.sin(t * 0.0001 + s.phase * 0.01) * 0.1; // More fluid variation
+    // HAIR-LIKE DRIFT - slow, natural individual movement
+    const drift = Math.sin(t * 0.00015 + s.phase * 0.02) * 0.12 +
+                  Math.cos(t * 0.00008 + s.phase * 0.015) * 0.08 +
+                  Math.sin(t * 0.00005 + s.phase * 0.01) * 0.05; // Slow, natural variation
     s.x += drift;
   }
 
