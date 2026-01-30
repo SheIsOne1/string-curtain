@@ -277,8 +277,10 @@ html, body {
 
 .section h3 {
   margin: 0;
+  font-family: "Imperial Script", cursive;
+  font-weight: 400;
+  font-style: normal;
   font-size: 48px;
-  font-weight: 700;
   letter-spacing: 0.5px;
   color: white !important;
   text-shadow: 0 2px 10px rgba(0,0,0,0.8);
