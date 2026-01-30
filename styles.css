@@ -265,13 +265,10 @@ html, body {
 .section {
   height: 100%;
   padding: 0;
-  padding-top: 40px;
   padding-left: 32px;
   padding-right: 32px;
   box-sizing: border-box;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  position: relative;
   border-left: 1px solid rgba(255,255,255,0.08);
 
   opacity: 0;
@@ -291,11 +288,13 @@ html, body {
   opacity: 1;
   transition: opacity 200ms ease;
   pointer-events: none;
-  position: relative;
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1;
   /* Position at top/header of section - centered horizontally */
-  align-self: flex-start;
-  width: 100%;
+  width: calc(100% - 64px);
   text-align: center;
 }
 
