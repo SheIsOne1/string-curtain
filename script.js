@@ -72,11 +72,27 @@ function resize() {
 addEventListener("resize", resize);
 
 /* ===== POINTER ===== */
-const pointer = { x: innerWidth / 2, y: innerHeight / 2, active: false };
+const pointer = { 
+  x: innerWidth / 2, 
+  y: innerHeight / 2, 
+  active: false,
+  vx: 0, // Brush velocity X (for brush stroke direction)
+  vy: 0, // Brush velocity Y
+  prevX: innerWidth / 2, // Previous position for velocity calculation
+  prevY: innerHeight / 2
+};
 
-// Track mouse position - attach to both window and canvas for reliability
+// Track mouse position and velocity - for brush stroke direction
 function handleMouseMove(e) {
-  // Always update position, even if curtain not ready
+  // Calculate brush velocity (direction and speed)
+  pointer.vx = e.clientX - pointer.x;
+  pointer.vy = e.clientY - pointer.y;
+  
+  // Store previous position
+  pointer.prevX = pointer.x;
+  pointer.prevY = pointer.y;
+  
+  // Update current position
   pointer.x = e.clientX; 
   pointer.y = e.clientY; 
   
@@ -403,7 +419,7 @@ function loop(t) {
     const s = strings[i];
     let tx = s.baseX;
 
-    // BRUSH THROUGH HAIR: Organic response to mouse/brush movement
+    // BRUSH THROUGH HAIR: Hair follows brush direction naturally
     if (curtainReady && pointer.active) {
       const d = Math.abs(s.baseX - snapX);
       if (d < params.openRadius) {
@@ -411,26 +427,32 @@ function loop(t) {
         const f = 1 - d / params.openRadius;
         const eased = f * f * (3 - 2 * f); // smoothstep for organic opening
         
-        // Organic brush direction - hair flows with brush
-        const dir = s.baseX < snapX ? -1 : 1;
-        const brushPull = params.openStrength * eased;
+        // Brush direction - hair follows the brush movement direction
+        const brushDir = pointer.vx !== 0 ? (pointer.vx > 0 ? 1 : -1) : (s.baseX < snapX ? -1 : 1);
+        const brushSpeed = Math.min(1, Math.abs(pointer.vx) / 50); // Normalize brush speed
         
-        // Add organic variation - each hair responds slightly differently
-        const hairResistance = 1 - (params.brushResistance * (1 - f)); // Less resistance near brush
-        tx = s.baseX + dir * brushPull * hairResistance;
+        // Organic brush pull - stronger when brush moves faster
+        const brushPull = params.openStrength * eased * (0.7 + brushSpeed * 0.3);
         
-        // Organic flow - hair continues to move slightly after brush passes
-        const flowAftermath = Math.sin(t * 0.001 + s.phase) * 2 * eased;
+        // Hair resistance - each strand responds differently
+        const hairResistance = 1 - (params.brushResistance * (1 - f));
+        tx = s.baseX + brushDir * brushPull * hairResistance;
+        
+        // Organic flow aftermath - hair continues flowing after brush
+        const flowAftermath = Math.sin(t * 0.001 + s.phase) * 2 * eased * (1 - brushSpeed * 0.5);
         tx += flowAftermath;
       }
     }
 
-    // ORGANIC HAIR BRUSH PHYSICS: Natural hair flowing with brush
+    // ORGANIC HAIR BRUSH PHYSICS: Smooth brush stroke interpolation
     const targetEase = curtainReady && pointer.active ? params.followEase : params.returnEase;
     
-    // Organic interpolation - hair naturally follows brush
+    // Smooth interpolation with easing (like brush stroke)
     const diff = tx - s.x;
-    const organicMove = diff * targetEase;
+    
+    // Use ease-out curve for smooth brush stroke feel
+    const easeOut = 1 - Math.pow(1 - Math.min(1, Math.abs(diff) / 100), 3);
+    const organicMove = diff * targetEase * (0.8 + easeOut * 0.2);
     
     // Natural hair inertia - each strand has its own response
     const effectiveInertia = params.clothInertia / s.mass;
@@ -448,6 +470,9 @@ function loop(t) {
     if (Math.abs(s.vx) < 0.08) {
       s.vx *= 0.92; // Gentle settling, not instant stop
     }
+    
+    // Smooth velocity decay for brush stroke feel
+    s.vx *= 0.99; // Very gentle decay
     
     // Update position
     s.x += s.vx;
