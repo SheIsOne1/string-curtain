@@ -28,11 +28,23 @@
     <div class="title-item" id="title3">Awards</div>
   </div>
 
-  <!-- Curtain -->
-  <canvas id="c"></canvas>
-  <div class="hud">Hover — curtain softly snaps to a section</div>
+  <!-- THREE.js Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <div class="hud">Hover — 3D curtain softly snaps to a section</div>
   <div class="debug" id="debug"></div>
 
-  <script src="script.js?v=4"></script>
+  <!-- THREE.js Import Map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <!-- Load 3D Script -->
+  <script type="module" src="script-3d.js"></script>
 </body>
 </html>

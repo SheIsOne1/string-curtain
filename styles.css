@@ -6,7 +6,148 @@ html, body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* ===== INTRO PAGE ===== */
+/* ===== THREE.js CANVAS CONTAINER ===== */
+#canvas-container {
+  position: fixed;
+  inset: 0;
+  z-index: 2; /* Above sections, below titles */
+  pointer-events: none; /* Allow mouse events to pass through for interaction */
+}
+
+#canvas-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto; /* Canvas itself captures mouse events */
+}
+
+/* ===== SECTIONS (behind curtain) ===== */
+.sections {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.section {
+  height: 100%;
+  padding: 0;
+  padding-left: 32px;
+  padding-right: 32px;
+  box-sizing: border-box;
+  position: relative;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.section h3 {
+  margin: 0;
+  padding: 0;
+  font-family: "Imperial Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 48px;
+  letter-spacing: 0.5px;
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  opacity: 1;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: calc(100% - 64px);
+  text-align: center;
+}
+
+/* Section panels using custom color palette */
+.s1 { background: linear-gradient(180deg, rgba(249,220,92,0.92), rgba(249,220,92,0.55)); }  /* #F9DC5C bright yellow */
+.s2 { background: linear-gradient(180deg, rgba(250,229,136,0.92), rgba(250,229,136,0.55)); }  /* #FAE588 light yellow */
+.s3 { background: linear-gradient(180deg, rgba(252,239,180,0.92), rgba(252,239,180,0.55)); }  /* #FCEFB4 pale yellow */
+.s4 { background: linear-gradient(180deg, rgba(253,244,203,0.92), rgba(253,244,203,0.55)); }  /* #FDF4CB very pale yellow */
+
+/* ===== HUD & DEBUG ===== */
+.hud {
+  position: fixed;
+  left: 14px;
+  top: 12px;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.debug {
+  position: fixed;
+  right: 14px;
+  top: 12px;
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 4;
+  background: rgba(0,0,0,0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ===== TITLES OVERLAY ===== */
+/* Titles appear on hover, above canvas in revealed area */
+.titles-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 3; /* Above canvas (z-index: 2) so titles are visible when curtain opens */
+  pointer-events: none; /* Allow mouse events to pass through to canvas when hidden */
+  background: none;
+}
+
+.title-item {
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 40px;
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
+  font-family: "Imperial Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 48px;
+  letter-spacing: 0.5px;
+  color: white !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
+  margin: 0;
+  position: relative;
+  cursor: pointer;
+  pointer-events: none;
+  z-index: 10 !important;
+  width: 100%;
+  text-align: center;
+  will-change: opacity, visibility;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.title-item:hover {
+  transform: scale(1.05);
+}
+
+/* Visible state for titles */
+.title-item.visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+}
+
+/* ===== INTRO PAGE (keeping for potential future use) ===== */
 .intro-page {
   position: fixed;
   inset: 0;
@@ -18,7 +159,7 @@ html, body {
   opacity: 1;
   transition: opacity 1s ease-out, visibility 1s ease-out;
   visibility: visible;
-  pointer-events: auto; /* Allow pointer events, but controlled by JS */
+  pointer-events: auto;
   user-select: none;
   -webkit-user-select: none;
   overflow: hidden;
@@ -30,10 +171,10 @@ html, body {
   background: 
     linear-gradient(90deg, 
       transparent 0%,
-      hsla(48, 94%, 67%, 0.15) 20%,  /* #F9DC5C bright yellow */
-      hsla(48, 92%, 75%, 0.15) 40%,  /* #FAE588 light yellow */
-      hsla(48, 90%, 85%, 0.15) 60%,  /* #FCEFB4 pale yellow */
-      hsla(48, 88%, 90%, 0.15) 80%,  /* #FDF4CB very pale yellow */
+      hsla(48, 94%, 67%, 0.15) 20%,
+      hsla(48, 92%, 75%, 0.15) 40%,
+      hsla(48, 90%, 85%, 0.15) 60%,
+      hsla(48, 88%, 90%, 0.15) 80%,
       transparent 100%
     );
   background-size: 200% 100%;
@@ -48,59 +189,6 @@ html, body {
   50% {
     background-position: 200% 0;
   }
-}
-
-.intro-particles {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    radial-gradient(2px 2px at 20% 30%, hsla(48, 94%, 67%, 0.3), transparent),  /* #F9DC5C */
-    radial-gradient(2px 2px at 60% 70%, hsla(48, 92%, 75%, 0.3), transparent),  /* #FAE588 */
-    radial-gradient(1px 1px at 50% 50%, hsla(48, 90%, 85%, 0.3), transparent),    /* #FCEFB4 */
-    radial-gradient(1px 1px at 80% 10%, hsla(48, 88%, 90%, 0.3), transparent),    /* #FDF4CB */
-    radial-gradient(2px 2px at 90% 60%, hsla(48, 85%, 93%, 0.3), transparent),    /* #FDF8E1 */
-    radial-gradient(1px 1px at 30% 80%, hsla(48, 94%, 67%, 0.3), transparent),  /* #F9DC5C */
-    radial-gradient(2px 2px at 10% 40%, hsla(48, 92%, 75%, 0.3), transparent),  /* #FAE588 */
-    radial-gradient(1px 1px at 70% 20%, hsla(48, 90%, 85%, 0.3), transparent);   /* #FCEFB4 */
-  background-size: 200% 200%;
-  animation: particleFloat 20s ease-in-out infinite;
-  opacity: 0.4;
-}
-
-@keyframes particleFloat {
-  0%, 100% {
-    background-position: 0% 0%, 100% 100%, 50% 50%, 80% 10%, 90% 60%, 30% 80%, 10% 40%, 70% 20%;
-  }
-  25% {
-    background-position: 20% 10%, 80% 90%, 60% 40%, 70% 20%, 80% 70%, 40% 70%, 20% 50%, 60% 30%;
-  }
-  50% {
-    background-position: 40% 20%, 60% 80%, 50% 50%, 60% 30%, 70% 80%, 50% 60%, 30% 60%, 50% 40%;
-  }
-  75% {
-    background-position: 30% 15%, 70% 85%, 55% 45%, 65% 25%, 75% 75%, 45% 65%, 25% 55%, 55% 35%;
-  }
-}
-
-.particle-portrait {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.8; /* Slightly reduced to not overpower */
-  z-index: 1; /* Below title, above background */
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.particle-portrait canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  mix-blend-mode: screen;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .intro-page.hidden {
@@ -126,14 +214,13 @@ html, body {
   transition: transform 0.3s ease;
   position: relative;
   z-index: 1;
-  /* Initial color and text-shadow will be set by lights animation at 0% */
-  color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
+  color: hsl(48, 94%, 67%);
   text-shadow:
-    0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
-    0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
-    -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
-    1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),   /* #FDF4CB very pale yellow */
-    0 0 2em hsla(48, 85%, 93%, 0.4);             /* #FDF8E1 almost white yellow */
+    0 0 1em hsla(48, 94%, 67%, 0.8),
+    0 0 0.5em hsla(48, 92%, 75%, 0.6),
+    -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
+    1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
+    0 0 2em hsla(48, 85%, 93%, 0.4);
 }
 
 @keyframes titleFloat {
@@ -162,233 +249,62 @@ html, body {
 
 @keyframes lights {
   0% {
-    color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
+    color: hsl(48, 94%, 67%);
     text-shadow:
-      0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
-      0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
-      -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
-      1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),   /* #FDF4CB very pale yellow */
-      0 0 2em hsla(48, 85%, 93%, 0.4);             /* #FDF8E1 almost white yellow */
+      0 0 1em hsla(48, 94%, 67%, 0.8),
+      0 0 0.5em hsla(48, 92%, 75%, 0.6),
+      -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
+      1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
+      0 0 2em hsla(48, 85%, 93%, 0.4);
   }
   
   20% { 
-    color: hsl(48, 92%, 75%); /* #FAE588 light yellow */
+    color: hsl(48, 92%, 75%);
     text-shadow:
       0 0 1em hsla(48, 92%, 75%, 0.8),
-      0 0 0.5em hsla(48, 90%, 85%, 0.6), /* #FCEFB4 pale yellow */
-      -0.5em -0.125em 0.5em hsla(48, 94%, 67%, 0.6), /* #F9DC5C bright yellow */
-      0.5em 0.125em 0.5em hsla(48, 88%, 90%, 0.6),  /* #FDF4CB very pale yellow */
-      0 0 2em hsla(48, 85%, 93%, 0.5);             /* #FDF8E1 almost white yellow */
+      0 0 0.5em hsla(48, 90%, 85%, 0.6),
+      -0.5em -0.125em 0.5em hsla(48, 94%, 67%, 0.6),
+      0.5em 0.125em 0.5em hsla(48, 88%, 90%, 0.6),
+      0 0 2em hsla(48, 85%, 93%, 0.5);
   }
   
   40% { 
-    color: hsl(48, 90%, 85%); /* #FCEFB4 pale yellow */
+    color: hsl(48, 90%, 85%);
     text-shadow:
       0 0 1em hsla(48, 90%, 85%, 0.9),
-      0 0 0.5em hsla(48, 88%, 90%, 0.7), /* #FDF4CB very pale yellow */
-      -0.25em -0.125em 0.5em hsla(48, 92%, 75%, 0.7), /* #FAE588 light yellow */
-      0.25em 0.125em 0.5em hsla(48, 94%, 67%, 0.7),   /* #F9DC5C bright yellow */
-      0 0 2em hsla(48, 85%, 93%, 0.6);               /* #FDF8E1 almost white yellow */
+      0 0 0.5em hsla(48, 88%, 90%, 0.7),
+      -0.25em -0.125em 0.5em hsla(48, 92%, 75%, 0.7),
+      0.25em 0.125em 0.5em hsla(48, 94%, 67%, 0.7),
+      0 0 2em hsla(48, 85%, 93%, 0.6);
   }
   
   60% {
-    color: hsl(48, 88%, 90%); /* #FDF4CB very pale yellow */
+    color: hsl(48, 88%, 90%);
     text-shadow:
       0 0 1em hsla(48, 88%, 90%, 0.9),
-      0 0 0.5em hsla(48, 85%, 93%, 0.7), /* #FDF8E1 almost white yellow */
-      0.5em -0.125em 0.5em hsla(48, 90%, 85%, 0.7),  /* #FCEFB4 pale yellow */
-      -0.5em 0.125em 0.5em hsla(48, 92%, 75%, 0.7),  /* #FAE588 light yellow */
-      0 0 2em hsla(48, 94%, 67%, 0.6);              /* #F9DC5C bright yellow */
+      0 0 0.5em hsla(48, 85%, 93%, 0.7),
+      0.5em -0.125em 0.5em hsla(48, 90%, 85%, 0.7),
+      -0.5em 0.125em 0.5em hsla(48, 92%, 75%, 0.7),
+      0 0 2em hsla(48, 94%, 67%, 0.6);
   }
   
   80% {
-    color: hsl(48, 85%, 93%); /* #FDF8E1 almost white yellow */
+    color: hsl(48, 85%, 93%);
     text-shadow:
       0 0 1em hsla(48, 85%, 93%, 0.8),
-      0 0 0.5em hsla(48, 88%, 90%, 0.6), /* #FDF4CB very pale yellow */
-      0.75em -0.125em 0.5em hsla(48, 90%, 85%, 0.6), /* #FCEFB4 pale yellow */
-      -0.75em 0.125em 0.5em hsla(48, 94%, 67%, 0.6),  /* #F9DC5C bright yellow */
-      0 0 2em hsla(48, 92%, 75%, 0.5);              /* #FAE588 light yellow */
+      0 0 0.5em hsla(48, 88%, 90%, 0.6),
+      0.75em -0.125em 0.5em hsla(48, 90%, 85%, 0.6),
+      -0.75em 0.125em 0.5em hsla(48, 94%, 67%, 0.6),
+      0 0 2em hsla(48, 92%, 75%, 0.5);
   }
   
   100% {
-    color: hsl(48, 94%, 67%); /* #F9DC5C bright yellow */
+    color: hsl(48, 94%, 67%);
     text-shadow:
-      0 0 1em hsla(48, 94%, 67%, 0.8),  /* #F9DC5C bright yellow */
-      0 0 0.5em hsla(48, 92%, 75%, 0.6), /* #FAE588 light yellow */
-      1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4), /* #FCEFB4 pale yellow */
-      -1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4), /* #FDF4CB very pale yellow */
-      0 0 2em hsla(48, 85%, 93%, 0.4);            /* #FDF8E1 almost white yellow */
+      0 0 1em hsla(48, 94%, 67%, 0.8),
+      0 0 0.5em hsla(48, 92%, 75%, 0.6),
+      1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
+      -1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
+      0 0 2em hsla(48, 85%, 93%, 0.4);
   }
-}
-
-/* ===== SECTIONS (behind curtain) ===== */
-.sections {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  z-index: 0;
-
-  opacity: 0;
-  transition: opacity 160ms ease;
-
-  /* mask driven by JS - vertical reveal from top for specific section */
-  --reveal-y: 80px;
-  --reveal-h: 0px;
-  --reveal-section-left: 0%;
-  --reveal-section-right: 25%;
-
-  /* Vertical reveal from top - will be combined with section selection via opacity */
-  -webkit-mask-image: 
-    linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent var(--reveal-y),
-      black var(--reveal-y),
-      black calc(var(--reveal-y) + var(--reveal-h)),
-      transparent calc(var(--reveal-y) + var(--reveal-h)),
-      transparent 100%
-    );
-  mask-image: 
-    linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent var(--reveal-y),
-      black var(--reveal-y),
-      black calc(var(--reveal-y) + var(--reveal-h)),
-      transparent calc(var(--reveal-y) + var(--reveal-h)),
-      transparent 100%
-    );
-
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}
-
-.section {
-  height: 100%;
-  padding: 0;
-  padding-left: 32px;
-  padding-right: 32px;
-  box-sizing: border-box;
-  position: relative;
-  border-left: 1px solid rgba(255,255,255,0.08);
-
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-
-.section h3 {
-  margin: 0;
-  padding: 0;
-  font-family: "Imperial Script", cursive;
-  font-weight: 400;
-  font-style: normal;
-  font-size: 48px;
-  letter-spacing: 0.5px;
-  color: white !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-  opacity: 1;
-  transition: opacity 200ms ease;
-  pointer-events: none;
-  position: absolute;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  /* Position at top/header of section - centered horizontally */
-  width: calc(100% - 64px);
-  text-align: center;
-}
-
-/* Section panels using custom color palette */
-.s1 { background: linear-gradient(180deg, rgba(249,220,92,0.92), rgba(249,220,92,0.55)); }  /* #F9DC5C bright yellow */
-.s2 { background: linear-gradient(180deg, rgba(250,229,136,0.92), rgba(250,229,136,0.55)); }  /* #FAE588 light yellow */
-.s3 { background: linear-gradient(180deg, rgba(252,239,180,0.92), rgba(252,239,180,0.55)); }  /* #FCEFB4 pale yellow */
-.s4 { background: linear-gradient(180deg, rgba(253,244,203,0.92), rgba(253,244,203,0.55)); }  /* #FDF4CB very pale yellow */
-
-/* ===== CANVAS ===== */
-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 2; /* Above titles overlay (z-index: 1) */
-}
-
-.hud {
-  position: fixed;
-  left: 14px;
-  top: 12px;
-  color: rgba(255,255,255,0.7);
-  font-size: 12px;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.debug {
-  position: fixed;
-  right: 14px;
-  top: 12px;
-  color: rgba(255,255,255,0.9);
-  font-size: 11px;
-  pointer-events: none;
-  z-index: 3;
-  background: rgba(0,0,0,0.5);
-  padding: 8px;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-/* Titles overlay - appear on hover, above canvas in revealed area */
-.titles-overlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  z-index: 3; /* Above canvas (z-index: 2) so titles are visible when curtain opens */
-  pointer-events: none; /* Allow mouse events to pass through to canvas when hidden */
-  background: none; /* No background - completely transparent */
-}
-
-.title-item {
-  display: flex !important; /* Force display */
-  align-items: flex-start; /* Align to top */
-  justify-content: center;
-  padding-top: 40px; /* Position at top with spacing */
-  /* Remove default hidden state - let JavaScript control completely */
-  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
-  font-family: "Imperial Script", cursive;
-  font-weight: 400;
-  font-style: normal;
-  font-size: 48px;
-  letter-spacing: 0.5px;
-  color: white !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.5);
-  margin: 0;
-  position: relative;
-  cursor: pointer;
-  pointer-events: none; /* Disabled by default, JavaScript will enable when visible */
-  z-index: 10 !important; /* Force above everything to test visibility */
-  width: 100%;
-  text-align: center;
-  /* Ensure titles are visible when opacity and visibility are set */
-  will-change: opacity, visibility;
-}
-
-/* Only enable pointer events when title is visible - JavaScript controls this */
-
-.title-item:hover {
-  transform: scale(1.05);
-}
-
-/* Class to force title visibility */
-.title-item.visible {
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: flex !important;
-  pointer-events: auto !important;
-  z-index: 10 !important;
 }
