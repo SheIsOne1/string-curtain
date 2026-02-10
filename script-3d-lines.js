@@ -3,6 +3,9 @@ import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
+console.log('Script loading...');
+console.log('THREE.js loaded:', THREE);
+
 // ===== DOM ELEMENTS =====
 const container = document.getElementById('canvas-container');
 const sectionsEl = document.getElementById('sections');
@@ -10,19 +13,23 @@ const sectionEls = ['sec0', 'sec1', 'sec2', 'sec3'].map(id => document.getElemen
 const titleOverlayEls = ['title0', 'title1', 'title2', 'title3'].map(id => document.getElementById(id));
 const debugEl = document.getElementById('debug');
 
+console.log('DOM elements found:', { container, sectionsEl });
+
 // ===== THREE.js SCENE SETUP =====
 const scene = new THREE.Scene();
-scene.background = null;
+scene.background = new THREE.Color(0x07070b); // Dark background as fallback
 
-// Better camera positioning for full screen coverage
+// Camera setup with better positioning
 const camera = new THREE.PerspectiveCamera(
-  50, 
+  60, // Wider FOV
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
-camera.position.z = 12;
-camera.position.y = 0;
+camera.position.set(0, 0, 20); // Further back to see everything
+camera.lookAt(0, 0, 0);
+
+console.log('Camera position:', camera.position);
 
 const renderer = new THREE.WebGLRenderer({ 
   antialias: true, 
@@ -33,37 +40,28 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// ===== ENHANCED LIGHTING FOR BEAUTIFUL GLOW =====
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+console.log('Renderer created, canvas added to container');
+
+// ===== LIGHTING =====
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xF9DC5C, 1.2);
-directionalLight.position.set(3, 5, 5);
+const directionalLight = new THREE.DirectionalLight(0xF9DC5C, 1.0);
+directionalLight.position.set(5, 5, 10);
 scene.add(directionalLight);
 
-const backLight = new THREE.DirectionalLight(0xFAE588, 0.6);
-backLight.position.set(-3, -2, -3);
-scene.add(backLight);
+console.log('Lights added');
 
-// Add point lights for depth
-const pointLight1 = new THREE.PointLight(0xF9DC5C, 0.8, 30);
-pointLight1.position.set(5, 3, 2);
-scene.add(pointLight1);
+// ===== CURTAIN PARAMETERS =====
+const CURTAIN_WIDTH = 30; // Even wider
+const CURTAIN_HEIGHT = 18; // Even taller
+const NUM_STRINGS = 100;
+const SEGMENTS_PER_STRING = 80;
 
-const pointLight2 = new THREE.PointLight(0xFCEFB4, 0.6, 30);
-pointLight2.position.set(-5, -3, 2);
-scene.add(pointLight2);
-
-// ===== CURTAIN PARAMETERS - OPTIMIZED FOR FULL SCREEN =====
-const CURTAIN_WIDTH = 24; // Wider to fill screen
-const CURTAIN_HEIGHT = 14; // Taller to fill screen
-const NUM_STRINGS = 100; // Good balance of density and performance
-const SEGMENTS_PER_STRING = 100; // Very smooth curves
-
-// Physics parameters (matching your original smooth behavior)
+// Physics parameters
 const params = {
-  openRadius: 3.2,
-  openStrength: 2.2,
+  openRadius: 4.0,
+  openStrength: 2.5,
   followEase: 0.07,
   returnEase: 0.05,
   damping: 0.96,
@@ -74,51 +72,53 @@ const params = {
 
 // ===== POINTER STATE =====
 const pointer = {
-  x: 0,
-  y: 0,
+  x: window.innerWidth / 2,
+  y: window.innerHeight / 2,
   active: false,
   vx: 0,
   vy: 0,
-  prevX: 0,
-  prevY: 0,
+  prevX: window.innerWidth / 2,
+  prevY: window.innerHeight / 2,
   world: new THREE.Vector3()
 };
 
 let snapX = 0;
 const SNAP_EASE = 0.12;
 
-// ===== ENHANCED COLOR PALETTE WITH MORE VARIATION =====
+// ===== COLOR PALETTE =====
 const palette = [
-  { h: 48, s: 94, l: 67 },  // #F9DC5C - bright yellow
-  { h: 48, s: 92, l: 75 },  // #FAE588 - light yellow
-  { h: 48, s: 90, l: 85 },  // #FCEFB4 - pale yellow
-  { h: 48, s: 88, l: 90 },  // #FDF4CB - very pale yellow
-  { h: 48, s: 85, l: 93 }   // #FDF8E1 - almost white yellow
+  { h: 48, s: 94, l: 67 },
+  { h: 48, s: 92, l: 75 },
+  { h: 48, s: 90, l: 85 },
+  { h: 48, s: 88, l: 90 },
+  { h: 48, s: 85, l: 93 }
 ];
 
-// ===== CREATE BEAUTIFUL THICK STRINGS =====
+// ===== CREATE STRINGS =====
 const strings = [];
+
+console.log('Creating strings...');
 
 for (let i = 0; i < NUM_STRINGS; i++) {
   const baseX = (i / (NUM_STRINGS - 1)) * CURTAIN_WIDTH - CURTAIN_WIDTH / 2;
   
-  // Create beautiful gradient colors
+  // Create colors
   const colorData1 = palette[Math.floor(Math.random() * palette.length)];
-  const colorData2 = palette[(Math.floor(Math.random() * palette.length))];
+  const colorData2 = palette[Math.floor(Math.random() * palette.length)];
   
   const topColor = new THREE.Color().setHSL(
     (colorData1.h + (Math.random() - 0.5) * 3) / 360,
-    Math.max(0.75, Math.min(1.0, (colorData1.s + (Math.random() - 0.5) * 5) / 100)),
-    Math.max(0.55, Math.min(0.95, (colorData1.l + (Math.random() - 0.5) * 4) / 100))
+    Math.max(0.75, Math.min(1.0, (colorData1.s) / 100)),
+    Math.max(0.55, Math.min(0.95, (colorData1.l) / 100))
   );
   
   const bottomColor = new THREE.Color().setHSL(
     (colorData2.h + (Math.random() - 0.5) * 3) / 360,
-    Math.max(0.75, Math.min(1.0, (colorData2.s + (Math.random() - 0.5) * 5) / 100)),
-    Math.max(0.55, Math.min(0.95, (colorData2.l + (Math.random() - 0.5) * 4) / 100))
+    Math.max(0.75, Math.min(1.0, (colorData2.s) / 100)),
+    Math.max(0.55, Math.min(0.95, (colorData2.l) / 100))
   );
 
-  // Create smooth line with many segments
+  // Create line positions
   const positions = [];
   const colors = [];
   
@@ -126,7 +126,6 @@ for (let i = 0; i < NUM_STRINGS; i++) {
     const y = (j / SEGMENTS_PER_STRING) * CURTAIN_HEIGHT - CURTAIN_HEIGHT / 2;
     positions.push(baseX, y, 0);
     
-    // Smooth gradient transition
     const t = j / SEGMENTS_PER_STRING;
     const color = new THREE.Color().lerpColors(topColor, bottomColor, t);
     colors.push(color.r, color.g, color.b);
@@ -136,32 +135,33 @@ for (let i = 0; i < NUM_STRINGS; i++) {
   geometry.setPositions(positions);
   geometry.setColors(colors);
 
-  // MUCH THICKER LINES with better visual quality
   const material = new LineMaterial({
     color: 0xffffff,
-    linewidth: 4.5, // Much thicker for impact!
+    linewidth: 5, // Even thicker
     vertexColors: true,
     dashed: false,
     alphaToCoverage: true,
     transparent: true,
-    opacity: 0.92, // Slightly more opaque
-    depthWrite: false // Better transparency blending
+    opacity: 0.95,
+    depthWrite: false
   });
+
+  // Set resolution immediately
+  material.resolution.set(window.innerWidth, window.innerHeight);
 
   const line = new Line2(geometry, material);
   line.computeLineDistances();
   scene.add(line);
 
-  // Store string data with enhanced properties
   strings.push({
     line: line,
     geometry: geometry,
+    material: material,
     baseX: baseX,
     x: baseX,
     vx: 0,
     phase: Math.random() * 1000,
     wobble: 0.9 + Math.random() * 1.1,
-    thickness: 0.8 + Math.random() * 0.6,
     waveSpeed: 0.6 + Math.random() * 0.5,
     waveFreq: 0.012 + Math.random() * 0.012,
     naturalSway: Math.random() * Math.PI * 2,
@@ -172,13 +172,8 @@ for (let i = 0; i < NUM_STRINGS; i++) {
   });
 }
 
-// Update material resolution
-function updateMaterialResolution() {
-  strings.forEach(s => {
-    s.line.material.resolution.set(window.innerWidth, window.innerHeight);
-  });
-}
-updateMaterialResolution();
+console.log('Created', strings.length, 'strings');
+console.log('Scene children:', scene.children.length);
 
 // ===== MOUSE TRACKING =====
 const raycaster = new THREE.Raycaster();
@@ -256,38 +251,34 @@ function updateSections() {
       Section: ${idx}<br>
       Snap X: ${snapX.toFixed(2)}<br>
       Strings: ${NUM_STRINGS}<br>
-      Active: ${pointer.active}
+      Frame: ${frameCount}
     `;
   }
 }
 
-// ===== ENHANCED ANIMATION WITH SMOOTH ORGANIC MOTION =====
+// ===== ANIMATION =====
 let time = 0;
+let frameCount = 0;
 
 function animate() {
   requestAnimationFrame(animate);
   time += 1;
+  frameCount++;
 
   updateSections();
 
-  // Animate point lights for subtle glow effect
-  pointLight1.position.x = Math.sin(time * 0.001) * 3 + 5;
-  pointLight2.position.x = Math.cos(time * 0.0015) * 3 - 5;
-
-  // Update each string with enhanced organic motion
+  // Update each string
   for (let i = 0; i < strings.length; i++) {
     const s = strings[i];
     let targetX = s.baseX;
 
-    // BRUSH THROUGH HAIR EFFECT - matching your original smooth behavior
     if (pointer.active) {
       const d = Math.abs(s.baseX - snapX);
       
       if (d < params.openRadius) {
         const f = 1 - d / params.openRadius;
-        const eased = f * f * (3 - 2 * f); // smoothstep
+        const eased = f * f * (3 - 2 * f);
         
-        // Natural brush direction
         const brushDir = pointer.vx !== 0 ? (pointer.vx > 0 ? 1 : -1) : (s.baseX < snapX ? -1 : 1);
         const brushSpeed = Math.min(1, Math.abs(pointer.vx) / 50);
         
@@ -296,13 +287,12 @@ function animate() {
         
         targetX = s.baseX + brushDir * brushPull * hairResistance;
         
-        // Smooth flow aftermath
-        const flowAftermath = Math.sin(time * 0.001 + s.phase) * 0.025 * eased * (1 - brushSpeed * 0.5);
+        const flowAftermath = Math.sin(time * 0.001 + s.phase) * 0.025 * eased;
         targetX += flowAftermath;
       }
     }
 
-    // ORGANIC PHYSICS - smooth interpolation
+    // Physics
     const targetEase = pointer.active ? params.followEase : params.returnEase;
     const diff = targetX - s.x;
     
@@ -311,8 +301,6 @@ function animate() {
     
     const effectiveInertia = params.inertia / s.mass;
     s.vx += organicMove * effectiveInertia;
-    
-    // Individual damping per string for variation
     s.vx *= s.dampingFactor;
     
     const maxVel = 4.5 + s.wobble * 1.0;
@@ -325,14 +313,12 @@ function animate() {
     s.vx *= 0.99;
     s.x += s.vx;
 
-    // SMOOTH COUPLING with neighbors
+    // Coupling
     if (i > 0 && i < strings.length - 1) {
       const left = strings[i - 1];
       const right = strings[i + 1];
       
-      const couplingStrength = pointer.active 
-        ? params.coupling * 0.5
-        : params.coupling * 0.2;
+      const couplingStrength = pointer.active ? params.coupling * 0.5 : params.coupling * 0.2;
       
       const avgNeighborX = (left.x + right.x) / 2;
       const neighborInfluence = (avgNeighborX - s.x) * couplingStrength;
@@ -344,35 +330,28 @@ function animate() {
       s.vx += velocityInfluence;
     }
 
-    // GENTLE ORGANIC DRIFT
+    // Drift
     const drift = Math.sin(time * 0.00025 + s.phase * 0.025) * 0.022 +
-                  Math.cos(time * 0.00012 + s.phase * 0.02) * 0.015 +
-                  Math.sin(time * 0.00008 + s.phase * 0.015) * 0.01;
+                  Math.cos(time * 0.00012 + s.phase * 0.02) * 0.015;
     s.x += drift;
 
-    // UPDATE LINE POSITIONS with beautiful flowing waves
+    // Update positions with waves
     const positions = [];
     
     for (let j = 0; j <= SEGMENTS_PER_STRING; j++) {
       const y = s.originalPositions[j * 3 + 1];
       const progress = j / SEGMENTS_PER_STRING;
       
-      // SMOOTH FLOWING WAVES - gentle and organic
       const waveTravel = (time * s.waveSpeed * 0.0008) + (y * s.waveFreq);
       
-      // Multiple wave layers for organic feel
       const wave1 = Math.sin(waveTravel) * 0.12 * s.curlAmount;
       const wave2 = Math.sin(waveTravel * 1.4 + s.phase) * 0.06 * s.wobble;
       const wave3 = Math.cos(waveTravel * 0.8 + s.phase * 0.6) * 0.03;
-      const wave4 = Math.sin(waveTravel * 2.1 + s.naturalSway) * 0.02;
       
-      // Progressive wave amplitude (more at bottom)
       const waveMultiplier = Math.pow(progress, 1.3);
-      const waveX = (wave1 + wave2 + wave3 + wave4) * waveMultiplier;
+      const waveX = (wave1 + wave2 + wave3) * waveMultiplier;
       
-      // Depth variation for 3D feel
-      const waveZ = Math.sin(waveTravel * 0.6 + s.phase) * 0.08 * progress +
-                    Math.cos(waveTravel * 0.4) * 0.04 * progress;
+      const waveZ = Math.sin(waveTravel * 0.6 + s.phase) * 0.08 * progress;
       
       positions.push(s.x + waveX, y, waveZ);
     }
@@ -389,10 +368,21 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  updateMaterialResolution();
+  
+  // Update all material resolutions
+  strings.forEach(s => {
+    s.material.resolution.set(window.innerWidth, window.innerHeight);
+  });
 }
 
 window.addEventListener('resize', onWindowResize);
 
 // ===== START =====
+console.log('Starting animation...');
 animate();
+
+// Log first frame render
+setTimeout(() => {
+  console.log('First second complete. Frame count:', frameCount);
+  console.log('Renderer info:', renderer.info);
+}, 1000);
