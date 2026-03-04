@@ -6,19 +6,15 @@ html, body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* ===== THREE.js CANVAS CONTAINER ===== */
-#canvas-container {
+/* ===== CANVAS (2D lines) ===== */
+#c {
   position: fixed;
   inset: 0;
-  z-index: 2; /* Above sections, below titles */
-  pointer-events: none; /* Allow mouse events to pass through for interaction */
-}
-
-#canvas-container canvas {
   display: block;
   width: 100%;
   height: 100%;
-  pointer-events: auto; /* Canvas itself captures mouse events */
+  z-index: 2; /* Above sections, below titles */
+  pointer-events: auto;
 }
 
 /* ===== SECTIONS (behind curtain) ===== */
