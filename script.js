@@ -52,22 +52,18 @@ function onFirstClick() {
   canvas.style.pointerEvents = "none";
   wakeRAF();
 }
-// Listen on canvas AND document for maximum reliability
 canvas.addEventListener("click",    onFirstClick, { once: true });
 canvas.addEventListener("touchend", onFirstClick, { once: true, passive: true });
 document.addEventListener("click",  onFirstClick, { once: true });
 
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
-// Fades the canvas out so the coloured sections underneath become visible.
 function navigateTo(idx) {
   if (phase !== "open") return;
   setPhase("navigating");
   hoveredIdx = -1;
 
-  // CSS transition fades canvas to transparent → reveals sections (z-index 0)
   canvas.style.opacity = "0";
 
-  // Sections all appear; clicked one is fully opaque, others dimmed
   sectionsEl.style.opacity = "1";
   sectionEls.forEach((el, i) => {
     if (!el) return;
@@ -76,7 +72,7 @@ function navigateTo(idx) {
   });
 }
 
-// Wire up title items
+// ─── TITLE HOVER + CLICK ─────────────────────────────────────────────────────
 titleItems.forEach((el, i) => {
   if (!el) return;
   el.style.cursor = "pointer";
@@ -88,9 +84,11 @@ titleItems.forEach((el, i) => {
 
   el.addEventListener("mouseenter", () => {
     if (phase !== "open") return;
-    const rect   = el.getBoundingClientRect();
+    // *** FIX: measure the inner <span>, not the full-height div ***
+    const textEl = el.querySelector(".title-text") || el;
+    const rect   = textEl.getBoundingClientRect();
     hoverAnchorX = rect.left + rect.width  / 2;
-    hoverAnchorY = rect.top  + rect.height + 6;
+    hoverAnchorY = rect.bottom + 6;          // just below the actual text
     hoveredIdx   = i;
     hoverT0      = performance.now();
     wakeRAF();
@@ -194,12 +192,11 @@ function drawThread(th, t, swayAmt) {
   ctx.stroke();
 }
 
-// ─── HOVER THREAD — straight down from title ──────────────────────────────────
+// ─── HOVER THREAD — straight down from title text ─────────────────────────────
 function drawHoverThread(anchorX, anchorY, freeY, t, alpha) {
   const len = freeY - anchorY;
   if (len < 2) return;
 
-  // Horizontal wave, zero at root and tip, peak in the middle
   const waveAmp = Math.min(8, len * 0.042) * Math.sin(Math.min(1, len / 70) * Math.PI);
   const SEGS    = 50;
 
@@ -212,7 +209,6 @@ function drawHoverThread(anchorX, anchorY, freeY, t, alpha) {
     ctx.lineTo(anchorX + wave, py);
   }
 
-  // Three passes: outer glow → inner glow → bright core
   const passes = [
     { w: 8,   a: 0.05 },
     { w: 3.5, a: 0.20 },
@@ -284,20 +280,17 @@ function wakeRAF() { if (!rafId) rafId = requestAnimationFrame(loop); }
 function loop(t) {
   rafId = null;
   if (!pageVisible) return;
-  if (phase === "navigating") return;  // canvas fading via CSS — stop drawing
+  if (phase === "navigating") return;
 
-  // ── Phase advance ────────────────────────────────────────────────────────
   if (phase === "opening") {
     progress = Math.min(1, (t - phaseT0) / T_OPEN);
     if (progress >= 1) { progress = 1; setPhase("open"); }
   }
 
-  // ── Clear ────────────────────────────────────────────────────────────────
   const clearAlpha = (phase === "idle") ? ALPHA_IDLE : ALPHA_ANIM;
   ctx.fillStyle = `rgba(7,7,11,${clearAlpha})`;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Menu / titles visibility ──────────────────────────────────────────────
   if (phase !== "idle") {
     const menuA = Math.max(0, (progress - .45) / .55);
     sectionsEl.style.opacity = String(menuA);
@@ -312,7 +305,6 @@ function loop(t) {
     });
   }
 
-  // ── Curtain threads ───────────────────────────────────────────────────────
   for (let i = 0; i < threads.length; i++) {
     const th  = threads[i];
     const raw = Math.max(0, Math.min(1, (progress - th.stagger) / (1 - th.stagger)));
@@ -336,24 +328,18 @@ function loop(t) {
 
   drawRail();
 
-  // ── Hover thread (downward only) ──────────────────────────────────────────
+  // ── Hover thread ──────────────────────────────────────────────────────────
   if (hoveredIdx >= 0 && phase === "open") {
-    const elapsed = t - hoverT0;
-
-    // Mouse below anchor adds up to +35% speed boost —
-    // gives the feeling of pulling without full mouse control.
+    const elapsed      = t - hoverT0;
     const mouseBelow   = Math.max(0, mouseY - hoverAnchorY);
     const mouseBonus   = Math.min(0.35, mouseBelow / 280 * 0.35);
     const baseProgress = Math.min(1, elapsed / T_EXTEND);
     const prog         = easeOutCubic(Math.min(1, baseProgress + mouseBonus));
-
-    // Fade in over first 300 ms
-    const emerge = Math.min(1, elapsed / 300);
-    const freeY  = hoverAnchorY + prog * MAX_LEN;
+    const emerge       = Math.min(1, elapsed / 300);
+    const freeY        = hoverAnchorY + prog * MAX_LEN;
 
     drawHoverThread(hoverAnchorX, hoverAnchorY, freeY, t, emerge);
 
-    // Pulsing arrow at tip
     const pulse = 0.5 + 0.5 * Math.sin(t * 0.004);
     drawArrow(hoverAnchorX, freeY + 12, emerge * pulse);
   }
