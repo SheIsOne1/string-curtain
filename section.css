@@ -1,0 +1,93 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #07070b;
+  overflow-x: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 32px;
+  border-bottom: 1px solid rgba(210,168,65,0.25);
+  background: rgba(7,7,11,0.96);
+  backdrop-filter: blur(10px);
+}
+
+.back-link {
+  color: rgba(210,168,65,0.55);
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.back-link:hover { color: rgba(210,168,65,1); }
+
+.page-title {
+  font-family: "Imperial Script", cursive;
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 1;
+  color: rgba(210,168,65,0.95);
+  text-shadow: 0 0 28px rgba(210,168,65,0.25);
+}
+
+/* ===== LAYOUT GRID ===== */
+.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* row 1 = thin bar | row 2 = tall hero | row 3 = content | row 4 = footer */
+  grid-template-rows: 52px 2fr 1.4fr 0.7fr;
+  gap: 3px;
+  padding: 20px;
+  height: calc(100vh - 72px);
+}
+
+/* ───── Cell base ───── */
+.cell {
+  border: 1px solid rgba(210,168,65,0.22);
+  border-radius: 4px;
+  background-color: rgba(210,168,65,0.04);
+  /* Vertical stripe — wireframe content-lines texture */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 13px,
+    rgba(210,168,65,0.07) 13px,
+    rgba(210,168,65,0.07) 14px
+  );
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.cell:hover {
+  background-color: rgba(210,168,65,0.07);
+  border-color: rgba(210,168,65,0.40);
+}
+
+/* Full-width cells (row 1 header bar + row 2 hero) */
+.cell--full {
+  grid-column: 1 / -1;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 44px 220px 140px 140px 140px 80px;
+    height: auto;
+    min-height: calc(100vh - 72px);
+  }
+  .cell--full { grid-column: 1; }
+}
