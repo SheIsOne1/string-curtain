@@ -6,18 +6,20 @@ html, body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* ===== CANVAS (2D lines) ===== */
+/* ===== CANVAS ===== */
 #c {
   position: fixed;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  z-index: 2; /* Above sections, below titles */
+  z-index: 2;
   pointer-events: auto;
+  /* Smooth fade-out when a section is chosen */
+  transition: opacity 0.85s ease;
 }
 
-/* ===== SECTIONS (behind curtain) ===== */
+/* ===== SECTIONS (behind curtain, revealed when canvas fades) ===== */
 .sections {
   position: fixed;
   inset: 0;
@@ -25,19 +27,17 @@ html, body {
   grid-template-columns: repeat(4, 1fr);
   z-index: 0;
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity 0.5s ease;
 }
 
 .section {
   height: 100%;
-  padding: 0;
-  padding-left: 32px;
-  padding-right: 32px;
+  padding: 0 32px;
   box-sizing: border-box;
   position: relative;
   border-left: 1px solid rgba(255,255,255,0.08);
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .section h3 {
@@ -50,8 +50,6 @@ html, body {
   letter-spacing: 0.5px;
   color: white !important;
   text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-  opacity: 1;
-  transition: opacity 200ms ease;
   pointer-events: none;
   position: absolute;
   top: 40px;
@@ -62,13 +60,12 @@ html, body {
   text-align: center;
 }
 
-/* Section panels using custom color palette */
-.s1 { background: linear-gradient(180deg, rgba(249,220,92,0.92), rgba(249,220,92,0.55)); }  /* #F9DC5C bright yellow */
-.s2 { background: linear-gradient(180deg, rgba(250,229,136,0.92), rgba(250,229,136,0.55)); }  /* #FAE588 light yellow */
-.s3 { background: linear-gradient(180deg, rgba(252,239,180,0.92), rgba(252,239,180,0.55)); }  /* #FCEFB4 pale yellow */
-.s4 { background: linear-gradient(180deg, rgba(253,244,203,0.92), rgba(253,244,203,0.55)); }  /* #FDF4CB very pale yellow */
+.s1 { background: linear-gradient(180deg, rgba(249,220,92,0.92), rgba(249,220,92,0.55)); }
+.s2 { background: linear-gradient(180deg, rgba(250,229,136,0.92), rgba(250,229,136,0.55)); }
+.s3 { background: linear-gradient(180deg, rgba(252,239,180,0.92), rgba(252,239,180,0.55)); }
+.s4 { background: linear-gradient(180deg, rgba(253,244,203,0.92), rgba(253,244,203,0.55)); }
 
-/* ===== HUD & DEBUG ===== */
+/* ===== HUD ===== */
 .hud {
   position: fixed;
   left: 14px;
@@ -94,14 +91,13 @@ html, body {
 }
 
 /* ===== TITLES OVERLAY ===== */
-/* Titles appear on hover, above canvas in revealed area */
 .titles-overlay {
   position: fixed;
   inset: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  z-index: 3; /* Above canvas (z-index: 2) so titles are visible when curtain opens */
-  pointer-events: none; /* Allow mouse events to pass through to canvas when hidden */
+  z-index: 3;
+  pointer-events: none;
   background: none;
 }
 
@@ -132,175 +128,4 @@ html, body {
 
 .title-item:hover {
   transform: scale(1.05);
-}
-
-/* Visible state for titles */
-.title-item.visible {
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: flex !important;
-  pointer-events: auto !important;
-  z-index: 10 !important;
-}
-
-/* ===== INTRO PAGE (keeping for potential future use) ===== */
-.intro-page {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #07070b;
-  z-index: 100;
-  opacity: 1;
-  transition: opacity 1s ease-out, visibility 1s ease-out;
-  visibility: visible;
-  pointer-events: auto;
-  user-select: none;
-  -webkit-user-select: none;
-  overflow: hidden;
-}
-
-.intro-background {
-  position: absolute;
-  inset: 0;
-  background: 
-    linear-gradient(90deg, 
-      transparent 0%,
-      hsla(48, 94%, 67%, 0.15) 20%,
-      hsla(48, 92%, 75%, 0.15) 40%,
-      hsla(48, 90%, 85%, 0.15) 60%,
-      hsla(48, 88%, 90%, 0.15) 80%,
-      transparent 100%
-    );
-  background-size: 200% 100%;
-  animation: curtainFlow 8s ease-in-out infinite;
-  opacity: 0.6;
-}
-
-@keyframes curtainFlow {
-  0%, 100% {
-    background-position: -100% 0;
-  }
-  50% {
-    background-position: 200% 0;
-  }
-}
-
-.intro-page.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.imperial-script-regular {
-  font-family: "Imperial Script", cursive;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.intro-title {
-  font-family: "Imperial Script", cursive;
-  font-weight: 400;
-  font-style: normal;
-  font-size: 120px;
-  margin: 0;
-  animation: fadeInScale 0.8s ease-out, lights 2.5s 0.3s linear both, titleFloat 4s ease-in-out 1.1s infinite;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  position: relative;
-  z-index: 1;
-  color: hsl(48, 94%, 67%);
-  text-shadow:
-    0 0 1em hsla(48, 94%, 67%, 0.8),
-    0 0 0.5em hsla(48, 92%, 75%, 0.6),
-    -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
-    1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
-    0 0 2em hsla(48, 85%, 93%, 0.4);
-}
-
-@keyframes titleFloat {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-10px) scale(1.02);
-  }
-}
-
-.intro-title:hover {
-  transform: scale(1.05);
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes lights {
-  0% {
-    color: hsl(48, 94%, 67%);
-    text-shadow:
-      0 0 1em hsla(48, 94%, 67%, 0.8),
-      0 0 0.5em hsla(48, 92%, 75%, 0.6),
-      -1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
-      1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
-      0 0 2em hsla(48, 85%, 93%, 0.4);
-  }
-  
-  20% { 
-    color: hsl(48, 92%, 75%);
-    text-shadow:
-      0 0 1em hsla(48, 92%, 75%, 0.8),
-      0 0 0.5em hsla(48, 90%, 85%, 0.6),
-      -0.5em -0.125em 0.5em hsla(48, 94%, 67%, 0.6),
-      0.5em 0.125em 0.5em hsla(48, 88%, 90%, 0.6),
-      0 0 2em hsla(48, 85%, 93%, 0.5);
-  }
-  
-  40% { 
-    color: hsl(48, 90%, 85%);
-    text-shadow:
-      0 0 1em hsla(48, 90%, 85%, 0.9),
-      0 0 0.5em hsla(48, 88%, 90%, 0.7),
-      -0.25em -0.125em 0.5em hsla(48, 92%, 75%, 0.7),
-      0.25em 0.125em 0.5em hsla(48, 94%, 67%, 0.7),
-      0 0 2em hsla(48, 85%, 93%, 0.6);
-  }
-  
-  60% {
-    color: hsl(48, 88%, 90%);
-    text-shadow:
-      0 0 1em hsla(48, 88%, 90%, 0.9),
-      0 0 0.5em hsla(48, 85%, 93%, 0.7),
-      0.5em -0.125em 0.5em hsla(48, 90%, 85%, 0.7),
-      -0.5em 0.125em 0.5em hsla(48, 92%, 75%, 0.7),
-      0 0 2em hsla(48, 94%, 67%, 0.6);
-  }
-  
-  80% {
-    color: hsl(48, 85%, 93%);
-    text-shadow:
-      0 0 1em hsla(48, 85%, 93%, 0.8),
-      0 0 0.5em hsla(48, 88%, 90%, 0.6),
-      0.75em -0.125em 0.5em hsla(48, 90%, 85%, 0.6),
-      -0.75em 0.125em 0.5em hsla(48, 94%, 67%, 0.6),
-      0 0 2em hsla(48, 92%, 75%, 0.5);
-  }
-  
-  100% {
-    color: hsl(48, 94%, 67%);
-    text-shadow:
-      0 0 1em hsla(48, 94%, 67%, 0.8),
-      0 0 0.5em hsla(48, 92%, 75%, 0.6),
-      1em -0.125em 0.5em hsla(48, 90%, 85%, 0.4),
-      -1em 0.125em 0.5em hsla(48, 88%, 90%, 0.4),
-      0 0 2em hsla(48, 85%, 93%, 0.4);
-  }
 }
