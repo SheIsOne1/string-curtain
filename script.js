@@ -2,10 +2,8 @@
 
 const canvas     = document.getElementById("c");
 const ctx        = canvas.getContext("2d", { alpha: true });
-const sectionsEl = document.getElementById("sections");
 const titlesEl   = document.getElementById("titlesOverlay");
 const titleItems = [0,1,2,3].map(i => document.getElementById("title" + i));
-const sectionEls = [0,1,2,3].map(i => document.getElementById("sec"   + i));
 
 // ─── TIMING ──────────────────────────────────────────────────────────────────
 const T_OPEN   = 2800;
@@ -36,7 +34,6 @@ document.addEventListener("mousemove", e => { mouseY = e.clientY; });
 // ─── INIT ────────────────────────────────────────────────────────────────────
 canvas.style.opacity         = "1";
 canvas.style.pointerEvents   = "auto";
-sectionsEl.style.opacity     = "0";
 titlesEl.style.pointerEvents = "none";
 titleItems.forEach(el => {
   if (!el) return;
@@ -57,22 +54,27 @@ canvas.addEventListener("touchend", onFirstClick, { once: true, passive: true })
 document.addEventListener("click",  onFirstClick, { once: true });
 
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
+const SECTION_PAGES = [
+  "our-story.html",
+  "making-of.html",
+  "creators.html",
+  "awards.html",
+];
+
 function navigateTo(idx) {
   if (phase !== "open") return;
   setPhase("navigating");
   hoveredIdx = -1;
 
+  // Fade canvas to black, then go straight to the grid page.
+  // No sections are shown — nothing flashes.
   canvas.style.opacity = "0";
-
-  sectionsEl.style.opacity = "1";
-  sectionEls.forEach((el, i) => {
-    if (!el) return;
-    el.style.opacity   = i === idx ? "1"    : "0.4";
-    el.style.transform = i === idx ? "none" : "scale(0.97)";
-  });
+  setTimeout(() => {
+    window.location.href = SECTION_PAGES[idx];
+  }, 600);
 }
 
-// ─── TITLE HOVER + CLICK ─────────────────────────────────────────────────────
+// ─── TITLE HOVER + CLICK ──────────────────────────────────────────────────────
 titleItems.forEach((el, i) => {
   if (!el) return;
   el.style.cursor = "pointer";
@@ -84,11 +86,10 @@ titleItems.forEach((el, i) => {
 
   el.addEventListener("mouseenter", () => {
     if (phase !== "open") return;
-    // *** FIX: measure the inner <span>, not the full-height div ***
     const textEl = el.querySelector(".title-text") || el;
     const rect   = textEl.getBoundingClientRect();
-    hoverAnchorX = rect.left + rect.width  / 2;
-    hoverAnchorY = rect.bottom + 6;          // just below the actual text
+    hoverAnchorX = rect.left + rect.width / 2;
+    hoverAnchorY = rect.bottom + 6;
     hoveredIdx   = i;
     hoverT0      = performance.now();
     wakeRAF();
@@ -97,13 +98,6 @@ titleItems.forEach((el, i) => {
   el.addEventListener("mouseleave", () => {
     hoveredIdx = -1;
   });
-});
-
-// Section divs are also clickable
-sectionEls.forEach((el, i) => {
-  if (!el) return;
-  el.style.cursor = "pointer";
-  el.addEventListener("click", e => { e.stopPropagation(); navigateTo(i); });
 });
 
 // ─── RESIZE ──────────────────────────────────────────────────────────────────
@@ -192,27 +186,35 @@ function drawThread(th, t, swayAmt) {
   ctx.stroke();
 }
 
-// ─── HOVER THREAD — straight down from title text ─────────────────────────────
+// ─── HOVER THREAD — coiled, multi-layer, bouncing tip ────────────────────────
 function drawHoverThread(anchorX, anchorY, freeY, t, alpha) {
   const len = freeY - anchorY;
-  if (len < 2) return;
+  if (len < 2) return 0;
 
-  const waveAmp = Math.min(8, len * 0.042) * Math.sin(Math.min(1, len / 70) * Math.PI);
-  const SEGS    = 50;
+  const SEGS = 60;
+  const a1 = Math.min(13, len * 0.065);
+  const a2 = Math.min( 5, len * 0.025);
+  const a3 = Math.min( 2, len * 0.010);
+
+  const bounce = (Math.sin(t * 0.00380) * 0.65
+                + Math.sin(t * 0.00195 + 1.4) * 0.35) * 8;
 
   ctx.beginPath();
   ctx.moveTo(anchorX, anchorY);
   for (let k = 1; k <= SEGS; k++) {
-    const p    = k / SEGS;
-    const py   = anchorY + len * p;
-    const wave = Math.sin(p * Math.PI * 2.2 - t * 0.0022) * waveAmp * Math.sin(p * Math.PI);
-    ctx.lineTo(anchorX + wave, py);
+    const p   = k / SEGS;
+    const py  = anchorY + len * p + bounce * (p * p);
+    const env = Math.sin(p * Math.PI);
+    const w1 = Math.sin(p * Math.PI * 1.8 - t * 0.00180 + 0.00) * a1 * env;
+    const w2 = Math.sin(p * Math.PI * 3.6 - t * 0.00290 + 1.20) * a2 * env;
+    const w3 = Math.sin(p * Math.PI * 6.5 - t * 0.00480 + 2.50) * a3 * (0.2 + p * 0.8);
+    ctx.lineTo(anchorX + w1 + w2 + w3, py);
   }
 
   const passes = [
-    { w: 8,   a: 0.05 },
-    { w: 3.5, a: 0.20 },
-    { w: 1.2, a: 0.92 },
+    { w: 9,   a: 0.05 },
+    { w: 3.5, a: 0.18 },
+    { w: 1.2, a: 0.90 },
   ];
   for (const pass of passes) {
     ctx.lineWidth   = pass.w;
@@ -220,6 +222,8 @@ function drawHoverThread(anchorX, anchorY, freeY, t, alpha) {
     ctx.lineCap     = "round";
     ctx.stroke();
   }
+
+  return freeY + bounce;
 }
 
 // ─── DOWNWARD ARROW ───────────────────────────────────────────────────────────
@@ -229,7 +233,7 @@ function drawArrow(cx, cy, alpha) {
   ctx.translate(cx, cy);
   ctx.beginPath();
   ctx.moveTo(-s * 0.6, -s * 0.35);
-  ctx.lineTo(0,         s * 0.5);
+  ctx.lineTo(0,         s * 0.50);
   ctx.lineTo( s * 0.6, -s * 0.35);
   ctx.lineWidth   = 1.6;
   ctx.strokeStyle = `rgba(210,168,65,${0.85 * alpha})`;
@@ -291,11 +295,8 @@ function loop(t) {
   ctx.fillStyle = `rgba(7,7,11,${clearAlpha})`;
   ctx.fillRect(0, 0, W, H);
 
+  // Fade in titles only
   if (phase !== "idle") {
-    const menuA = Math.max(0, (progress - .45) / .55);
-    sectionsEl.style.opacity = String(menuA);
-    sectionEls.forEach(el => { if (el) el.style.opacity = String(menuA); });
-
     titleItems.forEach(el => {
       if (!el) return;
       const v = Math.max(0, (progress - .68) / .28);
@@ -338,10 +339,9 @@ function loop(t) {
     const emerge       = Math.min(1, elapsed / 300);
     const freeY        = hoverAnchorY + prog * MAX_LEN;
 
-    drawHoverThread(hoverAnchorX, hoverAnchorY, freeY, t, emerge);
-
-    const pulse = 0.5 + 0.5 * Math.sin(t * 0.004);
-    drawArrow(hoverAnchorX, freeY + 12, emerge * pulse);
+    const tipY = drawHoverThread(hoverAnchorX, hoverAnchorY, freeY, t, emerge);
+    const pulse = 0.45 + 0.55 * Math.sin(t * 0.004);
+    drawArrow(hoverAnchorX, tipY + 13, emerge * pulse);
   }
 
   rafId = requestAnimationFrame(loop);
