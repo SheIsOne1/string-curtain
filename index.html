@@ -8,11 +8,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Imperial+Script&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 
 <body>
 
-  <!-- Titles Overlay (above canvas) -->
+  <!-- Titles Overlay (above curtain canvas) -->
   <div class="titles-overlay" id="titlesOverlay">
     <div class="title-item" id="title0"><span class="title-text">Our Story</span></div>
     <div class="title-item" id="title1"><span class="title-text">Making Of</span></div>
@@ -20,14 +28,16 @@
     <div class="title-item" id="title3"><span class="title-text">Awards</span></div>
   </div>
 
-  <!-- Hibiscus Animation (below titles, revealed when curtain opens) -->
-  <div id="hibiscusContainer">
-    <iframe id="hibiscusFrame" src=""></iframe>
-  </div>
+  <!-- Hibiscus flower animation canvas (inline, revealed when curtain opens) -->
+  <canvas id="hibiscus"></canvas>
 
-  <!-- Canvas -->
+  <!-- Curtain canvas -->
   <canvas id="c"></canvas>
 
   <script src="script.js"></script>
+  <script type="module">
+    import { startHibiscus } from './hibiscus.js';
+    window.__startHibiscus = startHibiscus;
+  </script>
 </body>
 </html>

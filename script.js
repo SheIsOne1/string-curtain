@@ -4,9 +4,8 @@ const canvas          = document.getElementById("c");
 const ctx             = canvas.getContext("2d", { alpha: true });
 const titlesEl        = document.getElementById("titlesOverlay");
 const titleItems      = [0,1,2,3].map(i => document.getElementById("title" + i));
-const hibiscusContainer = document.getElementById("hibiscusContainer");
-const hibiscusFrame     = document.getElementById("hibiscusFrame");
-let hibiscusLoaded      = false;
+const hibiscusCanvas = document.getElementById("hibiscus");
+let hibiscusLoaded   = false;
 
 // ─── TIMING ──────────────────────────────────────────────────────────────────
 const T_OPEN   = 2800;
@@ -307,13 +306,13 @@ function loop(t) {
       el.style.visibility    = v > 0 ? "visible" : "hidden";
       el.style.pointerEvents = v > .5 ? "auto" : "none";
     });
-    // Reveal hibiscus animation — lazy-load src only once curtain is fully open
-    if (phase === "open" && !hibiscusLoaded) {
+    // Start hibiscus animation once curtain is fully open
+    if (phase === "open" && !hibiscusLoaded && window.__startHibiscus) {
       hibiscusLoaded = true;
-      hibiscusFrame.src = "blooming_hibiscus_time_lapse_animation.html";
+      window.__startHibiscus(hibiscusCanvas);
     }
-    hibiscusContainer.style.opacity    = String(Math.min(1, v));
-    hibiscusContainer.style.visibility = v > 0 ? "visible" : "hidden";
+    hibiscusCanvas.style.opacity    = String(Math.min(1, v));
+    hibiscusCanvas.style.visibility = v > 0 ? "visible" : "hidden";
   }
 
   for (let i = 0; i < threads.length; i++) {
