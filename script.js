@@ -29,9 +29,10 @@ let hoveredIdx   = -1;
 let hoverT0      = 0;
 let hoverAnchorX = 0;
 let hoverAnchorY = 0;
-let mouseY       = 0;
+let mouseX       = -9999;
+let mouseY       = -9999;
 
-document.addEventListener("mousemove", e => { mouseY = e.clientY; });
+document.addEventListener("mousemove", e => { mouseX = e.clientX; mouseY = e.clientY; });
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 canvas.style.opacity         = "1";
