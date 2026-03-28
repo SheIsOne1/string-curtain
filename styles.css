@@ -93,11 +93,10 @@ html, body {
 /* ===== HIBISCUS ANIMATION CONTAINER ===== */
 #hibiscusContainer {
   position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -30%);
+  left: 25%;
+  top: 110px;
   width: 50%;
-  height: calc((100% - 95px) * 0.5);
+  height: 45vh;
   z-index: 3;
   opacity: 0;
   visibility: hidden;
