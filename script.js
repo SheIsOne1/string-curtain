@@ -245,16 +245,52 @@ function drawArrow(cx, cy, alpha) {
   ctx.restore();
 }
 
-// ─── TOP RAIL ────────────────────────────────────────────────────────────────
+// ─── TOP PROGRESS BAR (thread style) ─────────────────────────────────────────
 function drawRail() {
-  const g = ctx.createLinearGradient(0,0,0,22);
-  g.addColorStop(0,  "rgba(50,38,12,0.97)");
-  g.addColorStop(.4, "rgba(90,68,22,0.80)");
-  g.addColorStop(1,  "rgba(20,15,5,0.0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,W,22);
-  ctx.fillStyle = "rgba(210,168,65,0.28)";
-  ctx.fillRect(0,0,W,1.5);
+  const p   = Math.max(0, Math.min(1, progress));
+  const barW = W * p;
+  if (barW <= 0) return;
+
+  ctx.save();
+  ctx.lineCap = "round";
+
+  // Outer glow
+  ctx.beginPath();
+  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
+  ctx.lineWidth   = 8;
+  ctx.strokeStyle = "rgba(210,168,65,0.12)";
+  ctx.stroke();
+
+  // Mid glow
+  ctx.beginPath();
+  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
+  ctx.lineWidth   = 4;
+  ctx.strokeStyle = "rgba(210,168,65,0.30)";
+  ctx.stroke();
+
+  // Inner glow
+  ctx.beginPath();
+  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
+  ctx.lineWidth   = 2;
+  ctx.strokeStyle = "rgba(210,168,65,0.65)";
+  ctx.stroke();
+
+  // Core line
+  ctx.beginPath();
+  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
+  ctx.lineWidth   = 1;
+  ctx.strokeStyle = "rgba(249,220,92,0.95)";
+  ctx.stroke();
+
+  // Bright tip dot
+  if (p < 1) {
+    ctx.beginPath();
+    ctx.arc(barW, 1, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,240,150,0.9)";
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 // ─── TRAIL ALPHA ─────────────────────────────────────────────────────────────
