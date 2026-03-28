@@ -93,10 +93,10 @@ html, body {
 /* ===== HIBISCUS FLOWER CANVAS ===== */
 #hibiscus {
   position: fixed;
-  left: 25%;
+  left: 35%;
   top: 310px;
-  width: 50%;
-  height: 55vh;
+  width: 30%;
+  height: 40vh;
   z-index: 3;
   opacity: 0;
   visibility: hidden;

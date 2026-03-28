@@ -11,7 +11,7 @@ export function startHibiscus(canvas) {
     // CONFIG
     const COUNT = 15000;
     const SPEED_MULT = 0.3;
-    const AUTO_SPIN = false;
+    const AUTO_SPIN = true;
 
     // SETUP
     const scene = new THREE.Scene();
@@ -19,7 +19,7 @@ export function startHibiscus(canvas) {
     const W = canvas.clientWidth  || 400;
     const H = canvas.clientHeight || 300;
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
-    camera.position.set(0, 0, 800);
+    camera.position.set(0, 0, 250);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     renderer.setSize(W, H);
