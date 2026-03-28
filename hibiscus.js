@@ -22,8 +22,8 @@ export function startHibiscus(canvas) {
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
     camera.position.set(0, -10, 300);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: "high-performance" });
-    renderer.setClearColor(0x000000, 0);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+    renderer.setClearColor(0x000000, 1);
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
