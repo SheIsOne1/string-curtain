@@ -243,8 +243,8 @@
           }
           sizes.push(Math.min(fs - 0.5, MAX_SIZE));
         });
-        // Apply the smallest computed size to all so they're uniform
-        const unified = Math.min(...sizes);
+        // Apply the largest computed size to all — match Journey's size
+        const unified = Math.max(...sizes);
         titles.forEach(el => { el.style.fontSize = unified + 'px'; });
       }
 
