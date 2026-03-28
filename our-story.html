@@ -229,9 +229,11 @@
       const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
 
       function fitColTitles() {
-        document.querySelectorAll('.col-cell h3').forEach(el => {
+        const titles = document.querySelectorAll('.col-cell h3');
+        const sizes = [];
+        titles.forEach(el => {
           const parent = el.parentElement;
-          const available = (parent.clientWidth - 40) * 0.95; // subtract 20px padding each side
+          const available = (parent.clientWidth - 40) * 0.95;
           const MAX_SIZE = 36;
           el.style.fontSize = '8px';
           let fs = 8;
@@ -239,8 +241,11 @@
             fs += 0.5;
             el.style.fontSize = fs + 'px';
           }
-          el.style.fontSize = Math.min(fs - 0.5, MAX_SIZE) + 'px';
+          sizes.push(Math.min(fs - 0.5, MAX_SIZE));
         });
+        // Apply the smallest computed size to all so they're uniform
+        const unified = Math.min(...sizes);
+        titles.forEach(el => { el.style.fontSize = unified + 'px'; });
       }
 
       function resize() {
