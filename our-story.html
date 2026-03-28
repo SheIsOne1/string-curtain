@@ -111,6 +111,9 @@
       text-shadow: 0 0 28px rgba(210,168,65,0.25);
       margin-bottom: 16px;
       line-height: 1.1;
+      white-space: nowrap;
+      display: block;
+      width: 100%;
     }
 
     .col-cell p {
@@ -224,6 +227,20 @@
       // Thread phase offsets so each line waves slightly differently
       const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
 
+      function fitColTitles() {
+        document.querySelectorAll('.col-cell h3').forEach(el => {
+          const parent = el.parentElement;
+          const available = parent.clientWidth * 0.85;
+          el.style.fontSize = '8px';
+          let fs = 8;
+          while (el.scrollWidth < available && fs < 120) {
+            fs += 0.5;
+            el.style.fontSize = fs + 'px';
+          }
+          el.style.fontSize = (fs - 0.5) + 'px';
+        });
+      }
+
       function resize() {
         dpr = window.devicePixelRatio || 1;
         W   = canvas.clientWidth;
@@ -277,6 +294,9 @@
         colC.style.left   = x2 + 'px';
         colC.style.width  = (W - x2) + 'px';
         colC.style.height = row3H + 'px';
+
+        // Fit col h3 titles to single row
+        fitColTitles();
 
         // Row 4 quote
         const quote = document.getElementById('rowQuote');
