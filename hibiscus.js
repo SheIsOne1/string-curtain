@@ -20,7 +20,7 @@ export function startHibiscus(canvas) {
     const W = canvas.clientWidth  || 400;
     const H = canvas.clientHeight || 300;
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
-    camera.position.set(0, 0, 200);
+    camera.position.set(0, 0, 260);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     renderer.setClearColor(0x000000, 1);
@@ -31,7 +31,7 @@ export function startHibiscus(canvas) {
     controls.enableDamping = true;
     controls.autoRotate = AUTO_SPIN;
     controls.autoRotateSpeed = 2.0;
-    controls.target.set(0, 45, 0);
+    controls.target.set(0, 55, 0);
     controls.update();
 
     // POST PROCESSING
