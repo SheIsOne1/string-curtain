@@ -96,6 +96,7 @@
 
     /* ===== ROW 3: THREE COLUMNS ===== */
     .col-cell {
+      overflow: hidden;
       position: absolute;
       display: flex;
       flex-direction: column;
@@ -230,14 +231,15 @@
       function fitColTitles() {
         document.querySelectorAll('.col-cell h3').forEach(el => {
           const parent = el.parentElement;
-          const available = parent.clientWidth * 0.85;
+          const available = (parent.clientWidth - 48) * 0.95; // subtract padding
+          const MAX_SIZE = 36;
           el.style.fontSize = '8px';
           let fs = 8;
-          while (el.scrollWidth < available && fs < 120) {
+          while (el.scrollWidth < available && fs < MAX_SIZE) {
             fs += 0.5;
             el.style.fontSize = fs + 'px';
           }
-          el.style.fontSize = (fs - 0.5) + 'px';
+          el.style.fontSize = Math.min(fs - 0.5, MAX_SIZE) + 'px';
         });
       }
 
