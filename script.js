@@ -56,6 +56,14 @@ canvas.addEventListener("click",    onFirstClick, { once: true });
 canvas.addEventListener("touchend", onFirstClick, { once: true, passive: true });
 document.addEventListener("click",  onFirstClick, { once: true });
 
+// ─── SKIP CURTAIN when returning from a section page ─────────────────────────
+if (new URLSearchParams(window.location.search).get("open") === "1") {
+  progress = 1;
+  setPhase("open");
+  canvas.style.pointerEvents = "none";
+  wakeRAF();
+}
+
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
 const SECTION_PAGES = [
   "our-story.html",
