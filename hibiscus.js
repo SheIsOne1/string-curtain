@@ -31,7 +31,7 @@ export function startHibiscus(canvas) {
     controls.enableDamping = true;
     controls.autoRotate = AUTO_SPIN;
     controls.autoRotateSpeed = 2.0;
-    controls.target.set(0, 55, 0);
+    controls.target.set(0, 65, 0);
     controls.update();
 
     // POST PROCESSING
