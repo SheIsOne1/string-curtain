@@ -20,7 +20,7 @@ export function startHibiscus(canvas) {
     const W = canvas.clientWidth  || 400;
     const H = canvas.clientHeight || 300;
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
-    camera.position.set(0, -10, 300);
+    camera.position.set(0, -20, 300);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     renderer.setClearColor(0x000000, 1);
