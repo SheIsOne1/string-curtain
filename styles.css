@@ -90,6 +90,27 @@ html, body {
   font-family: monospace;
 }
 
+/* ===== HIBISCUS ANIMATION CONTAINER ===== */
+#hibiscusContainer {
+  position: fixed;
+  left: 0;
+  top: 95px;           /* just below the title text row */
+  width: 100%;
+  height: calc(100% - 95px);
+  z-index: 3;          /* same layer as titles overlay, above canvas */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.85s ease, visibility 0.85s ease;
+  pointer-events: none;
+}
+
+#hibiscusFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 /* ===== TITLES OVERLAY ===== */
 .titles-overlay {
   position: fixed;

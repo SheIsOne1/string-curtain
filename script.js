@@ -1,9 +1,10 @@
 "use strict";
 
-const canvas     = document.getElementById("c");
-const ctx        = canvas.getContext("2d", { alpha: true });
-const titlesEl   = document.getElementById("titlesOverlay");
-const titleItems = [0,1,2,3].map(i => document.getElementById("title" + i));
+const canvas          = document.getElementById("c");
+const ctx             = canvas.getContext("2d", { alpha: true });
+const titlesEl        = document.getElementById("titlesOverlay");
+const titleItems      = [0,1,2,3].map(i => document.getElementById("title" + i));
+const hibiscusContainer = document.getElementById("hibiscusContainer");
 
 // ─── TIMING ──────────────────────────────────────────────────────────────────
 const T_OPEN   = 2800;
@@ -295,15 +296,18 @@ function loop(t) {
   ctx.fillStyle = `rgba(7,7,11,${clearAlpha})`;
   ctx.fillRect(0, 0, W, H);
 
-  // Fade in titles only
+  // Fade in titles and hibiscus animation together
   if (phase !== "idle") {
+    const v = Math.max(0, (progress - .68) / .28);
     titleItems.forEach(el => {
       if (!el) return;
-      const v = Math.max(0, (progress - .68) / .28);
       el.style.opacity       = String(Math.min(1, v));
       el.style.visibility    = v > 0 ? "visible" : "hidden";
       el.style.pointerEvents = v > .5 ? "auto" : "none";
     });
+    // Reveal hibiscus animation below the titles
+    hibiscusContainer.style.opacity    = String(Math.min(1, v));
+    hibiscusContainer.style.visibility = v > 0 ? "visible" : "hidden";
   }
 
   for (let i = 0; i < threads.length; i++) {
