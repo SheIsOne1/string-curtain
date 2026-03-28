@@ -263,12 +263,12 @@ const ALPHA_ANIM = 0.20;
 
 // ─── PREWARM ─────────────────────────────────────────────────────────────────
 function prewarm() {
-  ctx.fillStyle = "rgb(7,7,11)";
+  ctx.fillStyle = "rgb(0,0,0)";
   ctx.fillRect(0, 0, W, H);
   const FRAMES = 250, T_STEP = 80;
   for (let f = 0; f < FRAMES; f++) {
     const t = f * T_STEP;
-    ctx.fillStyle = `rgba(7,7,11,${ALPHA_IDLE})`;
+    ctx.fillStyle = `rgba(0,0,0,${ALPHA_IDLE})`;
     ctx.fillRect(0, 0, W, H);
     for (let i = 0; i < threads.length; i++) drawThread(threads[i], t, 1.0);
   }
@@ -294,7 +294,7 @@ function loop(t) {
   }
 
   const clearAlpha = (phase === "idle") ? ALPHA_IDLE : ALPHA_ANIM;
-  ctx.fillStyle = `rgba(7,7,11,${clearAlpha})`;
+  ctx.fillStyle = `rgba(0,0,0,${clearAlpha})`;
   ctx.fillRect(0, 0, W, H);
 
   // Fade in titles and hibiscus animation together
