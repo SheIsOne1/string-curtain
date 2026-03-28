@@ -44,6 +44,7 @@
   <script type="module">
     import { startHibiscus } from './hibiscus.js';
     window.__startHibiscus = startHibiscus;
+    if (window.__onHibiscusReady) window.__onHibiscusReady();
   </script>
 </body>
 </html>

@@ -61,6 +61,19 @@ if (new URLSearchParams(window.location.search).get("open") === "1") {
   progress = 1;
   setPhase("open");
   canvas.style.pointerEvents = "none";
+  // Force titles visible immediately — don't wait for loop
+  titleItems.forEach(el => {
+    if (!el) return;
+    el.style.opacity       = "1";
+    el.style.visibility    = "visible";
+    el.style.pointerEvents = "auto";
+  });
+  hibiscusCanvas.style.opacity    = "1";
+  hibiscusCanvas.style.visibility = "visible";
+  // Start hibiscus when module is ready
+  window.__onHibiscusReady = () => {
+    if (!hibiscusLoaded) { hibiscusLoaded = true; window.__startHibiscus(hibiscusCanvas); }
+  };
   wakeRAF();
 }
 
