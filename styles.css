@@ -96,7 +96,7 @@ html, body {
   left: 25%;
   top: 310px;
   width: 50%;
-  height: calc(100vh - 330px);
+  height: 55vh;
   z-index: 3;
   opacity: 0;
   visibility: hidden;
