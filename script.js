@@ -239,7 +239,7 @@ function drawArrow(cx, cy, alpha) {
   ctx.lineTo(0,         s * 0.50);
   ctx.lineTo( s * 0.6, -s * 0.35);
   ctx.lineWidth   = 1.6;
-  ctx.strokeStyle = `rgba(210,168,65,${0.85 * alpha})`;
+  ctx.strokeStyle = `rgba(122,174,255,${0.85 * alpha})`;
   ctx.lineCap     = "round";
   ctx.lineJoin    = "round";
   ctx.stroke();
