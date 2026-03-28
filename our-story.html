@@ -8,6 +8,141 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="section.css">
+  <style>
+    html, body {
+      height: 100%;
+      background: #000000;
+      overflow: hidden;
+    }
+
+    /* ===== CANVAS ===== */
+    #threadCanvas {
+      position: fixed;
+      left: 0;
+      top: 72px; /* below header */
+      width: 100%;
+      height: calc(100% - 72px);
+      display: block;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ===== CONTENT LAYER ===== */
+    .story-content {
+      position: fixed;
+      left: 0;
+      top: 72px;
+      width: 100%;
+      height: calc(100% - 72px);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ===== ROW 1: TAGLINE BAR ===== */
+    .row-tagline {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* height set by JS to match thread line position */
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tagline-text {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+      color: rgba(210,168,65,0.55);
+    }
+
+    /* ===== ROW 2: HERO ===== */
+    .row-hero {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10%;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-family: "Imperial Script", cursive;
+      font-weight: 400;
+      font-size: clamp(72px, 10vw, 130px);
+      line-height: 1;
+      color: rgba(210,168,65,0.95);
+      text-shadow:
+        0 0 60px rgba(210,168,65,0.35),
+        0 0 120px rgba(210,168,65,0.15),
+        0 2px 40px rgba(0,0,0,0.8);
+      margin-bottom: 28px;
+    }
+
+    .hero-paragraph {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.55);
+      max-width: 560px;
+    }
+
+    /* ===== ROW 3: THREE COLUMNS ===== */
+    .col-cell {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 8%;
+    }
+
+    .col-cell h3 {
+      font-family: "Imperial Script", cursive;
+      font-weight: 400;
+      font-size: clamp(28px, 3.2vw, 46px);
+      color: rgba(210,168,65,0.90);
+      text-shadow: 0 0 28px rgba(210,168,65,0.25);
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .col-cell p {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      line-height: 1.85;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.42);
+    }
+
+    /* ===== ROW 4: CLOSING QUOTE ===== */
+    .row-quote {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12%;
+    }
+
+    .closing-quote {
+      font-family: "Imperial Script", cursive;
+      font-weight: 400;
+      font-size: clamp(22px, 2.8vw, 38px);
+      color: rgba(210,168,65,0.60);
+      text-align: center;
+      line-height: 1.4;
+      text-shadow: 0 0 40px rgba(210,168,65,0.20);
+      font-style: normal;
+    }
+  </style>
 </head>
 <body>
 
@@ -16,23 +151,213 @@
     <h1 class="page-title">Our Story</h1>
   </header>
 
-  <main class="layout-grid">
-    <!-- Row 1: thin header bar -->
-    <div class="cell cell--full"></div>
+  <!-- Thread canvas: background layer -->
+  <canvas id="threadCanvas"></canvas>
 
-    <!-- Row 2: tall hero -->
-    <div class="cell cell--full"></div>
+  <!-- Content overlay: sits above canvas -->
+  <div class="story-content" id="storyContent">
+
+    <!-- Row 1: tagline bar -->
+    <div class="row-tagline" id="rowTagline">
+      <span class="tagline-text">A film about love, roots &amp; becoming</span>
+    </div>
+
+    <!-- Row 2: hero -->
+    <div class="row-hero" id="rowHero">
+      <h2 class="hero-title">Our Story</h2>
+      <p class="hero-paragraph">
+        Bella is a meditation on memory and place — a portrait of a woman carrying the weight
+        of inherited silence, learning to speak it into light. Shot across three continents over
+        two years, the film follows a single thread of longing back to where it began.
+      </p>
+    </div>
 
     <!-- Row 3: three content columns -->
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
+    <div class="col-cell" id="colA">
+      <h3>The Beginning</h3>
+      <p>
+        Every story has a wound at its origin. For Bella, it was a photograph found
+        in a drawer — a woman she had never met, wearing her own face. That image
+        became the doorway through which the past could finally speak.
+      </p>
+    </div>
+    <div class="col-cell" id="colB">
+      <h3>The Journey</h3>
+      <p>
+        From the coastal villages of her grandmother's childhood to the crowded city
+        she now calls home, the film traces the geography of inheritance — the places
+        that shape us long before we choose them, the landscapes that live inside the body.
+      </p>
+    </div>
+    <div class="col-cell" id="colC">
+      <h3>The Vision</h3>
+      <p>
+        We wanted the camera to behave like memory itself — not documentary, not fiction,
+        but something in between. Golden light. Long silences. Faces held in close-up
+        until they reveal something they didn't intend to give.
+      </p>
+    </div>
 
-    <!-- Row 4: three footer columns -->
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-  </main>
+    <!-- Row 4: closing quote -->
+    <div class="row-quote" id="rowQuote">
+      <blockquote class="closing-quote">
+        "To tell a story honestly is to hold a candle up to the dark<br>and trust that someone, somewhere, recognises the room."
+      </blockquote>
+    </div>
 
+  </div>
+
+  <script>
+    (function () {
+      const canvas  = document.getElementById('threadCanvas');
+      const ctx     = canvas.getContext('2d');
+      const content = document.getElementById('storyContent');
+
+      // Layout rows (as fractions of canvas height)
+      const ROW1_H  = 60;   // px — fixed tagline bar
+      const ROW2_F  = 0.45; // fraction of remaining height for hero
+      const ROW3_F  = 0.35; // fraction for three-column row
+      // row 4 takes the rest
+
+      let W = 0, H = 0, dpr = 1;
+
+      // Thread phase offsets so each line waves slightly differently
+      const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
+
+      function resize() {
+        dpr = window.devicePixelRatio || 1;
+        W   = canvas.clientWidth;
+        H   = canvas.clientHeight;
+        canvas.width  = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.scale(dpr, dpr);
+        layoutContent();
+      }
+
+      // ── Position content divs to match thread line positions ──────────────
+      function layoutContent() {
+        const remaining = H - ROW1_H;
+        const row2H     = remaining * ROW2_F;
+        const row3H     = remaining * ROW3_F;
+        const row4H     = remaining * (1 - ROW2_F - ROW3_F);
+
+        const y1 = ROW1_H;                   // bottom of row 1 / top of row 2
+        const y2 = y1 + row2H;               // bottom of row 2 / top of row 3
+        const y3 = y2 + row3H;               // bottom of row 3 / top of row 4
+
+        const x1 = W * (1 / 3);
+        const x2 = W * (2 / 3);
+
+        // Row 1 tagline
+        const tagline = document.getElementById('rowTagline');
+        tagline.style.top    = '0px';
+        tagline.style.height = y1 + 'px';
+
+        // Row 2 hero
+        const hero = document.getElementById('rowHero');
+        hero.style.top    = y1 + 'px';
+        hero.style.height = row2H + 'px';
+
+        // Row 3 columns
+        const colA = document.getElementById('colA');
+        const colB = document.getElementById('colB');
+        const colC = document.getElementById('colC');
+
+        colA.style.top    = y2 + 'px';
+        colA.style.left   = '0px';
+        colA.style.width  = x1 + 'px';
+        colA.style.height = row3H + 'px';
+
+        colB.style.top    = y2 + 'px';
+        colB.style.left   = x1 + 'px';
+        colB.style.width  = (x2 - x1) + 'px';
+        colB.style.height = row3H + 'px';
+
+        colC.style.top    = y2 + 'px';
+        colC.style.left   = x2 + 'px';
+        colC.style.width  = (W - x2) + 'px';
+        colC.style.height = row3H + 'px';
+
+        // Row 4 quote
+        const quote = document.getElementById('rowQuote');
+        quote.style.top    = y3 + 'px';
+        quote.style.height = row4H + 'px';
+      }
+
+      // ── Multi-pass golden glow line drawing ───────────────────────────────
+      // Draws a wavy horizontal or vertical thread with outer-glow → inner-glow → core
+      function drawThread(isHorizontal, position, time, phaseOffset) {
+        const passes = [
+          // [lineWidth, alpha]  — outer glow → core
+          [14, 0.030],
+          [7,  0.065],
+          [3,  0.18],
+          [1,  0.75],
+        ];
+
+        for (const [lw, alpha] of passes) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth   = lw;
+          ctx.shadowBlur  = 0;
+
+          if (isHorizontal) {
+            // y = fixed position, x varies across canvas width
+            for (let x = 0; x <= W; x += 2) {
+              const wave = Math.sin(x * 0.008 + time * 0.001 + phaseOffset) * 3;
+              const y    = position + wave;
+              if (x === 0) ctx.moveTo(x, y);
+              else          ctx.lineTo(x, y);
+            }
+          } else {
+            // x = fixed position, y varies across canvas height
+            for (let y = 0; y <= H; y += 2) {
+              const wave = Math.sin(y * 0.008 + time * 0.001 + phaseOffset) * 3;
+              const x    = position + wave;
+              if (y === 0) ctx.moveTo(x, y);
+              else          ctx.lineTo(x, y);
+            }
+          }
+
+          ctx.stroke();
+        }
+      }
+
+      // ── Animation loop ────────────────────────────────────────────────────
+      function draw(time) {
+        ctx.clearRect(0, 0, W, H);
+
+        const remaining = H - ROW1_H;
+        const row2H     = remaining * ROW2_F;
+        const row3H     = remaining * ROW3_F;
+
+        const y1 = ROW1_H;
+        const y2 = y1 + row2H;
+        const y3 = y2 + row3H;
+
+        const x1 = W * (1 / 3);
+        const x2 = W * (2 / 3);
+
+        // Horizontal dividers
+        drawThread(true,  y1, time, threadPhases[0]);   // after tagline bar
+        drawThread(true,  y2, time, threadPhases[1]);   // after hero
+        drawThread(true,  y3, time, threadPhases[2]);   // after 3-col row
+
+        // Vertical dividers (only in row 3 zone — but drawn full height looks cinematic)
+        drawThread(false, x1, time, threadPhases[3]);
+        drawThread(false, x2, time, threadPhases[4]);
+
+        // Mask vertical threads outside of row 3 with a subtle fade
+        // (leave full-height for the cinematic feel — just reduce opacity outside row 3)
+        // Already handled by drawing at low alpha. No extra clip needed.
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(draw);
+    })();
+  </script>
 </body>
 </html>
