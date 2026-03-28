@@ -234,7 +234,7 @@
         titles.forEach(el => {
           const parent = el.parentElement;
           const available = (parent.clientWidth - 40) * 0.95;
-          const MAX_SIZE = 36;
+          const MAX_SIZE = 96;
           el.style.fontSize = '8px';
           let fs = 8;
           while (el.scrollWidth < available && fs < MAX_SIZE) {
