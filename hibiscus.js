@@ -16,12 +16,14 @@ export function startHibiscus(canvas) {
     // SETUP
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000, 0.01);
+    scene.background = null;
     const W = canvas.clientWidth  || 400;
     const H = canvas.clientHeight || 300;
     const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
     camera.position.set(0, -10, 300);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: "high-performance" });
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
