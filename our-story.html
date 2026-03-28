@@ -101,7 +101,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 0 8%;
+      padding: 0 20px;
     }
 
     .col-cell h3 {
@@ -231,7 +231,7 @@
       function fitColTitles() {
         document.querySelectorAll('.col-cell h3').forEach(el => {
           const parent = el.parentElement;
-          const available = (parent.clientWidth - 48) * 0.95; // subtract padding
+          const available = (parent.clientWidth - 40) * 0.95; // subtract 20px padding each side
           const MAX_SIZE = 36;
           el.style.fontSize = '8px';
           let fs = 8;
