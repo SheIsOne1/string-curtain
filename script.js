@@ -383,7 +383,7 @@ function loop(t) {
     const diff = tx - th.x;
 
     th.vx += diff * (0.055 / th.mass);
-    th.vx *= 0.966;
+    th.vx *= 0.94;
     th.vx  = Math.max(-20, Math.min(20, th.vx));
     th.x  += th.vx;
 
@@ -393,15 +393,14 @@ function loop(t) {
       th.vx += ((threads[i-1].vx + threads[i+1].vx) / 2 - th.vx) * kv;
     }
 
-    // ── Mouse repulsion ────────────────────────────────────────────────────
-    const MOUSE_R = 160;
+    // ── Mouse influence — gentle rope-like push ───────────────────────────
+    const MOUSE_R = 120;
     const mdx     = th.x - mouseX;
-    const mdy     = (H * 0.5) - mouseY;           // vertical centre of canvas
-    const mDistSq = mdx * mdx + mdy * mdy;
+    const mDistSq = mdx * mdx + (H * 0.5 - mouseY) * (H * 0.5 - mouseY);
     if (mDistSq < MOUSE_R * MOUSE_R && mDistSq > 0) {
-      const mDist  = Math.sqrt(mDistSq);
-      const force  = (1 - mDist / MOUSE_R) * 1.4;  // strength
-      th.vx += (mdx / mDist) * force;              // push sideways
+      const mDist = Math.sqrt(mDistSq);
+      const force = (1 - mDist / MOUSE_R) * 0.28;  // very soft
+      th.vx += (mdx / mDist) * force;
     }
 
     drawThread(th, t, 0.08 + (1 - ep) * 0.92);
