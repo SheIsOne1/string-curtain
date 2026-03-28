@@ -264,7 +264,7 @@ function drawRail(t) {
 
   // Wave parameters — active only when fully open
   const isOpen    = phase === "open";
-  const amp       = isOpen ? (hoveredIdx >= 0 ? 5 : 2.5) : 0;
+  const amp       = isOpen ? (hoveredIdx >= 0 ? 2 : 1) : 0;
   const freq      = 0.012;
   const spd       = t * (hoveredIdx >= 0 ? 0.003 : 0.0015);
 
@@ -282,26 +282,26 @@ function drawRail(t) {
 
   // Outer glow
   wavePath(barW);
-  ctx.lineWidth   = 9;
-  ctx.strokeStyle = `rgba(${col},0.12)`;
+  ctx.lineWidth   = 5;
+  ctx.strokeStyle = `rgba(${col},0.10)`;
   ctx.stroke();
 
   // Mid glow
   wavePath(barW);
-  ctx.lineWidth   = 5;
-  ctx.strokeStyle = `rgba(${col},0.30)`;
+  ctx.lineWidth   = 2.5;
+  ctx.strokeStyle = `rgba(${col},0.25)`;
   ctx.stroke();
 
   // Inner glow
   wavePath(barW);
-  ctx.lineWidth   = 2.5;
-  ctx.strokeStyle = `rgba(${col},0.65)`;
+  ctx.lineWidth   = 1.2;
+  ctx.strokeStyle = `rgba(${col},0.55)`;
   ctx.stroke();
 
   // Core line
   wavePath(barW);
-  ctx.lineWidth   = 1;
-  ctx.strokeStyle = `rgba(${col},0.95)`;
+  ctx.lineWidth   = 0.6;
+  ctx.strokeStyle = `rgba(${col},0.90)`;
   ctx.stroke();
 
   // Tip dot (during load only)
