@@ -94,9 +94,9 @@ html, body {
 #hibiscusContainer {
   position: fixed;
   left: 25%;
-  top: 110px;
+  top: 310px;
   width: 50%;
-  height: 45vh;
+  height: calc(100vh - 330px);
   z-index: 3;
   opacity: 0;
   visibility: hidden;
