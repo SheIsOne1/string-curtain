@@ -245,48 +245,71 @@ function drawArrow(cx, cy, alpha) {
   ctx.restore();
 }
 
-// ─── TOP PROGRESS BAR (thread style) ─────────────────────────────────────────
-function drawRail() {
-  const p   = Math.max(0, Math.min(1, progress));
+// ─── TOP PROGRESS / WAVE BAR (thread style) ──────────────────────────────────
+// Title hue palette (one per title index)
+const RAIL_COLORS = [
+  "210,168,65",   // Our Story  — gold
+  "249,220,92",   // Making Of  — bright yellow
+  "252,200,100",  // creators   — warm amber
+  "255,240,150",  // Awards     — pale gold
+];
+
+function drawRail(t) {
+  const p = Math.max(0, Math.min(1, progress));
+  if (p <= 0) return;
+
+  // Pick color based on hovered title (default gold)
+  const col  = hoveredIdx >= 0 ? RAIL_COLORS[hoveredIdx] : "210,168,65";
   const barW = W * p;
-  if (barW <= 0) return;
+
+  // Wave parameters — active only when fully open
+  const isOpen    = phase === "open";
+  const amp       = isOpen ? (hoveredIdx >= 0 ? 5 : 2.5) : 0;
+  const freq      = 0.012;
+  const spd       = t * (hoveredIdx >= 0 ? 0.003 : 0.0015);
+
+  // Build wave path (or straight line during load)
+  function wavePath(xEnd) {
+    ctx.beginPath();
+    for (let x = 0; x <= xEnd; x += 3) {
+      const y = 2 + Math.sin(x * freq + spd) * amp;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+  }
 
   ctx.save();
   ctx.lineCap = "round";
 
   // Outer glow
-  ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
-  ctx.lineWidth   = 8;
-  ctx.strokeStyle = "rgba(210,168,65,0.12)";
+  wavePath(barW);
+  ctx.lineWidth   = 9;
+  ctx.strokeStyle = `rgba(${col},0.12)`;
   ctx.stroke();
 
   // Mid glow
-  ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
-  ctx.lineWidth   = 4;
-  ctx.strokeStyle = "rgba(210,168,65,0.30)";
+  wavePath(barW);
+  ctx.lineWidth   = 5;
+  ctx.strokeStyle = `rgba(${col},0.30)`;
   ctx.stroke();
 
   // Inner glow
-  ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
-  ctx.lineWidth   = 2;
-  ctx.strokeStyle = "rgba(210,168,65,0.65)";
+  wavePath(barW);
+  ctx.lineWidth   = 2.5;
+  ctx.strokeStyle = `rgba(${col},0.65)`;
   ctx.stroke();
 
   // Core line
-  ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(barW, 1);
+  wavePath(barW);
   ctx.lineWidth   = 1;
-  ctx.strokeStyle = "rgba(249,220,92,0.95)";
+  ctx.strokeStyle = `rgba(${col},0.95)`;
   ctx.stroke();
 
-  // Bright tip dot
+  // Tip dot (during load only)
   if (p < 1) {
+    const tipY = 2 + Math.sin(barW * freq + spd) * amp;
     ctx.beginPath();
-    ctx.arc(barW, 1, 3, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,240,150,0.9)";
+    ctx.arc(barW, tipY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${col},0.9)`;
     ctx.fill();
   }
 
@@ -372,7 +395,7 @@ function loop(t) {
     drawThread(th, t, 0.08 + (1 - ep) * 0.92);
   }
 
-  drawRail();
+  drawRail(t);
 
   // ── Hover thread ──────────────────────────────────────────────────────────
   if (hoveredIdx >= 0 && phase === "open") {
