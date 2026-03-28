@@ -35,6 +35,12 @@
   <canvas id="c"></canvas>
 
   <script src="script.js"></script>
+  <script>
+    // Reset canvas opacity when navigating back via browser back button
+    window.addEventListener("pageshow", e => {
+      if (e.persisted) window.location.reload();
+    });
+  </script>
   <script type="module">
     import { startHibiscus } from './hibiscus.js';
     window.__startHibiscus = startHibiscus;
