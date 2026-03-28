@@ -93,15 +93,18 @@ html, body {
 /* ===== HIBISCUS ANIMATION CONTAINER ===== */
 #hibiscusContainer {
   position: fixed;
-  left: 0;
-  top: 95px;           /* just below the title text row */
-  width: 100%;
-  height: calc(100% - 95px);
-  z-index: 3;          /* same layer as titles overlay, above canvas */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -30%);
+  width: 50%;
+  height: calc((100% - 95px) * 0.5);
+  z-index: 3;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.85s ease, visibility 0.85s ease;
   pointer-events: none;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 #hibiscusFrame {
