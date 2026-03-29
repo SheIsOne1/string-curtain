@@ -236,12 +236,15 @@
           const parent = el.parentElement;
           const available = (parent.clientWidth - 40) * 0.95;
           const MAX_SIZE = 96;
+          // Use inline so scrollWidth reflects text width, not container width
+          el.style.display = 'inline';
           el.style.fontSize = '8px';
           let fs = 8;
           while (el.scrollWidth < available && fs < MAX_SIZE) {
             fs += 0.5;
             el.style.fontSize = fs + 'px';
           }
+          el.style.display = 'block';
           sizes.push(Math.min(fs - 0.5, MAX_SIZE));
         });
         // Apply the largest computed size to all — match Journey's size
