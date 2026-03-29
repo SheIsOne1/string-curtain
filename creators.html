@@ -210,12 +210,12 @@
       ctx.textAlign    = 'center';
       ctx.fillStyle    = 'rgba(210,168,65,0.85)';
       ctx.font         = `18px "Imperial Script", cursive`;
-      ctx.fillText(creator.role, cx, top + h * 0.32);
+      ctx.fillText(creator.role, cx, top + h * 0.38);
 
       ctx.fillStyle = 'rgba(210,168,65,0.45)';
       ctx.font      = `13px "Imperial Script", cursive`;
       creator.lines.forEach((line, i) => {
-        ctx.fillText(line, cx, top + h * 0.55 + i * 20);
+        ctx.fillText(line, cx, top + h * 0.65 + i * 16);
       });
     }
 
@@ -237,8 +237,8 @@
       const positions = [W / 6, W / 2, W * 5 / 6];
       const phases    = [0, 2.09, 4.19];
 
-      const BOX_W = R * 1.4;
-      const BOX_H = R * 1.1;
+      const BOX_W = R * 2.0;
+      const BOX_H = R * 0.55;
       const BOX_GAP = 18; // gap between coil bottom and box top
 
       positions.forEach((cx, i) => {
