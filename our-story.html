@@ -339,14 +339,14 @@
         // Outer titles sit in Row 1 tagline band, within their column sections
         const titleA = document.getElementById('titleA');
         const titleC = document.getElementById('titleC');
-        titleA.style.top    = '0px';
+        titleA.style.top    = y1 + 'px';
         titleA.style.left   = '0px';
         titleA.style.width  = x1 + 'px';
-        titleA.style.height = y1 + 'px';
-        titleC.style.top    = '0px';
+        titleA.style.height = row2H + 'px';
+        titleC.style.top    = y1 + 'px';
         titleC.style.left   = x2 + 'px';
         titleC.style.width  = (W - x2) + 'px';
-        titleC.style.height = y1 + 'px';
+        titleC.style.height = row2H + 'px';
 
         // Fit col h3 titles to single row
         fitColTitles();
