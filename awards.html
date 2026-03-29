@@ -42,56 +42,54 @@
 
   const PASSES = [[14, 0.022], [7, 0.055], [3, 0.16], [1, 0.75]];
 
-  // Boat-shaped constellation (side-view sailboat)
-  // Index map:
-  //  0=bow  1=hull-L  2=keel  3=hull-R  4=stern
-  //  5=deck-L  6=deck-R  7=mast-base  8=mast-top
-  //  9=main-award(sail-center)  10=sail-tip-L
+  // Woman's face constellation
+  //  0=crown  1=temple-L  2=temple-R
+  //  3=eye-L  4=eye-R  5=nose
+  //  6=cheek-L  7=cheek-R
+  //  8=lip-L  9=lip-R  10=chin
   const RAW_NODES = [
-    // Hull arc (bottom of boat)
-    { rx:0.10, ry:0.70, label:"Best Editing",        sub:"Locarno 2025",      size:1.0, phase:2.1 }, // 0 bow
-    { rx:0.26, ry:0.80, label:"Discovery Prize",     sub:"Toronto 2025",      size:1.0, phase:3.4 }, // 1 hull-L
-    { rx:0.46, ry:0.84, label:"Best Score",          sub:"Edinburgh 2025",    size:1.1, phase:0.9 }, // 2 keel
-    { rx:0.66, ry:0.79, label:"Special Mention",     sub:"Rotterdam 2025",    size:1.0, phase:1.7 }, // 3 hull-R
-    { rx:0.82, ry:0.68, label:"Audience Award",      sub:"Venice 2025",       size:1.2, phase:2.8 }, // 4 stern
-    // Deck
-    { rx:0.18, ry:0.60, label:"Best Feature",        sub:"Tribeca 2025",      size:1.5, phase:0.4 }, // 5 deck-L
-    { rx:0.78, ry:0.58, label:"Jury Prize",          sub:"Berlin 2025",       size:1.4, phase:1.2 }, // 6 deck-R
-    // Mast
-    { rx:0.46, ry:0.60, label:"Best Director",       sub:"TIFF 2025",         size:1.4, phase:3.0 }, // 7 mast-base
-    { rx:0.44, ry:0.14, label:"Best Cinematography", sub:"Sundance 2025",     size:1.7, phase:0.0 }, // 8 mast-top
-    // Main award — heart of the sail
-    { rx:0.32, ry:0.38, label:"Palme d'Or",          sub:"Cannes Film Festival", size:2.4, phase:0.6 }, // 9
-    // Sail left anchor point
-    { rx:0.16, ry:0.52, label:"Grand Prix",          sub:"Cannes 2025",       size:1.6, phase:1.9 }, // 10
+    { rx:0.50, ry:0.12, label:"Palme d'Or",          sub:"Cannes 2025",         size:2.2, phase:0.0 }, // 0 crown
+    { rx:0.26, ry:0.24, label:"Grand Prix",           sub:"Tribeca 2025",        size:1.6, phase:1.1 }, // 1 temple-L
+    { rx:0.74, ry:0.24, label:"Best Cinematography",  sub:"Sundance 2025",       size:1.6, phase:2.2 }, // 2 temple-R
+    { rx:0.34, ry:0.37, label:"Best Feature",         sub:"Berlin 2025",         size:1.7, phase:0.7 }, // 3 eye-L
+    { rx:0.66, ry:0.37, label:"Best Director",        sub:"TIFF 2025",           size:1.7, phase:1.8 }, // 4 eye-R
+    { rx:0.50, ry:0.52, label:"Jury Prize",           sub:"Venice 2025",         size:1.3, phase:3.1 }, // 5 nose
+    { rx:0.20, ry:0.56, label:"Best Score",           sub:"Edinburgh 2025",      size:1.1, phase:2.5 }, // 6 cheek-L
+    { rx:0.80, ry:0.56, label:"Audience Award",       sub:"Rotterdam 2025",      size:1.1, phase:0.4 }, // 7 cheek-R
+    { rx:0.38, ry:0.68, label:"Best Editing",         sub:"Locarno 2025",        size:1.2, phase:1.5 }, // 8 lip-L
+    { rx:0.62, ry:0.68, label:"Discovery Prize",      sub:"Toronto 2025",        size:1.2, phase:2.8 }, // 9 lip-R
+    { rx:0.50, ry:0.80, label:"Special Mention",      sub:"SXSW 2025",           size:1.1, phase:0.9 }, // 10 chin
   ];
 
   function buildNodes() {
-    const aw = W;
     const ah = H - HEADER;
     return RAW_NODES.map(n => ({
       ...n,
-      x: n.rx * aw,
+      x: n.rx * W,
       y: HEADER + n.ry * ah,
     }));
   }
 
-  // Connections that draw the sailboat structure
   const CONNECTIONS = [
-    // Hull arc
-    [0,1],[1,2],[2,3],[3,4],
-    // Hull sides up to deck
-    [0,5],[4,6],
-    // Deck line: deck-L → mast-base → deck-R
-    [5,7],[7,6],
-    // Mast
-    [7,8],
-    // Main sail triangle: mast-top → sail-anchor-L → deck-L → back
-    [8,10],[10,5],[5,8],
-    // Sail veins through main award
-    [9,8],[9,5],[9,10],[9,7],
-    // Jib: mast-top → deck-R → stern (front sail line)
-    [8,6],[6,4],
+    // Forehead arc: temple-L → crown → temple-R
+    [1,0],[0,2],
+    // Temple to eye (brow lines)
+    [1,3],[2,4],
+    // Eye bridge
+    [3,4],
+    // Eyes to nose
+    [3,5],[4,5],
+    // Nose to cheeks (nostril lines)
+    [5,6],[5,7],
+    // Face outline: temple → cheek → jaw → chin
+    [1,6],[6,10],
+    [2,7],[7,10],
+    // Chin to lips
+    [10,8],[10,9],
+    // Mouth
+    [8,9],
+    // Smile lines: eye to lip corner
+    [3,8],[4,9],
   ];
 
   function buildConnections() { return CONNECTIONS; }
