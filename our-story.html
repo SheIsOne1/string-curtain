@@ -185,9 +185,9 @@
       <span class="tagline-text">A film about love, roots &amp; becoming</span>
     </div>
 
-    <!-- Row 2: hero -->
+    <!-- Row 2: hero — The Journey title replaces Our Story -->
     <div class="row-hero" id="rowHero">
-      <h2 class="hero-title">Our Story</h2>
+      <h2 class="hero-title">The Journey</h2>
       <p class="hero-paragraph">
         Bella is a meditation on memory and place — a portrait of a woman carrying the weight
         of inherited silence, learning to speak it into light. Shot across three continents over
@@ -195,9 +195,9 @@
       </p>
     </div>
 
-    <!-- Outer column titles — positioned in Row 1 by JS -->
-    <div class="col-title-outer" id="titleA"><h3>The Beginning</h3></div>
-    <div class="col-title-outer" id="titleC"><h3>The Vision</h3></div>
+    <!-- Outer column titles — positioned in Row 2 by JS -->
+    <div class="col-title-outer" id="titleA"><h3>Animation</h3></div>
+    <div class="col-title-outer" id="titleC"><h3>Music</h3></div>
 
     <!-- Row 3: three content columns -->
     <div class="col-cell" id="colA">
@@ -208,7 +208,6 @@
       </p>
     </div>
     <div class="col-cell" id="colB">
-      <h3>The Journey</h3>
       <p>
         From the coastal villages of her grandmother's childhood to the crowded city
         she now calls home, the film traces the geography of inheritance — the places
@@ -250,10 +249,9 @@
       const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
 
       function fitColTitles() {
-        // All three titles: The Beginning (titleA), The Journey (colB), The Vision (titleC)
+        // Outer titles only: Animation (titleA) and Music (titleC)
         const titles = [
           document.querySelector('#titleA h3'),
-          document.querySelector('#colB h3'),
           document.querySelector('#titleC h3'),
         ];
         const sizes = [];
@@ -279,11 +277,7 @@
 
         document.body.removeChild(probe);
         const unified = Math.max(...sizes);
-        titles.forEach((el, i) => {
-          // Outer titles (index 0 = The Beginning, 2 = The Vision) are 80% of unified size
-          const scale = (i === 1) ? 1 : 0.8;
-          el.style.fontSize = (unified * scale) + 'px';
-        });
+        titles.forEach(el => { el.style.fontSize = unified + 'px'; });
       }
 
       function resize() {
