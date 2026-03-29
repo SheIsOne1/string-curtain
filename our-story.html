@@ -279,7 +279,11 @@
 
         document.body.removeChild(probe);
         const unified = Math.max(...sizes);
-        titles.forEach(el => { el.style.fontSize = unified + 'px'; });
+        titles.forEach((el, i) => {
+          // Outer titles (index 0 = The Beginning, 2 = The Vision) are 80% of unified size
+          const scale = (i === 1) ? 1 : 0.8;
+          el.style.fontSize = (unified * scale) + 'px';
+        });
       }
 
       function resize() {
