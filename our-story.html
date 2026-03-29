@@ -232,22 +232,27 @@
       function fitColTitles() {
         const titles = document.querySelectorAll('.col-cell h3');
         const sizes = [];
+
+        // Measure in a detached span so no container clipping affects the result
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
+        document.body.appendChild(probe);
+
         titles.forEach(el => {
           const parent = el.parentElement;
           const available = (parent.clientWidth - 40) * 0.95;
           const MAX_SIZE = 96;
-          // Use inline so scrollWidth reflects text width, not container width
-          el.style.display = 'inline';
-          el.style.fontSize = '8px';
+          probe.textContent = el.textContent;
           let fs = 8;
-          while (el.scrollWidth < available && fs < MAX_SIZE) {
+          probe.style.fontSize = fs + 'px';
+          while (probe.offsetWidth < available && fs < MAX_SIZE) {
             fs += 0.5;
-            el.style.fontSize = fs + 'px';
+            probe.style.fontSize = fs + 'px';
           }
-          el.style.display = 'block';
           sizes.push(Math.min(fs - 0.5, MAX_SIZE));
         });
-        // Apply the largest computed size to all — match Journey's size
+
+        document.body.removeChild(probe);
         const unified = Math.max(...sizes);
         titles.forEach(el => { el.style.fontSize = unified + 'px'; });
       }
