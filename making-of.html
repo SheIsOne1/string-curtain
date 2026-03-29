@@ -298,10 +298,11 @@
         // Draw all 8 horizontal thread lines
         ys.forEach((y, i) => drawThread(y, time, phases[i]));
 
-        // Sprocket holes in top strip (centered between line 1 and line 2)
-        drawSprocketStrip(STRIP_H / 2, scrollX);
-        // Sprocket holes in bottom strip (centered between line 7 and line 8)
-        drawSprocketStrip(H - STRIP_H / 2, scrollX);
+        // Sprocket holes in every paired strip (top, both internal dividers, bottom)
+        drawSprocketStrip(STRIP_H / 2, scrollX);                        // top strip
+        drawSprocketStrip((ys[2] + ys[3]) / 2, scrollX);               // divider 1
+        drawSprocketStrip((ys[4] + ys[5]) / 2, scrollX);               // divider 2
+        drawSprocketStrip(H - STRIP_H / 2, scrollX);                   // bottom strip
 
         tickTimecode();
         requestAnimationFrame(draw);
