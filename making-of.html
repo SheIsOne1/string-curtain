@@ -40,21 +40,6 @@
       position: absolute;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-    }
-
-    .frame-inner {
-      padding: 0 10%;
-      text-align: center;
-    }
-
-    .frame-number {
-      font-family: 'Courier New', monospace;
-      font-size: 9px;
-      letter-spacing: 0.35em;
-      text-transform: uppercase;
-      color: rgba(210,168,65,0.28);
-      margin-bottom: 14px;
     }
 
     .frame-title {
@@ -64,18 +49,30 @@
       text-shadow:
         0 0 40px rgba(210,168,65,0.35),
         0 0 90px rgba(210,168,65,0.12);
-      line-height: 1.05;
-      margin-bottom: 18px;
+      line-height: 1;
       white-space: nowrap;
+      text-align: center;
+      width: 100%;
     }
 
-    .frame-text {
-      font-family: system-ui, -apple-system, sans-serif;
-      font-size: 12px;
-      line-height: 1.9;
-      letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.40);
-      max-width: 560px;
+    .frame-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .frame-slots-row {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .img-slot {
+      flex: 1;
+      border: none;
+      background: rgba(210,168,65,0.03);
+      min-width: 0;
     }
 
     #timecode {
@@ -103,39 +100,38 @@
   <div class="film-content" id="filmContent">
 
     <div class="frame" id="frame1">
-      <div class="frame-inner">
-        <div class="frame-number">Scene 01 — Pre-Production</div>
-        <div class="frame-title" id="ft1">The Idea</div>
-        <p class="frame-text">
-          It began with a question no one had written down. We wanted to make something
-          that felt less like a film and more like a memory — the kind that surfaces
-          unbidden, already half-dissolved, already beautiful in its incompleteness.
-        </p>
+      <div class="frame-title-row"><div class="frame-title" id="ft1">The Idea</div></div>
+      <div class="frame-slots-row" id="slots1">
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
       </div>
     </div>
 
     <div class="frame" id="frame2">
-      <div class="frame-inner">
-        <div class="frame-number">Scene 02 — Production</div>
-        <div class="frame-title" id="ft2">The Light</div>
-        <p class="frame-text">
-          We shot on 16mm. Every frame was a negotiation with available light — dawn
-          on the hillside, a single candle in a shuttered room. The camera didn't
-          observe Bella. It waited for her, the way you wait for someone to forget
-          you are watching.
-        </p>
+      <div class="frame-title-row"><div class="frame-title" id="ft2">The Light</div></div>
+      <div class="frame-slots-row" id="slots2">
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
       </div>
     </div>
 
     <div class="frame" id="frame3">
-      <div class="frame-inner">
-        <div class="frame-number">Scene 03 — Post-Production</div>
-        <div class="frame-title" id="ft3">The Edit</div>
-        <p class="frame-text">
-          The first cut was four hours long. We let it breathe for six weeks before
-          touching it again. What remained — what refused to be cut — became the film.
-          Silence turned out to hold more than any line of dialogue could carry.
-        </p>
+      <div class="frame-title-row"><div class="frame-title" id="ft3">The Edit</div></div>
+      <div class="frame-slots-row" id="slots3">
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
+        <div class="img-slot"></div>
       </div>
     </div>
 
@@ -148,19 +144,17 @@
       const canvas = document.getElementById('filmCanvas');
       const ctx    = canvas.getContext('2d');
 
-      // Sprocket strip height (top and bottom)
       const STRIP_H  = 54;
-      // Gap between the two paired thread lines at each frame border (match STRIP_H)
       const PAIR_GAP = STRIP_H;
-      // Sprocket hole dimensions
       const HOLE_W   = 22;
       const HOLE_H   = 16;
-      const HOLE_GAP = 52; // horizontal spacing center-to-center
+      const HOLE_GAP = 52;
+      const TITLE_H  = 36; // height reserved for frame title row
 
-      // Thread animation phase offsets for the 8 lines
       const phases = [0, 0.8, 1.6, 2.4, 3.2, 4.0, 4.8, 5.6];
 
       let W = 0, H = 0, dpr = 1;
+      let frameRects = []; // [{top, bottom, slotsTop, slotsBottom}]
 
       // ── Multi-pass golden glow horizontal thread ──────────────────────────
       function drawThread(yPos, time, phase) {
@@ -172,6 +166,21 @@
           for (let x = 0; x <= W; x += 2) {
             const y = yPos + Math.sin(x * 0.008 + time * 0.001 + phase) * 3;
             x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+
+      // ── Multi-pass golden glow vertical thread ─────────────────────────────
+      function drawVerticalThread(xPos, yTop, yBottom, time, phase) {
+        const passes = [[14, 0.028], [7, 0.060], [3, 0.17], [1, 0.75]];
+        for (const [lw, alpha] of passes) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth = lw;
+          for (let y = yTop; y <= yBottom; y += 2) {
+            const x = xPos + Math.sin(y * 0.008 + time * 0.001 + phase) * 3;
+            y === yTop ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
@@ -189,7 +198,7 @@
         }
       }
 
-      // ── Draw sprocket holes scrolling horizontally in a strip ─────────────
+      // ── Draw sprocket holes in a strip ────────────────────────────────────
       function drawSprocketStrip(stripCenterY, scrollX) {
         const holeY = stripCenterY - HOLE_H / 2;
         const count = Math.ceil(W / HOLE_GAP) + 2;
@@ -200,10 +209,9 @@
         }
       }
 
-      // ── 8 thread line positions (2 per frame edge) ───────────────────────
+      // ── 8 thread line Y positions ─────────────────────────────────────────
       function linePositions() {
         const innerH = H - STRIP_H * 2;
-        // Each internal divider takes PAIR_GAP px; subtract from available frame space
         const frameH = (innerH - PAIR_GAP * 2) / 3;
         const y2 = STRIP_H;
         const y3 = y2 + frameH;
@@ -211,46 +219,61 @@
         const y5 = y4 + frameH;
         const y6 = y5 + PAIR_GAP;
         return [
-          0,          // line 1: top edge of top sprocket strip
-          y2,         // line 2: bottom of top sprocket strip
-          y3,         // line 3: bottom of frame 1 (first of pair)
-          y4,         // line 4: top of frame 2  (second of pair)
-          y5,         // line 5: bottom of frame 2 (first of pair)
-          y6,         // line 6: top of frame 3   (second of pair)
-          H - STRIP_H,// line 7: top of bottom sprocket strip
-          H - 1,      // line 8: bottom edge
+          0,
+          y2,
+          y3,
+          y4,
+          y5,
+          y6,
+          H - STRIP_H,
+          H - 1,
         ];
       }
 
-      // ── Position frame divs between thread lines ──────────────────────────
+      // ── Position frame divs and image slots ───────────────────────────────
       function layoutFrames() {
         const ys = linePositions();
-        const frames = [
+        const configs = [
           { el: document.getElementById('frame1'), top: ys[1], bottom: ys[2] },
           { el: document.getElementById('frame2'), top: ys[3], bottom: ys[4] },
           { el: document.getElementById('frame3'), top: ys[5], bottom: ys[6] },
         ];
-        frames.forEach(({ el, top, bottom }) => {
+
+        frameRects = [];
+
+        configs.forEach(({ el, top, bottom }) => {
           el.style.left   = '0';
           el.style.width  = W + 'px';
           el.style.top    = top + 'px';
           el.style.height = (bottom - top) + 'px';
+
+          // Title row height
+          const titleRow = el.querySelector('.frame-title-row');
+          titleRow.style.height = TITLE_H + 'px';
+
+          frameRects.push({
+            top,
+            bottom,
+            slotsTop: top + TITLE_H,
+            slotsBottom: bottom,
+          });
         });
+
         fitTitles();
       }
 
-      // ── Auto-size frame titles ────────────────────────────────────────────
+      // ── Auto-size frame titles (capped at 18px = 50% of 36) ─────────────
       function fitTitles() {
         const probe = document.createElement('span');
         probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
         document.body.appendChild(probe);
 
-        const MAX_SIZE = 36;
+        const MAX_SIZE = 18;
         const target   = W * 0.14;
 
         document.querySelectorAll('.frame-title').forEach(el => {
           probe.textContent = el.textContent;
-          let fs = 12;
+          let fs = 6;
           probe.style.fontSize = fs + 'px';
           while (probe.offsetWidth < target && fs < MAX_SIZE) {
             fs += 0.5;
@@ -292,18 +315,28 @@
       function draw(time) {
         ctx.clearRect(0, 0, W, H);
 
-        scrollX = time * 0.010; // slow rightward drift for sprocket holes
+        scrollX = time * 0.010;
 
         const ys = linePositions();
 
-        // Draw all 8 horizontal thread lines
+        // Draw 8 horizontal thread lines
         ys.forEach((y, i) => drawThread(y, time, phases[i]));
 
-        // Sprocket holes in every paired strip (top, both internal dividers, bottom)
-        drawSprocketStrip(STRIP_H / 2, scrollX);                        // top strip
-        drawSprocketStrip((ys[2] + ys[3]) / 2, scrollX);               // divider 1
-        drawSprocketStrip((ys[4] + ys[5]) / 2, scrollX);               // divider 2
-        drawSprocketStrip(H - STRIP_H / 2, scrollX);                   // bottom strip
+        // Sprocket holes in all 4 strips
+        drawSprocketStrip(STRIP_H / 2, scrollX);
+        drawSprocketStrip((ys[2] + ys[3]) / 2, scrollX);
+        drawSprocketStrip((ys[4] + ys[5]) / 2, scrollX);
+        drawSprocketStrip(H - STRIP_H / 2, scrollX);
+
+        // Draw 5 vertical thread dividers per frame (6 equal image slots)
+        frameRects.forEach((fr, fi) => {
+          const slotW = W / 6;
+          for (let i = 1; i <= 5; i++) {
+            const x = slotW * i;
+            const phase = phases[(fi * 5 + i) % phases.length];
+            drawVerticalThread(x, fr.slotsTop, fr.slotsBottom, time, phase);
+          }
+        });
 
         tickTimecode();
         requestAnimationFrame(draw);
