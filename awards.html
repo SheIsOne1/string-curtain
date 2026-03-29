@@ -7,25 +7,250 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="section.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      display: flex; align-items: center; padding: 0 28px; z-index: 10;
+    }
+    .back-link {
+      color: rgba(210,168,65,0.75); font-family: 'Imperial Script', cursive;
+      font-size: 18px; text-decoration: none; transition: color 0.2s;
+    }
+    .back-link:hover { color: #7aaeff; }
+    .page-title {
+      font-family: 'Imperial Script', cursive; font-size: 32px;
+      font-weight: 400; color: rgba(210,168,65,0.85); margin-left: 24px;
+    }
+    canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+  </style>
 </head>
 <body>
-
-  <header class="page-header">
+  <canvas id="c"></canvas>
+  <header>
     <a href="https://sheisone1.github.io/string-curtain/index.html?open=1" class="back-link">← Back</a>
     <h1 class="page-title">Awards</h1>
   </header>
 
-  <main class="layout-grid">
-    <div class="cell cell--full"></div>
-    <div class="cell cell--full"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-  </main>
+  <script>
+  const canvas = document.getElementById('c');
+  const ctx    = canvas.getContext('2d');
+  let W, H, dpr;
 
+  const N_PETALS = 5;
+  const HEADER   = 60;
+
+  // 5 petal-tip awards (major)
+  const TIP_AWARDS = [
+    { label: "Grand Prix",          sub: "Cannes 2025"          },
+    { label: "Best Feature",        sub: "Tribeca 2025"         },
+    { label: "Best Cinematography", sub: "Sundance 2025"        },
+    { label: "Best Director",       sub: "TIFF 2025"            },
+    { label: "Jury Prize",          sub: "Berlin 2025"          },
+  ];
+  // 5 notch awards (minor, between petals)
+  const NOTCH_AWARDS = [
+    { label: "Audience Award",  sub: "Venice 2025"     },
+    { label: "Best Score",      sub: "Edinburgh 2025"  },
+    { label: "Special Mention", sub: "Rotterdam 2025"  },
+    { label: "Best Editing",    sub: "Locarno 2025"    },
+    { label: "Discovery Prize", sub: "Toronto 2025"    },
+  ];
+
+  const PASSES = [[14, 0.022], [7, 0.055], [3, 0.16], [1, 0.75]];
+
+  function buildNodes() {
+    const cx = W / 2;
+    const cy = HEADER + (H - HEADER) / 2;
+    const R  = Math.min(W * 0.36, (H - HEADER) * 0.40);
+    const Rn = R * 0.38; // notch radius (between petals)
+
+    const nodes = [];
+
+    // [0] center — most prestigious
+    nodes.push({ x: cx, y: cy, label: "Palme d'Or",
+                 sub: "Cannes Film Festival", size: 2.5, phase: 0 });
+
+    // [1..5] petal tips
+    for (let i = 0; i < N_PETALS; i++) {
+      const ang = (i / N_PETALS) * Math.PI * 2 - Math.PI / 2;
+      nodes.push({
+        x: cx + R  * Math.cos(ang),
+        y: cy + R  * Math.sin(ang),
+        label: TIP_AWARDS[i].label,
+        sub:   TIP_AWARDS[i].sub,
+        size:  1.55,
+        phase: 1.3 + i * 1.26
+      });
+    }
+
+    // [6..10] notch stars (between adjacent tips)
+    for (let i = 0; i < N_PETALS; i++) {
+      const ang = ((i + 0.5) / N_PETALS) * Math.PI * 2 - Math.PI / 2;
+      nodes.push({
+        x: cx + Rn * Math.cos(ang),
+        y: cy + Rn * Math.sin(ang),
+        label: NOTCH_AWARDS[i].label,
+        sub:   NOTCH_AWARDS[i].sub,
+        size:  1.0,
+        phase: 0.6 + i * 0.95
+      });
+    }
+
+    return nodes;
+  }
+
+  function buildConnections() {
+    const conns = [];
+    // Center → each tip (petal veins)
+    for (let i = 0; i < N_PETALS; i++) conns.push([0, 1 + i]);
+    // Petal outline: tip_i → notch_i → tip_{i+1}
+    for (let i = 0; i < N_PETALS; i++) {
+      const tip  = 1 + i;
+      const notc = 6 + i;
+      const next = 1 + ((i + 1) % N_PETALS);
+      conns.push([tip, notc]);
+      conns.push([notc, next]);
+    }
+    // Center → each notch (inner petal detail lines)
+    for (let i = 0; i < N_PETALS; i++) conns.push([0, 6 + i]);
+    return conns;
+  }
+
+  // ── Thread line between two points ───────────────────────────────────────
+  function drawThread(x1, y1, x2, y2, time, phase) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    const ux = dx / len, uy = dy / len;
+    const px = -uy, py = ux;
+    const steps = Math.max(40, Math.round(len / 4));
+
+    for (const [lw, alpha] of PASSES) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+      ctx.lineWidth   = lw;
+      ctx.lineCap     = 'round';
+      for (let s = 0; s <= steps; s++) {
+        const tp   = s / steps;
+        const bx   = x1 + dx * tp;
+        const by   = y1 + dy * tp;
+        const wave = Math.sin(tp * Math.PI * 4 + time * 0.0007 + phase) * 2.5;
+        s === 0
+          ? ctx.moveTo(bx + px * wave, by + py * wave)
+          : ctx.lineTo(bx + px * wave, by + py * wave);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // ── Glowing star node ─────────────────────────────────────────────────────
+  function drawStar(x, y, size, time, phase) {
+    const pulse = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
+    const glowR = size * 20 * pulse;
+    const coreR = size * 3.2;
+
+    // Radial glow
+    const g = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+    g.addColorStop(0,    `rgba(255,242,200,${0.6 * pulse})`);
+    g.addColorStop(0.2,  `rgba(210,168,65,${0.35 * pulse})`);
+    g.addColorStop(0.6,  `rgba(210,168,65,${0.07 * pulse})`);
+    g.addColorStop(1,     'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, glowR, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // 4-point sparkle
+    const sLen = size * 13 * pulse;
+    for (let i = 0; i < 4; i++) {
+      const ang = i * Math.PI / 2 + time * 0.00012;
+      const sg  = ctx.createLinearGradient(x, y,
+                    x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
+      sg.addColorStop(0, `rgba(255,248,220,${0.65 * pulse})`);
+      sg.addColorStop(1,  'rgba(210,168,65,0)');
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
+      ctx.strokeStyle = sg;
+      ctx.lineWidth   = 0.9;
+      ctx.stroke();
+    }
+
+    // Core dot
+    const cg = ctx.createRadialGradient(x, y, 0, x, y, coreR);
+    cg.addColorStop(0, `rgba(255,255,245,${0.95 * pulse})`);
+    cg.addColorStop(1,  'rgba(210,168,65,0.3)');
+    ctx.beginPath();
+    ctx.arc(x, y, coreR, 0, Math.PI * 2);
+    ctx.fillStyle = cg;
+    ctx.fill();
+  }
+
+  // ── Award label ───────────────────────────────────────────────────────────
+  function drawLabel(node, cx, cy, time) {
+    const { x, y, label, sub, size, phase } = node;
+    const pulse = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
+    const alpha = 0.65 + 0.35 * pulse;
+
+    // Push label away from flower center
+    const dx  = x - cx, dy = y - cy;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const pushR = size * 28;
+    const lx  = x + (dx / len) * pushR;
+    const ly  = y + (dy / len) * pushR;
+
+    const fSize = Math.round(9 + size * 3.5);
+    ctx.font      = `${fSize}px 'Imperial Script', cursive`;
+    ctx.fillStyle = `rgba(210,168,65,${alpha})`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, lx, ly);
+
+    ctx.font      = `${Math.round(fSize * 0.70)}px 'Imperial Script', cursive`;
+    ctx.fillStyle = `rgba(122,174,255,${alpha * 0.82})`;
+    ctx.fillText(sub, lx, ly + fSize * 1.1);
+  }
+
+  // ── Main loop ─────────────────────────────────────────────────────────────
+  function draw(time) {
+    ctx.clearRect(0, 0, W, H);
+
+    const nodes = buildNodes();
+    const conns = buildConnections();
+    const cx    = W / 2;
+    const cy    = HEADER + (H - HEADER) / 2;
+
+    // Threads first
+    conns.forEach(([i, j]) => {
+      const a = nodes[i], b = nodes[j];
+      drawThread(a.x, a.y, b.x, b.y, time, (a.phase + b.phase) * 0.5);
+    });
+
+    // Stars + labels on top
+    nodes.forEach(n => {
+      drawStar(n.x, n.y, n.size, time, n.phase);
+      drawLabel(n, cx, cy, time);
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W   = window.innerWidth;
+    H   = window.innerHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+  }
+
+  resize();
+  window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
+  document.fonts.ready.then(() => requestAnimationFrame(draw));
+  </script>
 </body>
 </html>
