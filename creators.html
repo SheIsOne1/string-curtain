@@ -48,7 +48,7 @@
 
     .creator-labels {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      top: 60px; left: 0; right: 0;
       height: 90px;
       display: flex;
       z-index: 10;
@@ -164,8 +164,8 @@
     function draw(time) {
       ctx.clearRect(0, 0, W, H);
 
-      const HEADER_H = 60;
-      const FOOTER_H = 90;
+      const HEADER_H = 150; // 60px nav + 90px labels
+      const FOOTER_H = 20;
       const usableH  = H - HEADER_H - FOOTER_H;
       const cy       = HEADER_H + usableH * 0.5;
       const R        = Math.min(W * 0.10, usableH * 0.34);  // smaller overall
