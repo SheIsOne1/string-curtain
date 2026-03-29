@@ -168,10 +168,10 @@
     ];
 
     // Draw one horizontal wavy thread line
-    function drawHThread(x0, x1, y, time, phase) {
+    function drawHThread(x0, x1, y, time, phase, rgb = '210,168,65') {
       for (const [lw, alpha] of PASSES) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+        ctx.strokeStyle = `rgba(${rgb},${alpha})`;
         ctx.lineWidth   = lw;
         for (let x = x0; x <= x1; x += 2) {
           const wy = y + Math.sin(x * 0.012 + time * 0.001 + phase) * 2;
@@ -182,10 +182,10 @@
     }
 
     // Draw one vertical wavy thread line
-    function drawVThread(x, y0, y1, time, phase) {
+    function drawVThread(x, y0, y1, time, phase, rgb = '210,168,65') {
       for (const [lw, alpha] of PASSES) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+        ctx.strokeStyle = `rgba(${rgb},${alpha})`;
         ctx.lineWidth   = lw;
         for (let y = y0; y <= y1; y += 2) {
           const wx = x + Math.sin(y * 0.012 + time * 0.001 + phase) * 2;
@@ -200,19 +200,20 @@
       const left  = cx - w / 2;
       const right = cx + w / 2;
       const bot   = top + h;
+      const blue  = '122,174,255';
 
-      drawHThread(left, right, top,  time, phase);
-      drawHThread(left, right, bot,  time, phase + 1.6);
-      drawVThread(left,  top, bot,   time, phase + 0.9);
-      drawVThread(right, top, bot,   time, phase + 2.5);
+      drawHThread(left, right, top,  time, phase,       blue);
+      drawHThread(left, right, bot,  time, phase + 1.6, blue);
+      drawVThread(left,  top, bot,   time, phase + 0.9, blue);
+      drawVThread(right, top, bot,   time, phase + 2.5, blue);
 
       // Text inside
       ctx.textAlign    = 'center';
-      ctx.fillStyle    = 'rgba(210,168,65,0.85)';
+      ctx.fillStyle    = 'rgba(122,174,255,0.85)';
       ctx.font         = `18px "Imperial Script", cursive`;
       ctx.fillText(creator.role, cx, top + h * 0.38);
 
-      ctx.fillStyle = 'rgba(210,168,65,0.45)';
+      ctx.fillStyle = 'rgba(122,174,255,0.45)';
       ctx.font      = `13px "Imperial Script", cursive`;
       creator.lines.forEach((line, i) => {
         ctx.fillText(line, cx, top + h * 0.65 + i * 16);
