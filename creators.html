@@ -109,9 +109,9 @@
 
     const PASSES = [[14, 0.028], [7, 0.060], [3, 0.17], [1, 0.75]];
 
-    // N_TWIST: how many "bumps" (rope twist texture) appear per full circle
-    const N_TWIST = 28;
-    const N_RINGS = 5;   // concentric rings per coil, matching reference
+    // Reference: 4 concentric rings, each made of 2 interweaving strands
+    const N_RINGS = 4;
+    const N_TWIST = 24; // twist cycles per full circle
 
     function resize() {
       dpr = window.devicePixelRatio || 1;
@@ -124,38 +124,40 @@
       ctx.scale(dpr, dpr);
     }
 
-    // Draw one concentric ring with twisted-rope texture
-    function drawRopeRing(cx, cy, r, time, phase) {
-      const steps   = Math.max(180, Math.round(r * 4));
-      const twistAmp = r * 0.022;   // radial oscillation → rope-twist illusion
+    // One ring: 2 interweaving strands offset by π → they cross = twisted rope texture
+    function drawRopeRing(cx, cy, R, ropeHalf, time, phase) {
+      const steps = Math.max(240, Math.round(R * 5));
 
-      for (const [lw, alpha] of PASSES) {
-        ctx.beginPath();
-        ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
-        ctx.lineWidth   = lw;
-        for (let s = 0; s <= steps; s++) {
-          const a  = (s / steps) * Math.PI * 2;
-          // Radial oscillation gives the twisted-rope look
-          const rr = r
-            + Math.sin(a * N_TWIST + time * 0.00045 + phase) * twistAmp
-            + Math.sin(a * N_TWIST * 0.5 + time * 0.00030 + phase * 1.3) * twistAmp * 0.4;
-          const x = cx + rr * Math.cos(a);
-          const y = cy + rr * Math.sin(a);
-          s === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      for (let strand = 0; strand < 2; strand++) {
+        const sph = phase + strand * Math.PI; // opposite phase → strands cross
+
+        for (const [lw, alpha] of PASSES) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth   = lw;
+          for (let s = 0; s <= steps; s++) {
+            const a   = (s / steps) * Math.PI * 2;
+            const off = Math.sin(a * N_TWIST + time * 0.00038 + sph) * ropeHalf;
+            const r   = R + off;
+            const x   = cx + r * Math.cos(a);
+            const y   = cy + r * Math.sin(a);
+            s === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
         }
-        ctx.stroke();
       }
     }
 
-    // Draw a full rope coil (5 concentric rings, hollow center like reference)
+    // Full coil: 4 concentric rings, hollow centre (~38% of outer radius)
     function drawRopeCoil(cx, cy, outerR, time, basePh) {
-      const innerR  = outerR * 0.30;                      // hollow centre
-      const spacing = (outerR - innerR) / (N_RINGS - 1);  // gap between ring centres
+      const innerR   = outerR * 0.38;
+      const spacing  = (outerR - innerR) / (N_RINGS - 1);
+      const ropeHalf = spacing * 0.46; // half-thickness ≈ nearly-touching rings
 
       for (let ri = 0; ri < N_RINGS; ri++) {
-        const r     = innerR + ri * spacing;
-        const phase = basePh + ri * 1.05;
-        drawRopeRing(cx, cy, r, time, phase);
+        const R     = innerR + ri * spacing;
+        const phase = basePh + ri * 1.1;
+        drawRopeRing(cx, cy, R, ropeHalf, time, phase);
       }
     }
 
