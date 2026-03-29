@@ -45,6 +45,7 @@
 
     .frame-inner {
       padding: 0 10%;
+      text-align: center;
     }
 
     .frame-number {
@@ -244,8 +245,8 @@
         probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
         document.body.appendChild(probe);
 
-        const MAX_SIZE = 72;
-        const target   = W * 0.28;
+        const MAX_SIZE = 36;
+        const target   = W * 0.14;
 
         document.querySelectorAll('.frame-title').forEach(el => {
           probe.textContent = el.textContent;
