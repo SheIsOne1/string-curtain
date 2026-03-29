@@ -150,9 +150,9 @@
 
     // Full coil: 4 concentric rings, hollow centre (~38% of outer radius)
     function drawRopeCoil(cx, cy, outerR, time, basePh) {
-      const innerR   = outerR * 0.38;
+      const innerR   = outerR * 0.58;  // bigger hollow centre for image
       const spacing  = (outerR - innerR) / (N_RINGS - 1);
-      const ropeHalf = spacing * 0.46; // half-thickness ≈ nearly-touching rings
+      const ropeHalf = spacing * 0.46;
 
       for (let ri = 0; ri < N_RINGS; ri++) {
         const R     = innerR + ri * spacing;
@@ -168,7 +168,7 @@
       const FOOTER_H = 90;
       const usableH  = H - HEADER_H - FOOTER_H;
       const cy       = HEADER_H + usableH * 0.5;
-      const R        = Math.min(W * 0.13, usableH * 0.42);
+      const R        = Math.min(W * 0.10, usableH * 0.34);  // smaller overall
 
       const positions = [W / 6, W / 2, W * 5 / 6];
       const phases    = [0, 2.09, 4.19];
