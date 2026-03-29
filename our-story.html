@@ -185,9 +185,9 @@
       <span class="tagline-text">A film about love, roots &amp; becoming</span>
     </div>
 
-    <!-- Row 2: hero — The Journey title replaces Our Story -->
+    <!-- Row 2: hero -->
     <div class="row-hero" id="rowHero">
-      <h2 class="hero-title">The Journey</h2>
+      <h2 class="hero-title">Our Story</h2>
       <p class="hero-paragraph">
         Bella is a meditation on memory and place — a portrait of a woman carrying the weight
         of inherited silence, learning to speak it into light. Shot across three continents over
@@ -208,6 +208,7 @@
       </p>
     </div>
     <div class="col-cell" id="colB">
+      <h3>The Journey</h3>
       <p>
         From the coastal villages of her grandmother's childhood to the crowded city
         she now calls home, the film traces the geography of inheritance — the places
@@ -249,9 +250,9 @@
       const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
 
       function fitColTitles() {
-        // Outer titles only: Animation (titleA) and Music (titleC)
         const titles = [
           document.querySelector('#titleA h3'),
+          document.querySelector('#colB h3'),
           document.querySelector('#titleC h3'),
         ];
         const sizes = [];
@@ -277,7 +278,10 @@
 
         document.body.removeChild(probe);
         const unified = Math.max(...sizes);
-        titles.forEach(el => { el.style.fontSize = unified + 'px'; });
+        titles.forEach((el, i) => {
+          const scale = (i === 1) ? 1 : 0.8;
+          el.style.fontSize = (unified * scale) + 'px';
+        });
       }
 
       function resize() {
