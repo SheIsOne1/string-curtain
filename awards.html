@@ -38,85 +38,63 @@
   const ctx    = canvas.getContext('2d');
   let W, H, dpr;
 
-  const N_PETALS = 5;
-  const HEADER   = 60;
-
-  // 5 petal-tip awards (major)
-  const TIP_AWARDS = [
-    { label: "Grand Prix",          sub: "Cannes 2025"          },
-    { label: "Best Feature",        sub: "Tribeca 2025"         },
-    { label: "Best Cinematography", sub: "Sundance 2025"        },
-    { label: "Best Director",       sub: "TIFF 2025"            },
-    { label: "Jury Prize",          sub: "Berlin 2025"          },
-  ];
-  // 5 notch awards (minor, between petals)
-  const NOTCH_AWARDS = [
-    { label: "Audience Award",  sub: "Venice 2025"     },
-    { label: "Best Score",      sub: "Edinburgh 2025"  },
-    { label: "Special Mention", sub: "Rotterdam 2025"  },
-    { label: "Best Editing",    sub: "Locarno 2025"    },
-    { label: "Discovery Prize", sub: "Toronto 2025"    },
-  ];
+  const HEADER = 60;
 
   const PASSES = [[14, 0.022], [7, 0.055], [3, 0.16], [1, 0.75]];
 
+  // Boat-shaped constellation (side-view sailboat)
+  // Index map:
+  //  0=bow  1=hull-L  2=keel  3=hull-R  4=stern
+  //  5=deck-L  6=deck-R  7=mast-base  8=mast-top
+  //  9=main-award(sail-center)  10=sail-tip-L
+  const RAW_NODES = [
+    // Hull arc (bottom of boat)
+    { rx:0.10, ry:0.70, label:"Best Editing",        sub:"Locarno 2025",      size:1.0, phase:2.1 }, // 0 bow
+    { rx:0.26, ry:0.80, label:"Discovery Prize",     sub:"Toronto 2025",      size:1.0, phase:3.4 }, // 1 hull-L
+    { rx:0.46, ry:0.84, label:"Best Score",          sub:"Edinburgh 2025",    size:1.1, phase:0.9 }, // 2 keel
+    { rx:0.66, ry:0.79, label:"Special Mention",     sub:"Rotterdam 2025",    size:1.0, phase:1.7 }, // 3 hull-R
+    { rx:0.82, ry:0.68, label:"Audience Award",      sub:"Venice 2025",       size:1.2, phase:2.8 }, // 4 stern
+    // Deck
+    { rx:0.18, ry:0.60, label:"Best Feature",        sub:"Tribeca 2025",      size:1.5, phase:0.4 }, // 5 deck-L
+    { rx:0.78, ry:0.58, label:"Jury Prize",          sub:"Berlin 2025",       size:1.4, phase:1.2 }, // 6 deck-R
+    // Mast
+    { rx:0.46, ry:0.60, label:"Best Director",       sub:"TIFF 2025",         size:1.4, phase:3.0 }, // 7 mast-base
+    { rx:0.44, ry:0.14, label:"Best Cinematography", sub:"Sundance 2025",     size:1.7, phase:0.0 }, // 8 mast-top
+    // Main award — heart of the sail
+    { rx:0.32, ry:0.38, label:"Palme d'Or",          sub:"Cannes Film Festival", size:2.4, phase:0.6 }, // 9
+    // Sail left anchor point
+    { rx:0.16, ry:0.52, label:"Grand Prix",          sub:"Cannes 2025",       size:1.6, phase:1.9 }, // 10
+  ];
+
   function buildNodes() {
-    const cx = W / 2;
-    const cy = HEADER + (H - HEADER) / 2;
-    const R  = Math.min(W * 0.36, (H - HEADER) * 0.40);
-    const Rn = R * 0.38; // notch radius (between petals)
-
-    const nodes = [];
-
-    // [0] center — most prestigious
-    nodes.push({ x: cx, y: cy, label: "Palme d'Or",
-                 sub: "Cannes Film Festival", size: 2.5, phase: 0 });
-
-    // [1..5] petal tips
-    for (let i = 0; i < N_PETALS; i++) {
-      const ang = (i / N_PETALS) * Math.PI * 2 - Math.PI / 2;
-      nodes.push({
-        x: cx + R  * Math.cos(ang),
-        y: cy + R  * Math.sin(ang),
-        label: TIP_AWARDS[i].label,
-        sub:   TIP_AWARDS[i].sub,
-        size:  1.55,
-        phase: 1.3 + i * 1.26
-      });
-    }
-
-    // [6..10] notch stars (between adjacent tips)
-    for (let i = 0; i < N_PETALS; i++) {
-      const ang = ((i + 0.5) / N_PETALS) * Math.PI * 2 - Math.PI / 2;
-      nodes.push({
-        x: cx + Rn * Math.cos(ang),
-        y: cy + Rn * Math.sin(ang),
-        label: NOTCH_AWARDS[i].label,
-        sub:   NOTCH_AWARDS[i].sub,
-        size:  1.0,
-        phase: 0.6 + i * 0.95
-      });
-    }
-
-    return nodes;
+    const aw = W;
+    const ah = H - HEADER;
+    return RAW_NODES.map(n => ({
+      ...n,
+      x: n.rx * aw,
+      y: HEADER + n.ry * ah,
+    }));
   }
 
-  function buildConnections() {
-    const conns = [];
-    // Center → each tip (petal veins)
-    for (let i = 0; i < N_PETALS; i++) conns.push([0, 1 + i]);
-    // Petal outline: tip_i → notch_i → tip_{i+1}
-    for (let i = 0; i < N_PETALS; i++) {
-      const tip  = 1 + i;
-      const notc = 6 + i;
-      const next = 1 + ((i + 1) % N_PETALS);
-      conns.push([tip, notc]);
-      conns.push([notc, next]);
-    }
-    // Center → each notch (inner petal detail lines)
-    for (let i = 0; i < N_PETALS; i++) conns.push([0, 6 + i]);
-    return conns;
-  }
+  // Connections that draw the sailboat structure
+  const CONNECTIONS = [
+    // Hull arc
+    [0,1],[1,2],[2,3],[3,4],
+    // Hull sides up to deck
+    [0,5],[4,6],
+    // Deck line: deck-L → mast-base → deck-R
+    [5,7],[7,6],
+    // Mast
+    [7,8],
+    // Main sail triangle: mast-top → sail-anchor-L → deck-L → back
+    [8,10],[10,5],[5,8],
+    // Sail veins through main award
+    [9,8],[9,5],[9,10],[9,7],
+    // Jib: mast-top → deck-R → stern (front sail line)
+    [8,6],[6,4],
+  ];
+
+  function buildConnections() { return CONNECTIONS; }
 
   // ── Thread line between two points ───────────────────────────────────────
   function drawThread(x1, y1, x2, y2, time, phase) {
@@ -189,17 +167,15 @@
   }
 
   // ── Award label ───────────────────────────────────────────────────────────
-  function drawLabel(node, cx, cy, time) {
+  function drawLabel(node, time) {
     const { x, y, label, sub, size, phase } = node;
     const pulse = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
     const alpha = 0.65 + 0.35 * pulse;
 
-    // Push label away from flower center
-    const dx  = x - cx, dy = y - cy;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    const pushR = size * 28;
-    const lx  = x + (dx / len) * pushR;
-    const ly  = y + (dy / len) * pushR;
+    // Place label directly above or below the star
+    const offsetY = y > H * 0.55 ? size * 26 : -(size * 26);
+    const lx = x;
+    const ly = y + offsetY;
 
     const fSize = Math.round(9 + size * 3.5);
     ctx.font      = `${fSize}px 'Imperial Script', cursive`;
@@ -231,7 +207,7 @@
     // Stars + labels on top
     nodes.forEach(n => {
       drawStar(n.x, n.y, n.size, time, n.phase);
-      drawLabel(n, cx, cy, time);
+      drawLabel(n, time);
     });
 
     requestAnimationFrame(draw);
