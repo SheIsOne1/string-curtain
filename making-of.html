@@ -36,17 +36,15 @@
       pointer-events: none;
     }
 
-    /* Each film frame sits between the two vertical strip lines */
     .frame {
       position: absolute;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      /* left/width/top/height set by JS to match thread positions */
     }
 
     .frame-inner {
-      padding: 0 48px;
+      padding: 0 10%;
     }
 
     .frame-number {
@@ -79,7 +77,6 @@
       max-width: 560px;
     }
 
-    /* Timecode — bottom-right corner */
     #timecode {
       position: fixed;
       bottom: 18px;
@@ -147,101 +144,98 @@
 
   <script>
     (function () {
-      const canvas  = document.getElementById('filmCanvas');
-      const ctx     = canvas.getContext('2d');
+      const canvas = document.getElementById('filmCanvas');
+      const ctx    = canvas.getContext('2d');
 
-      const STRIP_W   = 62;   // px — width of each side strip
-      const HOLE_W    = 20;   // sprocket hole width
-      const HOLE_H    = 28;   // sprocket hole height
-      const HOLE_GAP  = 50;   // vertical spacing between holes
+      // Sprocket strip height (top and bottom)
+      const STRIP_H  = 54;
+      // Sprocket hole dimensions
+      const HOLE_W   = 22;
+      const HOLE_H   = 16;
+      const HOLE_GAP = 52; // horizontal spacing center-to-center
 
-      // Thread phase offsets
-      const phases = [0, 1.4, 2.9, 4.3, 5.8];
+      // Thread animation phase offsets for the 6 lines
+      const phases = [0, 1.1, 2.2, 3.3, 4.4, 5.5];
 
       let W = 0, H = 0, dpr = 1;
 
-      // ── Multi-pass golden glow line ───────────────────────────────────────
-      function drawThread(isHorizontal, position, time, phase) {
+      // ── Multi-pass golden glow horizontal thread ──────────────────────────
+      function drawThread(yPos, time, phase) {
         const passes = [[14, 0.028], [7, 0.060], [3, 0.17], [1, 0.75]];
         for (const [lw, alpha] of passes) {
           ctx.beginPath();
           ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
           ctx.lineWidth = lw;
-          if (isHorizontal) {
-            for (let x = 0; x <= W; x += 2) {
-              const y = position + Math.sin(x * 0.008 + time * 0.001 + phase) * 3;
-              x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-            }
-          } else {
-            for (let y = 0; y <= H; y += 2) {
-              const x = position + Math.sin(y * 0.008 + time * 0.001 + phase) * 3;
-              y === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-            }
+          for (let x = 0; x <= W; x += 2) {
+            const y = yPos + Math.sin(x * 0.008 + time * 0.001 + phase) * 3;
+            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
       }
 
-      // ── Glowing rectangle (sprocket hole outline) ─────────────────────────
+      // ── Glowing rounded-rect sprocket hole ───────────────────────────────
       function drawHole(x, y) {
-        const passes = [[5, 0.04], [2.5, 0.12], [1.2, 0.30], [0.6, 0.72]];
+        const passes = [[4, 0.04], [2, 0.12], [1, 0.32], [0.5, 0.72]];
         for (const [lw, alpha] of passes) {
           ctx.beginPath();
           ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
           ctx.lineWidth = lw;
-          const r = 3; // corner radius
-          ctx.roundRect(x, y, HOLE_W, HOLE_H, r);
+          ctx.roundRect(x, y, HOLE_W, HOLE_H, 3);
           ctx.stroke();
         }
       }
 
-      // ── Draw all sprocket holes on both strips ────────────────────────────
-      function drawSprockets(scrollY) {
-        const lx = (STRIP_W - HOLE_W) / 2;             // left strip hole x
-        const rx = W - STRIP_W + (STRIP_W - HOLE_W) / 2; // right strip hole x
-
-        const count = Math.ceil(H / HOLE_GAP) + 2;
-        const offset = scrollY % HOLE_GAP;
-
+      // ── Draw sprocket holes scrolling horizontally in a strip ─────────────
+      function drawSprocketStrip(stripCenterY, scrollX) {
+        const holeY = stripCenterY - HOLE_H / 2;
+        const count = Math.ceil(W / HOLE_GAP) + 2;
+        const offset = scrollX % HOLE_GAP;
         for (let i = -1; i < count; i++) {
-          const y = i * HOLE_GAP + offset + 8;
-          drawHole(lx, y);
-          drawHole(rx, y);
+          const x = i * HOLE_GAP + offset + 8;
+          drawHole(x, holeY);
         }
       }
 
-      // ── Layout: position frame divs to match thread lines ─────────────────
-      function layoutFrames() {
-        const y1 = H * 0.333;
-        const y2 = H * 0.667;
-
-        const frameLeft = STRIP_W;
-        const frameW    = W - STRIP_W * 2;
-
-        const frames = [
-          { el: document.getElementById('frame1'), top: 0,  height: y1 },
-          { el: document.getElementById('frame2'), top: y1, height: y2 - y1 },
-          { el: document.getElementById('frame3'), top: y2, height: H - y2 },
+      // ── 6 thread line positions ───────────────────────────────────────────
+      function linePositions() {
+        const innerH = H - STRIP_H * 2;
+        const frameH = innerH / 3;
+        return [
+          STRIP_H * 0,                          // line 1: top edge
+          STRIP_H,                              // line 2: bottom of top strip
+          STRIP_H + frameH,                     // line 3: divider 1
+          STRIP_H + frameH * 2,                 // line 4: divider 2
+          H - STRIP_H,                          // line 5: top of bottom strip
+          H,                                    // line 6: bottom edge (drawn at H-1)
         ];
-
-        frames.forEach(({ el, top, height }) => {
-          el.style.left   = frameLeft + 'px';
-          el.style.width  = frameW + 'px';
-          el.style.top    = top + 'px';
-          el.style.height = height + 'px';
-        });
-
-        fitTitles(frameW);
       }
 
-      // ── Auto-size frame titles to fill ~50% of frame width ────────────────
-      function fitTitles(frameW) {
+      // ── Position frame divs between thread lines ──────────────────────────
+      function layoutFrames() {
+        const ys = linePositions();
+        const frames = [
+          { el: document.getElementById('frame1'), top: ys[1], bottom: ys[2] },
+          { el: document.getElementById('frame2'), top: ys[2], bottom: ys[3] },
+          { el: document.getElementById('frame3'), top: ys[3], bottom: ys[4] },
+        ];
+        frames.forEach(({ el, top, bottom }) => {
+          el.style.left   = '0';
+          el.style.width  = W + 'px';
+          el.style.top    = top + 'px';
+          el.style.height = (bottom - top) + 'px';
+        });
+        fitTitles();
+      }
+
+      // ── Auto-size frame titles ────────────────────────────────────────────
+      function fitTitles() {
         const probe = document.createElement('span');
         probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
         document.body.appendChild(probe);
 
         const MAX_SIZE = 72;
-        const target   = frameW * 0.50; // fill half the frame width
+        const target   = W * 0.28;
 
         document.querySelectorAll('.frame-title').forEach(el => {
           probe.textContent = el.textContent;
@@ -282,23 +276,25 @@
       }
 
       // ── Animation loop ────────────────────────────────────────────────────
-      let scrollY = 0; // sprocket holes gently scroll downward
+      let scrollX = 0;
 
       function draw(time) {
         ctx.clearRect(0, 0, W, H);
 
-        scrollY = time * 0.012; // slow downward drift
+        scrollX = time * 0.010; // slow rightward drift for sprocket holes
 
-        // Film strip edge threads (vertical)
-        drawThread(false, STRIP_W,     time, phases[0]);
-        drawThread(false, W - STRIP_W, time, phases[1]);
+        const ys = linePositions();
 
-        // Frame divider threads (horizontal)
-        drawThread(true, H * 0.333, time, phases[2]);
-        drawThread(true, H * 0.667, time, phases[3]);
+        // Draw all 6 horizontal thread lines
+        ys.forEach((y, i) => {
+          const yDraw = i === 5 ? H - 1 : y; // keep last line inside canvas
+          drawThread(yDraw, time, phases[i]);
+        });
 
-        // Sprocket holes
-        drawSprockets(scrollY);
+        // Sprocket holes in top strip (centered between line 1 and line 2)
+        drawSprocketStrip(STRIP_H / 2, scrollX);
+        // Sprocket holes in bottom strip (centered between line 5 and line 6)
+        drawSprocketStrip(H - STRIP_H / 2, scrollX);
 
         tickTimecode();
         requestAnimationFrame(draw);
