@@ -8,6 +8,90 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="section.css">
+  <style>
+    html, body {
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #filmCanvas {
+      position: fixed;
+      left: 0;
+      top: 72px;
+      width: 100%;
+      height: calc(100% - 72px);
+      display: block;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .film-content {
+      position: fixed;
+      left: 0;
+      top: 72px;
+      width: 100%;
+      height: calc(100% - 72px);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Each film frame sits between the two vertical strip lines */
+    .frame {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      /* left/width/top/height set by JS to match thread positions */
+    }
+
+    .frame-inner {
+      padding: 0 48px;
+    }
+
+    .frame-number {
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(210,168,65,0.28);
+      margin-bottom: 14px;
+    }
+
+    .frame-title {
+      font-family: "Imperial Script", cursive;
+      font-weight: 400;
+      color: rgba(210,168,65,0.92);
+      text-shadow:
+        0 0 40px rgba(210,168,65,0.35),
+        0 0 90px rgba(210,168,65,0.12);
+      line-height: 1.05;
+      margin-bottom: 18px;
+      white-space: nowrap;
+    }
+
+    .frame-text {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      line-height: 1.9;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.40);
+      max-width: 560px;
+    }
+
+    /* Timecode — bottom-right corner */
+    #timecode {
+      position: fixed;
+      bottom: 18px;
+      right: 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: rgba(210,168,65,0.22);
+      z-index: 5;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
 
@@ -16,16 +100,214 @@
     <h1 class="page-title">Making Of</h1>
   </header>
 
-  <main class="layout-grid">
-    <div class="cell cell--full"></div>
-    <div class="cell cell--full"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-  </main>
+  <canvas id="filmCanvas"></canvas>
 
+  <div class="film-content" id="filmContent">
+
+    <div class="frame" id="frame1">
+      <div class="frame-inner">
+        <div class="frame-number">Scene 01 — Pre-Production</div>
+        <div class="frame-title" id="ft1">The Idea</div>
+        <p class="frame-text">
+          It began with a question no one had written down. We wanted to make something
+          that felt less like a film and more like a memory — the kind that surfaces
+          unbidden, already half-dissolved, already beautiful in its incompleteness.
+        </p>
+      </div>
+    </div>
+
+    <div class="frame" id="frame2">
+      <div class="frame-inner">
+        <div class="frame-number">Scene 02 — Production</div>
+        <div class="frame-title" id="ft2">The Light</div>
+        <p class="frame-text">
+          We shot on 16mm. Every frame was a negotiation with available light — dawn
+          on the hillside, a single candle in a shuttered room. The camera didn't
+          observe Bella. It waited for her, the way you wait for someone to forget
+          you are watching.
+        </p>
+      </div>
+    </div>
+
+    <div class="frame" id="frame3">
+      <div class="frame-inner">
+        <div class="frame-number">Scene 03 — Post-Production</div>
+        <div class="frame-title" id="ft3">The Edit</div>
+        <p class="frame-text">
+          The first cut was four hours long. We let it breathe for six weeks before
+          touching it again. What remained — what refused to be cut — became the film.
+          Silence turned out to hold more than any line of dialogue could carry.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="timecode">00:00:00:00</div>
+
+  <script>
+    (function () {
+      const canvas  = document.getElementById('filmCanvas');
+      const ctx     = canvas.getContext('2d');
+
+      const STRIP_W   = 62;   // px — width of each side strip
+      const HOLE_W    = 20;   // sprocket hole width
+      const HOLE_H    = 28;   // sprocket hole height
+      const HOLE_GAP  = 50;   // vertical spacing between holes
+
+      // Thread phase offsets
+      const phases = [0, 1.4, 2.9, 4.3, 5.8];
+
+      let W = 0, H = 0, dpr = 1;
+
+      // ── Multi-pass golden glow line ───────────────────────────────────────
+      function drawThread(isHorizontal, position, time, phase) {
+        const passes = [[14, 0.028], [7, 0.060], [3, 0.17], [1, 0.75]];
+        for (const [lw, alpha] of passes) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth = lw;
+          if (isHorizontal) {
+            for (let x = 0; x <= W; x += 2) {
+              const y = position + Math.sin(x * 0.008 + time * 0.001 + phase) * 3;
+              x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+          } else {
+            for (let y = 0; y <= H; y += 2) {
+              const x = position + Math.sin(y * 0.008 + time * 0.001 + phase) * 3;
+              y === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+        }
+      }
+
+      // ── Glowing rectangle (sprocket hole outline) ─────────────────────────
+      function drawHole(x, y) {
+        const passes = [[5, 0.04], [2.5, 0.12], [1.2, 0.30], [0.6, 0.72]];
+        for (const [lw, alpha] of passes) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth = lw;
+          const r = 3; // corner radius
+          ctx.roundRect(x, y, HOLE_W, HOLE_H, r);
+          ctx.stroke();
+        }
+      }
+
+      // ── Draw all sprocket holes on both strips ────────────────────────────
+      function drawSprockets(scrollY) {
+        const lx = (STRIP_W - HOLE_W) / 2;             // left strip hole x
+        const rx = W - STRIP_W + (STRIP_W - HOLE_W) / 2; // right strip hole x
+
+        const count = Math.ceil(H / HOLE_GAP) + 2;
+        const offset = scrollY % HOLE_GAP;
+
+        for (let i = -1; i < count; i++) {
+          const y = i * HOLE_GAP + offset + 8;
+          drawHole(lx, y);
+          drawHole(rx, y);
+        }
+      }
+
+      // ── Layout: position frame divs to match thread lines ─────────────────
+      function layoutFrames() {
+        const y1 = H * 0.333;
+        const y2 = H * 0.667;
+
+        const frameLeft = STRIP_W;
+        const frameW    = W - STRIP_W * 2;
+
+        const frames = [
+          { el: document.getElementById('frame1'), top: 0,  height: y1 },
+          { el: document.getElementById('frame2'), top: y1, height: y2 - y1 },
+          { el: document.getElementById('frame3'), top: y2, height: H - y2 },
+        ];
+
+        frames.forEach(({ el, top, height }) => {
+          el.style.left   = frameLeft + 'px';
+          el.style.width  = frameW + 'px';
+          el.style.top    = top + 'px';
+          el.style.height = height + 'px';
+        });
+
+        fitTitles(frameW);
+      }
+
+      // ── Auto-size frame titles to fill ~50% of frame width ────────────────
+      function fitTitles(frameW) {
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
+        document.body.appendChild(probe);
+
+        const MAX_SIZE = 72;
+        const target   = frameW * 0.50; // fill half the frame width
+
+        document.querySelectorAll('.frame-title').forEach(el => {
+          probe.textContent = el.textContent;
+          let fs = 12;
+          probe.style.fontSize = fs + 'px';
+          while (probe.offsetWidth < target && fs < MAX_SIZE) {
+            fs += 0.5;
+            probe.style.fontSize = fs + 'px';
+          }
+          el.style.fontSize = Math.min(fs - 0.5, MAX_SIZE) + 'px';
+        });
+
+        document.body.removeChild(probe);
+      }
+
+      // ── Resize ────────────────────────────────────────────────────────────
+      function resize() {
+        dpr = window.devicePixelRatio || 1;
+        W   = canvas.clientWidth;
+        H   = canvas.clientHeight;
+        canvas.width  = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.scale(dpr, dpr);
+        layoutFrames();
+      }
+
+      // ── Timecode ticker ───────────────────────────────────────────────────
+      const tcEl = document.getElementById('timecode');
+      let tcFrames = 0;
+      function tickTimecode() {
+        tcFrames++;
+        const fr = tcFrames % 24;
+        const s  = Math.floor(tcFrames / 24) % 60;
+        const m  = Math.floor(tcFrames / 1440) % 60;
+        const h  = Math.floor(tcFrames / 86400);
+        const pad = n => String(n).padStart(2,'0');
+        tcEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}:${pad(fr)}`;
+      }
+
+      // ── Animation loop ────────────────────────────────────────────────────
+      let scrollY = 0; // sprocket holes gently scroll downward
+
+      function draw(time) {
+        ctx.clearRect(0, 0, W, H);
+
+        scrollY = time * 0.012; // slow downward drift
+
+        // Film strip edge threads (vertical)
+        drawThread(false, STRIP_W,     time, phases[0]);
+        drawThread(false, W - STRIP_W, time, phases[1]);
+
+        // Frame divider threads (horizontal)
+        drawThread(true, H * 0.333, time, phases[2]);
+        drawThread(true, H * 0.667, time, phases[3]);
+
+        // Sprocket holes
+        drawSprockets(scrollY);
+
+        tickTimecode();
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(draw);
+    })();
+  </script>
 </body>
 </html>
