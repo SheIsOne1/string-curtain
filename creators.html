@@ -7,25 +7,200 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="section.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .page-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 24px;
+      z-index: 10;
+    }
+
+    .back-link {
+      font-family: 'Imperial Script', cursive;
+      font-size: 18px;
+      color: rgba(210,168,65,0.65);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: rgba(210,168,65,1); }
+
+    .page-title {
+      font-family: 'Imperial Script', cursive;
+      font-size: 38px;
+      color: rgba(210,168,65,0.9);
+      font-weight: 400;
+    }
+
+    .creator-labels {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 90px;
+      display: flex;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .creator-label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .creator-label .name {
+      font-family: 'Imperial Script', cursive;
+      font-size: 30px;
+      color: rgba(210,168,65,0.92);
+    }
+
+    .creator-label .role {
+      font-family: 'Imperial Script', cursive;
+      font-size: 15px;
+      color: rgba(210,168,65,0.45);
+      letter-spacing: 0.05em;
+    }
+  </style>
 </head>
 <body>
 
+  <canvas id="c"></canvas>
+
   <header class="page-header">
     <a href="https://sheisone1.github.io/string-curtain/index.html?open=1" class="back-link">← Back</a>
-    <h1 class="page-title">creators</h1>
+    <h1 class="page-title">Creators</h1>
   </header>
 
-  <main class="layout-grid">
-    <div class="cell cell--full"></div>
-    <div class="cell cell--full"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-  </main>
+  <div class="creator-labels">
+    <div class="creator-label">
+      <span class="name">Shiri Arbiv</span>
+      <span class="role">Director</span>
+    </div>
+    <div class="creator-label">
+      <span class="name">Maya Cohen</span>
+      <span class="role">Composer</span>
+    </div>
+    <div class="creator-label">
+      <span class="name">Lior Ben-David</span>
+      <span class="role">Animator</span>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let W, H, dpr;
+
+    const PASSES = [[14, 0.028], [7, 0.060], [3, 0.17], [1, 0.75]];
+    const N_LAT = 12;  // latitude rings
+    const N_LON = 10;  // longitude arcs
+
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width  = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(dpr, dpr);
+    }
+
+    function drawSphere(cx, cy, R, time, basePh) {
+      ctx.save();
+      // clip to circle so glow doesn't bleed outside
+      ctx.beginPath();
+      ctx.arc(cx, cy, R + 10, 0, Math.PI * 2);
+      ctx.clip();
+
+      /* ── latitude lines ── */
+      for (let li = 1; li < N_LAT; li++) {
+        const t      = -1 + (2 * li / N_LAT);          // -1..1 (south..north)
+        const halfW  = R * Math.sqrt(1 - t * t);
+        const lineY  = cy + t * R;
+        const phase  = basePh + li * 0.55;
+        const amp    = halfW * 0.055;                   // wave amplitude scales with ring width
+
+        for (const [lw, alpha] of PASSES) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+          ctx.lineWidth   = lw;
+          const steps = Math.max(24, Math.ceil(halfW * 2));
+          for (let s = 0; s <= steps; s++) {
+            const x    = cx - halfW + (s / steps) * halfW * 2;
+            const wave = Math.sin(x * 0.022 + time * 0.00075 + phase) * amp
+                       + Math.sin(x * 0.045 + time * 0.0013  + phase * 1.4) * amp * 0.35;
+            s === 0 ? ctx.moveTo(x, lineY + wave) : ctx.lineTo(x, lineY + wave);
+          }
+          ctx.stroke();
+        }
+      }
+
+      /* ── longitude arcs ── */
+      for (let li = 0; li < N_LON; li++) {
+        const lonAngle  = (li / N_LON) * Math.PI * 2;
+        const phase     = basePh + li * 0.72;
+        // front hemisphere (z > 0 when sin > 0) full brightness; back dimmed
+        const alphaMult = Math.sin(lonAngle) >= 0 ? 1.0 : 0.22;
+        const steps     = 64;
+
+        for (const [lw, alpha] of PASSES) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(210,168,65,${alpha * alphaMult})`;
+          ctx.lineWidth   = lw;
+          for (let s = 0; s <= steps; s++) {
+            const theta = (s / steps) * Math.PI;           // 0 (north pole) → π (south pole)
+            const bx    = cx + R * Math.sin(theta) * Math.cos(lonAngle);
+            const by    = cy - R * Math.cos(theta);        // screen y: north = cy-R
+            // small rope-like wave perpendicular to the arc
+            const wave  = Math.sin(theta * 2.8 + time * 0.00075 + phase) * 2.2
+                        + Math.sin(theta * 5.5 + time * 0.0013  + phase * 1.3) * 0.9;
+            s === 0 ? ctx.moveTo(bx + wave, by) : ctx.lineTo(bx + wave, by);
+          }
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function draw(time) {
+      ctx.clearRect(0, 0, W, H);
+
+      const HEADER_H = 60;
+      const FOOTER_H = 90;
+      const usableH  = H - HEADER_H - FOOTER_H;
+      const cy       = HEADER_H + usableH * 0.5;
+      const R        = Math.min(W * 0.13, usableH * 0.42);
+
+      const positions = [W / 6, W / 2, W * 5 / 6];
+      const phases    = [0, 2.09, 4.19];
+
+      positions.forEach((cx, i) => drawSphere(cx, cy, R, time, phases[i]));
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); });
+    resize();
+    requestAnimationFrame(draw);
+  </script>
 
 </body>
 </html>
