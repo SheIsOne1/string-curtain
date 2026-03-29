@@ -179,7 +179,9 @@
           ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
           ctx.lineWidth = lw;
           for (let y = yTop; y <= yBottom; y += 2) {
-            const x = xPos + Math.sin(y * 0.012 + time * 0.001 + phase) * 5;
+            const x = xPos
+              + Math.sin(y * 0.012 + time * 0.001  + phase) * 7
+              + Math.sin(y * 0.028 + time * 0.0017 + phase * 1.4) * 3;
             y === yTop ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
           }
           ctx.stroke();
