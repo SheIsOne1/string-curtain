@@ -251,18 +251,18 @@ function drawArrow(cx, cy, alpha) {
 // ─── TOP PROGRESS / WAVE BAR (thread style) ──────────────────────────────────
 // Title hue palette (one per title index)
 const RAIL_COLORS = [
-  "210,168,65",   // Our Story  — gold
-  "249,220,92",   // Making Of  — bright yellow
-  "252,200,100",  // creators   — warm amber
-  "255,240,150",  // Awards     — pale gold
+  "122,174,255",   // Our Story
+  "122,174,255",   // Making Of
+  "122,174,255",   // Creators
+  "122,174,255",   // Awards
 ];
 
 function drawRail(t) {
   const p = Math.max(0, Math.min(1, progress));
   if (p <= 0) return;
 
-  // Pick color based on hovered title (default gold)
-  const col  = hoveredIdx >= 0 ? RAIL_COLORS[hoveredIdx] : "210,168,65";
+  // Pick color based on hovered title (default blue)
+  const col  = hoveredIdx >= 0 ? RAIL_COLORS[hoveredIdx] : "122,174,255";
   const barW = W * p;
 
   // Wave parameters — active only when fully open
