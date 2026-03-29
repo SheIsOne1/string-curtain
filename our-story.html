@@ -126,6 +126,24 @@
       color: rgba(255,255,255,0.42);
     }
 
+    /* ===== OUTER COLUMN TITLES (in Row 1) ===== */
+    .col-title-outer {
+      position: absolute;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .col-title-outer h3 {
+      font-family: "Imperial Script", cursive;
+      font-weight: 400;
+      color: rgba(210,168,65,0.90);
+      text-shadow: 0 0 28px rgba(210,168,65,0.25);
+      line-height: 1.1;
+      white-space: nowrap;
+      margin: 0;
+    }
+
     /* ===== ROW 4: CLOSING QUOTE ===== */
     .row-quote {
       position: absolute;
@@ -177,9 +195,12 @@
       </p>
     </div>
 
+    <!-- Outer column titles — positioned in Row 1 by JS -->
+    <div class="col-title-outer" id="titleA"><h3>The Beginning</h3></div>
+    <div class="col-title-outer" id="titleC"><h3>The Vision</h3></div>
+
     <!-- Row 3: three content columns -->
     <div class="col-cell" id="colA">
-      <h3>The Beginning</h3>
       <p>
         Every story has a wound at its origin. For Bella, it was a photograph found
         in a drawer — a woman she had never met, wearing her own face. That image
@@ -195,7 +216,6 @@
       </p>
     </div>
     <div class="col-cell" id="colC">
-      <h3>The Vision</h3>
       <p>
         We wanted the camera to behave like memory itself — not documentary, not fiction,
         but something in between. Golden light. Long silences. Faces held in close-up
@@ -230,7 +250,12 @@
       const threadPhases = [0, 1.3, 2.7, 4.1, 5.5];
 
       function fitColTitles() {
-        const titles = document.querySelectorAll('.col-cell h3');
+        // All three titles: The Beginning (titleA), The Journey (colB), The Vision (titleC)
+        const titles = [
+          document.querySelector('#titleA h3'),
+          document.querySelector('#colB h3'),
+          document.querySelector('#titleC h3'),
+        ];
         const sizes = [];
 
         // Measure in a detached span so no container clipping affects the result
@@ -310,6 +335,18 @@
         colC.style.left   = x2 + 'px';
         colC.style.width  = (W - x2) + 'px';
         colC.style.height = row3H + 'px';
+
+        // Outer titles sit in Row 1 tagline band, within their column sections
+        const titleA = document.getElementById('titleA');
+        const titleC = document.getElementById('titleC');
+        titleA.style.top    = '0px';
+        titleA.style.left   = '0px';
+        titleA.style.width  = x1 + 'px';
+        titleA.style.height = y1 + 'px';
+        titleC.style.top    = '0px';
+        titleC.style.left   = x2 + 'px';
+        titleC.style.width  = (W - x2) + 'px';
+        titleC.style.height = y1 + 'px';
 
         // Fit col h3 titles to single row
         fitColTitles();
