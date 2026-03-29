@@ -48,7 +48,7 @@
 
     .creator-labels {
       position: fixed;
-      top: 60px; left: 0; right: 0;
+      left: 0; right: 0;
       height: 90px;
       display: flex;
       z-index: 10;
@@ -161,14 +161,20 @@
       }
     }
 
+    const labels = document.querySelector('.creator-labels');
+
     function draw(time) {
       ctx.clearRect(0, 0, W, H);
 
-      const HEADER_H = 150; // 60px nav + 90px labels
+      const HEADER_H = 60;
       const FOOTER_H = 20;
       const usableH  = H - HEADER_H - FOOTER_H;
       const cy       = HEADER_H + usableH * 0.5;
-      const R        = Math.min(W * 0.10, usableH * 0.34);  // smaller overall
+      const R        = Math.min(W * 0.10, usableH * 0.34);
+
+      // Position labels 10px above top edge of coil
+      const labelH = 90;
+      labels.style.top = (cy - R - 10 - labelH) + 'px';
 
       const positions = [W / 6, W / 2, W * 5 / 6];
       const phases    = [0, 2.09, 4.19];
