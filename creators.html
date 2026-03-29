@@ -161,6 +161,64 @@
       }
     }
 
+    const CREATORS = [
+      { name: 'Shiri Arbiv',   role: 'Director',  lines: ['Visual storyteller', 'Tel Aviv, IL'] },
+      { name: 'Maya Cohen',    role: 'Composer',   lines: ['Sound & score',      'Jerusalem, IL'] },
+      { name: 'Lior Ben-David', role: 'Animator',  lines: ['Motion & form',      'Haifa, IL'] },
+    ];
+
+    // Draw one horizontal wavy thread line
+    function drawHThread(x0, x1, y, time, phase) {
+      for (const [lw, alpha] of PASSES) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+        ctx.lineWidth   = lw;
+        for (let x = x0; x <= x1; x += 2) {
+          const wy = y + Math.sin(x * 0.012 + time * 0.001 + phase) * 2;
+          x === x0 ? ctx.moveTo(x, wy) : ctx.lineTo(x, wy);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Draw one vertical wavy thread line
+    function drawVThread(x, y0, y1, time, phase) {
+      for (const [lw, alpha] of PASSES) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(210,168,65,${alpha})`;
+        ctx.lineWidth   = lw;
+        for (let y = y0; y <= y1; y += 2) {
+          const wx = x + Math.sin(y * 0.012 + time * 0.001 + phase) * 2;
+          y === y0 ? ctx.moveTo(wx, y) : ctx.lineTo(wx, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Draw a thread-border box with text inside
+    function drawInfoBox(cx, top, w, h, time, phase, creator) {
+      const left  = cx - w / 2;
+      const right = cx + w / 2;
+      const bot   = top + h;
+
+      drawHThread(left, right, top,  time, phase);
+      drawHThread(left, right, bot,  time, phase + 1.6);
+      drawVThread(left,  top, bot,   time, phase + 0.9);
+      drawVThread(right, top, bot,   time, phase + 2.5);
+
+      // Text inside
+      ctx.textAlign    = 'center';
+      ctx.fillStyle    = 'rgba(210,168,65,0.85)';
+      ctx.font         = `18px "Imperial Script", cursive`;
+      ctx.fillText(creator.role, cx, top + h * 0.32);
+
+      ctx.fillStyle = 'rgba(210,168,65,0.45)';
+      ctx.font      = `13px "Imperial Script", cursive`;
+      creator.lines.forEach((line, i) => {
+        ctx.fillText(line, cx, top + h * 0.55 + i * 20);
+      });
+    }
+
     const labels = document.querySelector('.creator-labels');
 
     function draw(time) {
@@ -179,7 +237,14 @@
       const positions = [W / 6, W / 2, W * 5 / 6];
       const phases    = [0, 2.09, 4.19];
 
-      positions.forEach((cx, i) => drawRopeCoil(cx, cy, R, time, phases[i]));
+      const BOX_W = R * 1.4;
+      const BOX_H = R * 1.1;
+      const BOX_GAP = 18; // gap between coil bottom and box top
+
+      positions.forEach((cx, i) => {
+        drawRopeCoil(cx, cy, R, time, phases[i]);
+        drawInfoBox(cx, cy + R + BOX_GAP, BOX_W, BOX_H, time, phases[i], CREATORS[i]);
+      });
 
       requestAnimationFrame(draw);
     }
