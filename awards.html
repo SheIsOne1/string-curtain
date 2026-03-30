@@ -155,35 +155,35 @@
   function drawParticle(x, y, size, time, phase) {
     const pulse = 0.70 + 0.30 * Math.sin(time * 0.002 + phase);
 
-    // Wide soft glow
-    const gR = size * 24 * pulse;
+    // Soft outer glow (small, warm)
+    const gR = size * 10 * pulse;
     const g  = ctx.createRadialGradient(x, y, 0, x, y, gR);
-    g.addColorStop(0,   `rgba(255,253,210,${0.50 * pulse})`);
-    g.addColorStop(0.3, `rgba(255,242,150,${0.16 * pulse})`);
+    g.addColorStop(0,   `rgba(255,252,210,${0.38 * pulse})`);
+    g.addColorStop(0.4, `rgba(255,240,160,${0.10 * pulse})`);
     g.addColorStop(1,   'rgba(255,220,80,0)');
     ctx.beginPath(); ctx.arc(x, y, gR, 0, Math.PI * 2);
     ctx.fillStyle = g; ctx.fill();
 
     // Orbiting micro-particles
-    const count = 8;
+    const count = 6;
     for (let i = 0; i < count; i++) {
       const speed = i % 2 === 0 ? 0.00085 : -0.00055;
       const ang   = (i / count) * Math.PI * 2 + time * speed + phase;
-      const r     = size * (4.5 + Math.sin(time * 0.0025 + i * 1.1) * 1.8);
+      const r     = size * (2.8 + Math.sin(time * 0.0025 + i * 1.1) * 1.0);
       const px    = x + Math.cos(ang) * r;
       const py    = y + Math.sin(ang) * r;
-      const ps    = Math.max(0.4, (1.0 + Math.sin(time * 0.003 + i * 1.7) * 0.55) * pulse);
+      const ps    = Math.max(0.3, (0.7 + Math.sin(time * 0.003 + i * 1.7) * 0.35) * pulse);
       ctx.beginPath(); ctx.arc(px, py, ps, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,253,190,${0.80 * pulse})`;
+      ctx.fillStyle = `rgba(255,252,200,${0.70 * pulse})`;
       ctx.fill();
     }
 
     // Bright core
-    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
-    cg.addColorStop(0,   `rgba(255,255,240,${pulse})`);
-    cg.addColorStop(0.4, `rgba(255,250,180,${0.55 * pulse})`);
-    cg.addColorStop(1,   'rgba(255,230,90,0)');
-    ctx.beginPath(); ctx.arc(x, y, size * 3, 0, Math.PI * 2);
+    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 1.8);
+    cg.addColorStop(0,   `rgba(255,255,245,${pulse})`);
+    cg.addColorStop(0.5, `rgba(255,250,190,${0.50 * pulse})`);
+    cg.addColorStop(1,   'rgba(255,230,100,0)');
+    ctx.beginPath(); ctx.arc(x, y, size * 1.8, 0, Math.PI * 2);
     ctx.fillStyle = cg; ctx.fill();
   }
 
@@ -293,7 +293,7 @@
       const ax = ix + fx * iw;           // anchor on face outline
       const ay = iy + fy * ih;
       const isLeft = a.side === 'left';
-      const dist   = a.size * 90 + 40;  // how far the particle sits from the face
+      const dist   = a.size * 42 + 16;  // how far the particle sits from the face
       const px = ax + (isLeft ? -dist : dist);  // particle / title position
       const py = ay;
       const pulse = 0.70 + 0.30 * Math.sin(time * 0.002 + a.phase);
