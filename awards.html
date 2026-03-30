@@ -38,64 +38,74 @@
   const ctx    = canvas.getContext('2d');
   let W, H, dpr;
   const HEADER = 60;
-  const PASSES = [[16, 0.018], [8, 0.048], [3.5, 0.14], [1, 0.75]];
 
-  // ── Catmull-Rom spline draw ───────────────────────────────────────────────
-  function drawSpline(pts) {
-    if (pts.length < 2) return;
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[Math.max(i - 1, 0)];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[Math.min(i + 2, pts.length - 1)];
-      const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
-      const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
-      const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
-      const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
-      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
-    }
-  }
+  // ── Load face image ───────────────────────────────────────────────────────
+  const img = new Image();
+  img.src = 'face.png';
 
-  function glowLine(pts, alphaMult) {
-    for (const [lw, alpha] of PASSES) {
-      ctx.beginPath();
-      drawSpline(pts);
-      ctx.strokeStyle = `rgba(210,168,65,${alpha * alphaMult})`;
-      ctx.lineWidth   = lw;
-      ctx.lineCap     = 'round';
-      ctx.lineJoin    = 'round';
-      ctx.stroke();
-    }
-  }
-
-  // ── Face geometry (side profile, facing left) ─────────────────────────────
-  function makeGeo() {
-    const fh = (H - HEADER) * 0.86;
-    const fw = fh * 0.72;
-    // Center horizontally: nose (leftmost ~0.14fw) to back-of-head (~0.88fw)
-    const fx = W * 0.50 - fw * 0.50;
-    const fy = HEADER + (H - HEADER) * 0.06;
-    const p  = (rx, ry) => [fx + rx * fw, fy + ry * fh];
-    return p;
-  }
-
-  // ── Award star positions [rx, ry, label, sub, size, phase] ───────────────
-  const AWARDS = [
-    [0.60, 0.00, "Palme d'Or",          "Cannes 2025",         2.2, 0.0], // crown
-    [0.38, 0.24, "Best Director",       "TIFF 2025",           1.7, 1.1], // eye
-    [0.14, 0.38, "Grand Prix",          "Tribeca 2025",        1.6, 2.2], // nose tip
-    [0.17, 0.62, "Jury Prize",          "Venice 2025",         1.4, 0.7], // lower lip
-    [0.20, 0.68, "Best Cinematography", "Sundance 2025",       1.5, 1.8], // chin
-    [0.88, 0.35, "Best Feature",        "Berlin 2025",         1.5, 3.1], // hair back
-    [0.50, 0.26, "Best Score",          "Edinburgh 2025",      1.2, 2.5], // outer eye
-    [0.62, 0.97, "Audience Award",      "Rotterdam 2025",      1.1, 0.4], // neck base
+  // ── Face outline path – normalized [fx, fy] within image rect ────────────
+  // Traced from the line art: hair → forehead → eye → nose → lips → chin → neck → shoulder
+  const FACE_PATH = [
+    [0.41, 0.00],  // hair peak (curl at top)
+    [0.38, 0.04],  // hair base
+    [0.43, 0.09],  // forehead top
+    [0.45, 0.18],  // mid forehead
+    [0.44, 0.27],  // brow
+    [0.45, 0.33],  // eye
+    [0.48, 0.38],  // nose bridge
+    [0.54, 0.44],  // nose tip
+    [0.52, 0.49],  // upper lip
+    [0.50, 0.54],  // mouth
+    [0.47, 0.59],  // lower lip
+    [0.45, 0.64],  // chin
+    [0.41, 0.69],  // jaw
+    [0.43, 0.76],  // upper neck
+    [0.44, 0.83],  // lower neck
+    [0.39, 0.90],  // collarbone
+    [0.33, 0.97],  // shoulder
   ];
+
+  // Catmull-Rom spline: get [fx, fy] at parameter t ∈ [0, 1]
+  function pathPoint(t) {
+    const n = FACE_PATH.length - 1;
+    const seg = Math.min(Math.floor(t * n), n - 1);
+    const lt  = t * n - seg;
+    const p0  = FACE_PATH[Math.max(0,   seg - 1)];
+    const p1  = FACE_PATH[seg];
+    const p2  = FACE_PATH[Math.min(n,   seg + 1)];
+    const p3  = FACE_PATH[Math.min(n,   seg + 2)];
+    const cr  = (a, b, c, d, s) => 0.5 * (
+      2*b + (-a+c)*s + (2*a-5*b+4*c-d)*s*s + (-a+3*b-3*c+d)*s*s*s
+    );
+    return [ cr(p0[0],p1[0],p2[0],p3[0],lt), cr(p0[1],p1[1],p2[1],p3[1],lt) ];
+  }
+
+  // ── Awards placed at t-positions along the face path ─────────────────────
+  const AWARDS = [
+    { t:0.04, side:'right', label:"Palme d'Or",          sub:"Cannes 2025",    size:2.0, phase:0.0 },
+    { t:0.18, side:'left',  label:"Best Score",          sub:"Edinburgh 2025", size:1.1, phase:2.5 },
+    { t:0.30, side:'left',  label:"Best Director",       sub:"TIFF 2025",      size:1.6, phase:1.1 },
+    { t:0.42, side:'right', label:"Grand Prix",          sub:"Tribeca 2025",   size:1.5, phase:2.2 },
+    { t:0.52, side:'left',  label:"Jury Prize",          sub:"Venice 2025",    size:1.3, phase:0.7 },
+    { t:0.62, side:'right', label:"Best Cinematography", sub:"Sundance 2025",  size:1.4, phase:1.8 },
+    { t:0.74, side:'left',  label:"Best Feature",        sub:"Berlin 2025",    size:1.4, phase:3.1 },
+    { t:0.88, side:'right', label:"Audience Award",      sub:"Rotterdam 2025", size:1.1, phase:0.4 },
+  ];
+
+  // ── Face image rect ───────────────────────────────────────────────────────
+  function faceRect() {
+    const ih  = (H - HEADER) * 0.88;
+    const aspect = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0.74;
+    const iw  = ih * aspect;
+    const ix  = (W - iw) / 2;
+    const iy  = HEADER + (H - HEADER) * 0.06;
+    return { ix, iy, iw, ih };
+  }
 
   // ── Draw glowing star ─────────────────────────────────────────────────────
   function drawStar(x, y, size, time, phase) {
     const pulse = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
-    const gR = size * 18 * pulse;
+    const gR = size * 16 * pulse;
 
     const g = ctx.createRadialGradient(x, y, 0, x, y, gR);
     g.addColorStop(0,    `rgba(255,242,200,${0.65 * pulse})`);
@@ -105,156 +115,89 @@
     ctx.beginPath(); ctx.arc(x, y, gR, 0, Math.PI * 2);
     ctx.fillStyle = g; ctx.fill();
 
-    const sLen = size * 10 * pulse;
+    const sLen = size * 9 * pulse;
     for (let i = 0; i < 4; i++) {
       const ang = i * Math.PI / 2 + time * 0.00012;
       const sg  = ctx.createLinearGradient(x, y,
         x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
       sg.addColorStop(0, `rgba(255,248,220,${0.6 * pulse})`);
-      sg.addColorStop(1, 'rgba(210,168,65,0)');
-      ctx.beginPath();
-      ctx.moveTo(x, y);
+      sg.addColorStop(1,  'rgba(210,168,65,0)');
+      ctx.beginPath(); ctx.moveTo(x, y);
       ctx.lineTo(x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
       ctx.strokeStyle = sg; ctx.lineWidth = 0.8; ctx.stroke();
     }
 
-    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 2.8);
+    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 2.5);
     cg.addColorStop(0, `rgba(255,255,245,${0.95 * pulse})`);
-    cg.addColorStop(1, 'rgba(210,168,65,0.3)');
-    ctx.beginPath(); ctx.arc(x, y, size * 2.8, 0, Math.PI * 2);
+    cg.addColorStop(1,  'rgba(210,168,65,0.3)');
+    ctx.beginPath(); ctx.arc(x, y, size * 2.5, 0, Math.PI * 2);
     ctx.fillStyle = cg; ctx.fill();
   }
 
-  // ── Award label ───────────────────────────────────────────────────────────
-  function drawLabel(x, y, label, sub, size, time, phase, rx) {
+  // ── Draw award label ──────────────────────────────────────────────────────
+  function drawLabel(x, y, label, sub, size, time, phase, side) {
     const pulse  = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
     const alpha  = 0.65 + 0.35 * pulse;
     const fSize  = Math.round(9 + size * 3);
-    const isLeft = rx < 0.50;
-    const offX   = isLeft ? -(size * 28 + 18) : (size * 28 + 18);
+    const isLeft = side === 'left';
+    const offX   = isLeft ? -(size * 26 + 16) : (size * 26 + 16);
 
     ctx.textAlign    = isLeft ? 'right' : 'left';
     ctx.textBaseline = 'middle';
-
     ctx.font      = `${fSize}px 'Imperial Script', cursive`;
     ctx.fillStyle = `rgba(210,168,65,${alpha})`;
     ctx.fillText(label, x + offX, y);
-
     ctx.font      = `${Math.round(fSize * 0.70)}px 'Imperial Script', cursive`;
     ctx.fillStyle = `rgba(122,174,255,${alpha * 0.82})`;
     ctx.fillText(sub, x + offX, y + fSize * 1.1);
   }
 
-  // ── Main draw ─────────────────────────────────────────────────────────────
+  // ── Main draw loop ─────────────────────────────────────────────────────────
   function draw(time) {
+    if (!img.complete || !img.naturalWidth) { requestAnimationFrame(draw); return; }
     ctx.clearRect(0, 0, W, H);
-    const p     = makeGeo();
+
+    const { ix, iy, iw, ih } = faceRect();
     const pulse = 0.88 + 0.12 * Math.sin(time * 0.0007);
 
-    // ── Main face outline (one continuous profile) ───────────────────────
-    // Profile faces LEFT. Nose tip is leftmost (~rx 0.14).
-    // Hair bump at back (~rx 0.88) gives head volume.
-    glowLine([
-      p(0.60, 0.00), // crown
-      p(0.47, 0.01), // forehead center
-      p(0.34, 0.08), // forehead slope
-      p(0.25, 0.18), // nose bridge top
-      p(0.18, 0.28), // nose bridge lower
-      p(0.14, 0.38), // nose tip (most left)
-      p(0.16, 0.44), // under-nose curve
-      p(0.24, 0.48), // nostril base
-      p(0.21, 0.52), // philtrum
-      p(0.19, 0.56), // upper lip peak
-      p(0.17, 0.62), // lower lip
-      p(0.20, 0.68), // chin tip
-      p(0.28, 0.74), // lower jaw
-      p(0.38, 0.79), // jaw angle
-      p(0.45, 0.84), // neck front top
-      p(0.48, 0.91), // neck front base
-      p(0.54, 0.96), // neck bottom front
-      p(0.62, 0.97), // neck bottom
-      p(0.70, 0.95), // neck bottom back
-      p(0.74, 0.88), // neck back
-      p(0.78, 0.74), // back of head lower
-      p(0.84, 0.56), // back of head mid
-      p(0.88, 0.35), // back of head — hair volume bulge
-      p(0.86, 0.16), // hair upper back
-      p(0.78, 0.05), // hair top
-      p(0.68, 0.01), // hair front top
-      p(0.60, 0.00), // close to crown
-    ], pulse);
+    // Gold filter: invert black→white lines, sepia+saturate→gold tones
+    const gold = 'invert(1) sepia(1) saturate(5) hue-rotate(10deg) brightness(1.25)';
 
-    // ── Eyebrow ──────────────────────────────────────────────────────────
-    glowLine([
-      p(0.30, 0.21),
-      p(0.38, 0.17),
-      p(0.48, 0.18),
-      p(0.53, 0.20),
-    ], pulse * 0.60);
+    // Multi-pass glow (same technique as thread lines)
+    ctx.save(); ctx.globalAlpha = 0.10 * pulse;
+    ctx.filter = `blur(24px) ${gold}`;
+    ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // ── Closed eye (upper + lower lid as one loop) ───────────────────────
-    glowLine([
-      p(0.31, 0.28), // inner corner
-      p(0.38, 0.24), // upper lid peak
-      p(0.50, 0.26), // outer corner
-      p(0.44, 0.32), // lower lid curve
-      p(0.31, 0.28), // close inner corner
-    ], pulse * 0.82);
+    ctx.save(); ctx.globalAlpha = 0.18 * pulse;
+    ctx.filter = `blur(13px) ${gold}`;
+    ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // ── Eye inner oval (iris hint) ────────────────────────────────────────
-    glowLine([
-      p(0.38, 0.26),
-      p(0.42, 0.24),
-      p(0.46, 0.26),
-      p(0.42, 0.29),
-      p(0.38, 0.26),
-    ], pulse * 0.45);
+    ctx.save(); ctx.globalAlpha = 0.32 * pulse;
+    ctx.filter = `blur(6px) ${gold}`;
+    ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // ── Nostril small curve ───────────────────────────────────────────────
-    glowLine([
-      p(0.24, 0.48),
-      p(0.19, 0.50),
-      p(0.22, 0.53),
-    ], pulse * 0.68);
+    ctx.save(); ctx.globalAlpha = 0.55;
+    ctx.filter = `blur(2px) ${gold}`;
+    ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // ── Upper lip (cupid's bow S-curve) ──────────────────────────────────
-    glowLine([
-      p(0.24, 0.48), // under nose
-      p(0.22, 0.52), // right bow peak
-      p(0.20, 0.50), // cupid dip
-      p(0.18, 0.55), // left bow peak
-      p(0.17, 0.58), // mouth line
-    ], pulse * 0.78);
+    // Sharp core line
+    ctx.save(); ctx.globalAlpha = 0.92;
+    ctx.filter = gold;
+    ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // ── Lower lip (fuller curve) ──────────────────────────────────────────
-    glowLine([
-      p(0.17, 0.58),
-      p(0.18, 0.63),
-      p(0.20, 0.66),
-      p(0.17, 0.62),
-    ], pulse * 0.78);
-
-    // ── Neck collar flourish (decorative loop) ────────────────────────────
-    glowLine([
-      p(0.60, 0.97),
-      p(0.55, 0.94),
-      p(0.52, 0.98),
-      p(0.56, 1.01),
-      p(0.64, 1.00),
-      p(0.68, 0.96),
-      p(0.62, 0.94),
-    ], pulse * 0.50);
-
-    // ── Award stars + labels ──────────────────────────────────────────────
-    AWARDS.forEach(([rx, ry, label, sub, size, phase]) => {
-      const [x, y] = p(rx, ry);
-      drawStar(x, y, size, time, phase);
-      drawLabel(x, y, label, sub, size, time, phase, rx);
+    // Award stars + labels – positioned along face outline path
+    AWARDS.forEach(a => {
+      const [fx, fy] = pathPoint(a.t);
+      const x = ix + fx * iw;
+      const y = iy + fy * ih;
+      drawStar(x, y, a.size, time, a.phase);
+      drawLabel(x, y, a.label, a.sub, a.size, time, a.phase, a.side);
     });
 
     requestAnimationFrame(draw);
   }
 
+  // ── Resize ────────────────────────────────────────────────────────────────
   function resize() {
     dpr = window.devicePixelRatio || 1;
     W   = window.innerWidth;
@@ -268,7 +211,8 @@
 
   resize();
   window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); });
-  document.fonts.ready.then(() => requestAnimationFrame(draw));
+  img.onload = () => document.fonts.ready.then(() => requestAnimationFrame(draw));
+  if (img.complete && img.naturalWidth) document.fonts.ready.then(() => requestAnimationFrame(draw));
   </script>
 </body>
 </html>
