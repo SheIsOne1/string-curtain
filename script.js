@@ -302,7 +302,8 @@ function drawRail(t) {
 
 // ─── CURSOR PARTICLE ─────────────────────────────────────────────────────────
 function drawCursorParticle(t) {
-  if (mouseX < 0) return;                // mouse hasn't entered the page yet
+  if (phase !== "open") return;          // only active once curtain is fully open
+  if (mouseX < 0) return;               // mouse hasn't entered the page yet
   const x = mouseX, y = mouseY;
   const isHover = hoveredIdx >= 0;
   const pulse   = 0.70 + 0.30 * Math.sin(t * 0.003);
