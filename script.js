@@ -354,9 +354,15 @@ function loop(t) {
     if (phase === "open" && !hibiscusLoaded && window.__startHibiscus) {
       hibiscusLoaded = true;
       window.__startHibiscus(hibiscusCanvas);
+      // Delay visibility by 2 frames so Three.js + bloom settle before showing
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        hibiscusCanvas.style.opacity    = String(Math.min(1, v));
+        hibiscusCanvas.style.visibility = v > 0 ? "visible" : "hidden";
+      }));
+    } else if (hibiscusLoaded) {
+      hibiscusCanvas.style.opacity    = String(Math.min(1, v));
+      hibiscusCanvas.style.visibility = v > 0 ? "visible" : "hidden";
     }
-    hibiscusCanvas.style.opacity    = String(Math.min(1, v));
-    hibiscusCanvas.style.visibility = v > 0 ? "visible" : "hidden";
   }
 
   for (let i = 0; i < threads.length; i++) {
@@ -420,11 +426,17 @@ if (new URLSearchParams(window.location.search).get("open") === "1") {
     el.style.visibility    = "visible";
     el.style.pointerEvents = "auto";
   });
-  hibiscusCanvas.style.opacity    = "1";
-  hibiscusCanvas.style.visibility = "visible";
-  // Start hibiscus when module is ready
+  // Start hibiscus when module is ready — keep canvas hidden until first render settles
   window.__onHibiscusReady = () => {
-    if (!hibiscusLoaded) { hibiscusLoaded = true; window.__startHibiscus(hibiscusCanvas); }
+    if (!hibiscusLoaded) {
+      hibiscusLoaded = true;
+      window.__startHibiscus(hibiscusCanvas);
+      // Delay visibility by 2 frames so Three.js + bloom can initialise before we show
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        hibiscusCanvas.style.opacity    = "1";
+        hibiscusCanvas.style.visibility = "visible";
+      }));
+    }
   };
 }
 
