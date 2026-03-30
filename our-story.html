@@ -104,17 +104,18 @@
       padding: 0 20px;
     }
 
-    /* Photo cell – no padding, image fills the space */
+    /* Photo inside colB */
     #colB {
-      padding: 0;
       align-items: center;
     }
     #colB img {
-      width: 100%;
-      height: 100%;
+      width: auto;
+      max-width: 88%;
+      max-height: 72%;
       object-fit: cover;
       object-position: center top;
       display: block;
+      flex-shrink: 0;
     }
 
     .col-cell h3 {
@@ -221,7 +222,13 @@
       </p>
     </div>
     <div class="col-cell" id="colB">
+      <h3>Our Story</h3>
       <img src="ourstory.png" alt="Our Story">
+      <p>
+        From the coastal villages of her grandmother's childhood to the crowded city
+        she now calls home, the film traces the geography of inheritance — the places
+        that shape us long before we choose them, the landscapes that live inside the body.
+      </p>
     </div>
     <div class="col-cell" id="colC">
       <p>
