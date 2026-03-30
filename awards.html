@@ -256,31 +256,65 @@
   function drawMouseTrail() {
     const now = performance.now();
     mouseTrail = mouseTrail.filter(p => now - p.t < TRAIL_MS);
-    if (mouseTrail.length < 2) return;
+    if (mouseTrail.length < 3) return;
+
+    const tip = mouseTrail[mouseTrail.length - 1];
+    const old = mouseTrail[0];
+
+    // Build smooth catmull-rom path through all points
+    function buildPath() {
+      ctx.beginPath();
+      ctx.moveTo(mouseTrail[0].x, mouseTrail[0].y);
+      for (let i = 0; i < mouseTrail.length - 1; i++) {
+        const p0 = mouseTrail[Math.max(0, i - 1)];
+        const p1 = mouseTrail[i];
+        const p2 = mouseTrail[i + 1];
+        const p3 = mouseTrail[Math.min(mouseTrail.length - 1, i + 2)];
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+      }
+    }
+
+    const grad = ctx.createLinearGradient(old.x, old.y, tip.x, tip.y);
+    grad.addColorStop(0, 'rgba(255,250,185,0)');
+    grad.addColorStop(1, 'rgba(255,250,185,0.75)');
 
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    for (let i = 1; i < mouseTrail.length; i++) {
-      const p0  = mouseTrail[i - 1];
-      const p1  = mouseTrail[i];
-      const age = 1 - (now - p1.t) / TRAIL_MS;  // 1=fresh, 0=old
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-      ctx.strokeStyle = `rgba(255,250,185,${age * 0.55})`;
-      ctx.lineWidth   = age * 1.4;
-      ctx.stroke();
-    }
+    // Soft glow pass
+    buildPath();
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 3.5;
+    ctx.globalAlpha = 0.12;
+    ctx.stroke();
 
-    // Soft glow at the tip
-    const tip = mouseTrail[mouseTrail.length - 1];
-    const g   = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 10);
-    g.addColorStop(0,   'rgba(255,252,200,0.45)');
-    g.addColorStop(1,   'rgba(255,250,185,0)');
-    ctx.beginPath(); ctx.arc(tip.x, tip.y, 10, 0, Math.PI * 2);
+    // Mid glow
+    buildPath();
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.8;
+    ctx.globalAlpha = 0.25;
+    ctx.stroke();
+
+    // Crisp thread core
+    buildPath();
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 0.7;
+    ctx.globalAlpha = 0.85;
+    ctx.stroke();
+
+    // Tiny bright dot at tip
+    ctx.globalAlpha = 1;
+    const g = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, 5);
+    g.addColorStop(0, 'rgba(255,255,220,0.8)');
+    g.addColorStop(1, 'rgba(255,250,185,0)');
+    ctx.beginPath(); ctx.arc(tip.x, tip.y, 5, 0, Math.PI * 2);
     ctx.fillStyle = g; ctx.fill();
+
     ctx.restore();
   }
 
