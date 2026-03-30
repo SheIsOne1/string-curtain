@@ -82,7 +82,6 @@ function navigateTo(idx) {
 // ─── TITLE HOVER + CLICK ──────────────────────────────────────────────────────
 titleItems.forEach((el, i) => {
   if (!el) return;
-  el.style.cursor = "pointer";
 
   el.addEventListener("click", e => {
     e.stopPropagation();
@@ -301,6 +300,45 @@ function drawRail(t) {
   ctx.restore();
 }
 
+// ─── CURSOR PARTICLE ─────────────────────────────────────────────────────────
+function drawCursorParticle(t) {
+  if (mouseX < 0) return;                // mouse hasn't entered the page yet
+  const x = mouseX, y = mouseY;
+  const isHover = hoveredIdx >= 0;
+  const pulse   = 0.70 + 0.30 * Math.sin(t * 0.003);
+  const size    = isHover ? 2.4 : 1.5;  // slightly larger when over a title
+
+  // Soft outer glow
+  const gR = size * 10 * pulse;
+  const g  = ctx.createRadialGradient(x, y, 0, x, y, gR);
+  g.addColorStop(0,   `rgba(255,252,210,${0.38 * pulse})`);
+  g.addColorStop(0.4, `rgba(255,240,160,${0.10 * pulse})`);
+  g.addColorStop(1,   'rgba(255,220,80,0)');
+  ctx.beginPath(); ctx.arc(x, y, gR, 0, Math.PI * 2);
+  ctx.fillStyle = g; ctx.fill();
+
+  // Orbiting micro-particles
+  const count = isHover ? 6 : 4;
+  for (let i = 0; i < count; i++) {
+    const speed = i % 2 === 0 ? 0.00085 : -0.00055;
+    const ang   = (i / count) * Math.PI * 2 + t * speed;
+    const r     = size * (2.8 + Math.sin(t * 0.0025 + i * 1.1) * 1.0);
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(ang) * r, y + Math.sin(ang) * r,
+            Math.max(0.3, 0.7 * pulse), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,252,200,${0.70 * pulse})`;
+    ctx.fill();
+  }
+
+  // Bright core
+  const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 1.8);
+  cg.addColorStop(0,   `rgba(255,255,245,${pulse})`);
+  cg.addColorStop(0.5, `rgba(255,250,190,${0.50 * pulse})`);
+  cg.addColorStop(1,   'rgba(255,230,100,0)');
+  ctx.beginPath(); ctx.arc(x, y, size * 1.8, 0, Math.PI * 2);
+  ctx.fillStyle = cg; ctx.fill();
+}
+
 // ─── TRAIL ALPHA ─────────────────────────────────────────────────────────────
 const ALPHA_IDLE = 0.04;
 const ALPHA_ANIM = 0.20;
@@ -404,6 +442,8 @@ function loop(t) {
     const pulse = 0.45 + 0.55 * Math.sin(t * 0.004);
     drawArrow(hoverAnchorX, tipY + 13, emerge * pulse);
   }
+
+  drawCursorParticle(t);
 
   rafId = requestAnimationFrame(loop);
 }

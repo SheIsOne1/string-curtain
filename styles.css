@@ -4,7 +4,9 @@ html, body {
   background: #000000;
   overflow: hidden;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  cursor: none;
 }
+* { cursor: none !important; }
 
 /* ===== CANVAS ===== */
 #c {
