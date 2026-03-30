@@ -89,12 +89,12 @@
 
   <div class="creator-labels">
     <div class="creator-label">
-      <span class="name">Shiri Arbiv</span>
-      <span class="role">Director</span>
-    </div>
-    <div class="creator-label">
       <span class="name">Maya Cohen</span>
       <span class="role">Composer</span>
+    </div>
+    <div class="creator-label">
+      <span class="name">Shiri Arbiv</span>
+      <span class="role">Director</span>
     </div>
     <div class="creator-label">
       <span class="name">Lior Ben-David</span>
@@ -162,10 +162,14 @@
     }
 
     const CREATORS = [
-      { name: 'Shiri Arbiv',   role: 'Director',  lines: ['Visual storyteller', 'Tel Aviv, IL'] },
-      { name: 'Maya Cohen',    role: 'Composer',   lines: ['Sound & score',      'Jerusalem, IL'] },
+      { name: 'Maya Cohen',     role: 'Composer',  lines: ['Sound & score',      'Jerusalem, IL'] },
+      { name: 'Shiri Arbiv',    role: 'Director',  lines: ['Visual storyteller', 'Tel Aviv, IL'] },
       { name: 'Lior Ben-David', role: 'Animator',  lines: ['Motion & form',      'Haifa, IL'] },
     ];
+
+    // Portrait for the centre sphere
+    const portrait = new Image();
+    portrait.src = 'Shiri_Arbiv.JPG';
 
     // Draw one horizontal wavy thread line
     function drawHThread(x0, x1, y, time, phase, rgb = '210,168,65') {
@@ -244,6 +248,22 @@
 
       positions.forEach((cx, i) => {
         drawRopeCoil(cx, cy, R, time, phases[i]);
+
+        // Draw portrait inside centre sphere
+        if (i === 1 && portrait.complete && portrait.naturalWidth > 0) {
+          const clipR = R * 0.54;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, clipR, 0, Math.PI * 2);
+          ctx.clip();
+          const aspect = portrait.naturalWidth / portrait.naturalHeight;
+          const ih = clipR * 2;
+          const iw = ih * aspect;
+          ctx.globalAlpha = 0.82;
+          ctx.drawImage(portrait, cx - iw / 2, cy - clipR, iw, ih);
+          ctx.restore();
+        }
+
         drawInfoBox(cx, cy + R + BOX_GAP, BOX_W, BOX_H, time, phases[i], CREATORS[i]);
       });
 
