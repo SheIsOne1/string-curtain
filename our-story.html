@@ -238,8 +238,8 @@
     </div>
 
     <!-- Outer column titles — positioned in Row 2 by JS -->
-    <div class="col-title-outer" id="titleA"><h3>Memory</h3></div>
-    <div class="col-title-outer" id="titleC"><h3>Loss</h3></div>
+    <div class="col-title-outer" id="titleA"><h3>Animation</h3></div>
+    <div class="col-title-outer" id="titleC"><h3>Music</h3></div>
 
     <!-- Row 3: three content columns -->
     <div class="col-cell" id="colA">
@@ -318,7 +318,7 @@
         const unified = Math.max(...sizes);
         titles.forEach((el, i) => {
           const scale = (i === 1) ? 1 : 0.8;
-          el.style.fontSize = (unified * scale) + 'px';
+          el.style.fontSize = (unified * scale * 0.5) + 'px';
         });
       }
 
