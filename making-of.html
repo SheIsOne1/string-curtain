@@ -6,7 +6,7 @@
   <title>Bella — Making Of</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="section.css">
   <style>
     html, body {
@@ -43,7 +43,7 @@
     }
 
     .frame-title {
-      font-family: "Imperial Script", cursive;
+      font-family: "Playfair Display", serif;
       font-weight: 400;
       color: rgba(210,168,65,0.92);
       text-shadow:
@@ -267,7 +267,7 @@
       // ── Auto-size frame titles (capped at 18px = 50% of 36) ─────────────
       function fitTitles() {
         const probe = document.createElement('span');
-        probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Imperial Script",cursive;font-weight:400;';
+        probe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-family:"Playfair Display",serif;font-weight:400;';
         document.body.appendChild(probe);
 
         const MAX_SIZE = 18;

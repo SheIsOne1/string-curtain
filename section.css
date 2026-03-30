@@ -35,7 +35,7 @@ html, body {
 .back-link:hover { color: rgba(210,168,65,1); }
 
 .page-title {
-  font-family: "Imperial Script", cursive;
+  font-family: "Playfair Display", serif;
   font-weight: 400;
   font-size: 44px;
   line-height: 1;

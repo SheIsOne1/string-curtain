@@ -6,7 +6,7 @@
   <title>Bella — Awards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
@@ -15,12 +15,12 @@
       display: flex; align-items: center; padding: 0 28px; z-index: 10;
     }
     .back-link {
-      color: rgba(210,168,65,0.75); font-family: 'Imperial Script', cursive;
+      color: rgba(210,168,65,0.75); font-family: 'Playfair Display', serif;
       font-size: 18px; text-decoration: none; transition: color 0.2s;
     }
     .back-link:hover { color: #7aaeff; }
     .page-title {
-      font-family: 'Imperial Script', cursive; font-size: 32px;
+      font-family: 'Playfair Display', serif; font-size: 32px;
       font-weight: 400; color: rgba(210,168,65,0.85); margin-left: 24px;
     }
     canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; cursor: default; }
@@ -42,19 +42,19 @@
       box-shadow: 0 0 80px rgba(255,248,180,0.08), 0 0 30px rgba(210,168,65,0.12);
     }
     #modal-festival {
-      font-family: 'Imperial Script', cursive;
+      font-family: 'Playfair Display', serif;
       font-size: 13px; letter-spacing: 0.14em;
       color: rgba(122,174,255,0.75);
       margin-bottom: 14px;
     }
     #modal-prize {
-      font-family: 'Imperial Script', cursive;
+      font-family: 'Playfair Display', serif;
       font-size: 42px; line-height: 1.1;
       color: rgba(255,252,200,0.95);
       margin-bottom: 10px;
     }
     #modal-year {
-      font-family: 'Imperial Script', cursive;
+      font-family: 'Playfair Display', serif;
       font-size: 17px;
       color: rgba(210,168,65,0.6);
     }
@@ -198,10 +198,10 @@
 
     ctx.textAlign    = isLeft ? 'right' : 'left';
     ctx.textBaseline = 'middle';
-    ctx.font      = `${fSize}px 'Imperial Script', cursive`;
+    ctx.font      = `${fSize}px 'Playfair Display', serif`;
     ctx.fillStyle = `rgba(255,250,185,${alpha})`;
     ctx.fillText(prize, px + offX, py);
-    ctx.font      = `${Math.round(fSize * 0.68)}px 'Imperial Script', cursive`;
+    ctx.font      = `${Math.round(fSize * 0.68)}px 'Playfair Display', serif`;
     ctx.fillStyle = `rgba(122,174,255,${alpha * 0.78})`;
     ctx.fillText(festival, px + offX, py + fSize * 1.1);
   }
