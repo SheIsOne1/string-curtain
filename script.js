@@ -311,9 +311,9 @@ function drawCursorParticle(t) {
   // Soft outer glow
   const gR = size * 10 * pulse;
   const g  = ctx.createRadialGradient(x, y, 0, x, y, gR);
-  g.addColorStop(0,   `rgba(255,252,210,${0.38 * pulse})`);
-  g.addColorStop(0.4, `rgba(255,240,160,${0.10 * pulse})`);
-  g.addColorStop(1,   'rgba(255,220,80,0)');
+  g.addColorStop(0,   `rgba(255,210,230,${0.38 * pulse})`);
+  g.addColorStop(0.4, `rgba(255,180,210,${0.10 * pulse})`);
+  g.addColorStop(1,   'rgba(255,150,190,0)');
   ctx.beginPath(); ctx.arc(x, y, gR, 0, Math.PI * 2);
   ctx.fillStyle = g; ctx.fill();
 
@@ -326,15 +326,15 @@ function drawCursorParticle(t) {
     ctx.beginPath();
     ctx.arc(x + Math.cos(ang) * r, y + Math.sin(ang) * r,
             Math.max(0.3, 0.7 * pulse), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,252,200,${0.70 * pulse})`;
+    ctx.fillStyle = `rgba(255,200,225,${0.70 * pulse})`;
     ctx.fill();
   }
 
   // Bright core
   const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 1.8);
-  cg.addColorStop(0,   `rgba(255,255,245,${pulse})`);
-  cg.addColorStop(0.5, `rgba(255,250,190,${0.50 * pulse})`);
-  cg.addColorStop(1,   'rgba(255,230,100,0)');
+  cg.addColorStop(0,   `rgba(255,240,248,${pulse})`);
+  cg.addColorStop(0.5, `rgba(255,200,225,${0.50 * pulse})`);
+  cg.addColorStop(1,   'rgba(255,150,190,0)');
   ctx.beginPath(); ctx.arc(x, y, size * 1.8, 0, Math.PI * 2);
   ctx.fillStyle = cg; ctx.fill();
 }
