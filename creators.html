@@ -32,6 +32,7 @@
 
     .back-link {
       font-family: 'Playfair Display', serif;
+      font-style: italic;
       font-size: 18px;
       color: rgba(210,168,65,0.65);
       text-decoration: none;
@@ -41,6 +42,7 @@
 
     .page-title {
       font-family: 'Playfair Display', serif;
+      font-style: italic;
       font-size: 38px;
       color: rgba(210,168,65,0.9);
       font-weight: 400;
@@ -66,12 +68,14 @@
 
     .creator-label .name {
       font-family: 'Playfair Display', serif;
+      font-style: italic;
       font-size: 30px;
       color: rgba(210,168,65,0.92);
     }
 
     .creator-label .role {
       font-family: 'Playfair Display', serif;
+      font-style: italic;
       font-size: 15px;
       color: rgba(210,168,65,0.45);
       letter-spacing: 0.05em;
@@ -214,11 +218,11 @@
       // Text inside
       ctx.textAlign    = 'center';
       ctx.fillStyle    = 'rgba(122,174,255,0.85)';
-      ctx.font         = `18px "Playfair Display", serif`;
+      ctx.font         = `italic 18px "Playfair Display", serif`;
       ctx.fillText(creator.role, cx, top + h * 0.38);
 
       ctx.fillStyle = 'rgba(122,174,255,0.45)';
-      ctx.font      = `13px "Playfair Display", serif`;
+      ctx.font      = `italic 13px "Playfair Display", serif`;
       creator.lines.forEach((line, i) => {
         ctx.fillText(line, cx, top + h * 0.65 + i * 16);
       });

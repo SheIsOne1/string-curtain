@@ -36,6 +36,7 @@ html, body {
 
 .page-title {
   font-family: "Playfair Display", serif;
+  font-style: italic;
   font-weight: 400;
   font-size: 44px;
   line-height: 1;
