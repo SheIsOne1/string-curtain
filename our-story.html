@@ -148,6 +148,14 @@
       color: rgba(255,255,255,0.42);
     }
 
+    /* ===== MOBILE ===== */
+    @media (max-width: 767px) {
+      #threadCanvas  { top: 54px; height: calc(100% - 54px); }
+      .story-content { top: 54px; height: calc(100% - 54px); }
+      .closing-quote { font-size: clamp(10px, 3.2vw, 16px); padding: 0 6%; }
+      .tagline-text  { font-size: 9px; letter-spacing: 0.20em; }
+    }
+
     /* ===== OUTER COLUMN TITLES (in Row 1) ===== */
     .col-title-outer {
       position: absolute;
@@ -316,67 +324,82 @@
 
       // ── Position content divs to match thread line positions ──────────────
       function layoutContent() {
+        const isMobile = W < 768;
         const remaining = H - ROW1_H;
-        const row2H     = remaining * ROW2_F;
-        const row3H     = remaining * ROW3_F;
-        const row4H     = remaining * (1 - ROW2_F - ROW3_F);
 
-        const y1 = ROW1_H;                   // bottom of row 1 / top of row 2
-        const y2 = y1 + row2H;               // bottom of row 2 / top of row 3
-        const y3 = y2 + row3H;               // bottom of row 3 / top of row 4
+        const tagline = document.getElementById('rowTagline');
+        const hero    = document.getElementById('rowHero');
+        const colA    = document.getElementById('colA');
+        const colB    = document.getElementById('colB');
+        const colC    = document.getElementById('colC');
+        const titleA  = document.getElementById('titleA');
+        const titleC  = document.getElementById('titleC');
+        const quote   = document.getElementById('rowQuote');
 
+        if (isMobile) {
+          // ── Mobile: tagline | full-width photo | closing quote ──
+          const row2H = remaining * 0.74;
+          const row4H = remaining - row2H;
+          const y1    = ROW1_H;
+          const y2    = y1 + row2H;
+
+          tagline.style.top = '0px'; tagline.style.height = ROW1_H + 'px';
+
+          // Hero hidden
+          hero.style.height   = '0px';
+          hero.style.overflow = 'hidden';
+
+          // colA / colC collapsed to zero width
+          colA.style.top = y1 + 'px'; colA.style.left = '0px';
+          colA.style.width = '0px';   colA.style.height = row2H + 'px';
+
+          // colB full width
+          colB.style.top    = y1 + 'px'; colB.style.left   = '0px';
+          colB.style.width  = W + 'px';  colB.style.height = row2H + 'px';
+
+          colC.style.top = y1 + 'px'; colC.style.left = W + 'px';
+          colC.style.width = '0px';   colC.style.height = row2H + 'px';
+
+          titleA.style.display = 'none';
+          titleC.style.display = 'none';
+
+          quote.style.top = y2 + 'px'; quote.style.height = row4H + 'px';
+          return;
+        }
+
+        // ── Desktop layout ──
+        hero.style.height = ''; hero.style.overflow = '';
+        titleA.style.display = ''; titleC.style.display = '';
+
+        const row2H = remaining * ROW2_F;
+        const row3H = remaining * ROW3_F;
+        const row4H = remaining * (1 - ROW2_F - ROW3_F);
+        const y1 = ROW1_H;
+        const y2 = y1 + row2H;
+        const y3 = y2 + row3H;
         const x1 = W * 0.20;
         const x2 = W * 0.80;
 
-        // Row 1 tagline
-        const tagline = document.getElementById('rowTagline');
-        tagline.style.top    = '0px';
-        tagline.style.height = y1 + 'px';
+        tagline.style.top = '0px'; tagline.style.height = y1 + 'px';
+        hero.style.top    = y1 + 'px'; hero.style.height = row2H + 'px';
 
-        // Row 2 hero
-        const hero = document.getElementById('rowHero');
-        hero.style.top    = y1 + 'px';
-        hero.style.height = row2H + 'px';
+        colA.style.top = y2 + 'px'; colA.style.left = '0px';
+        colA.style.width = x1 + 'px'; colA.style.height = row3H + 'px';
 
-        // Row 3 columns
-        const colA = document.getElementById('colA');
-        const colB = document.getElementById('colB');
-        const colC = document.getElementById('colC');
+        colB.style.top = y2 + 'px'; colB.style.left = x1 + 'px';
+        colB.style.width = (x2 - x1) + 'px'; colB.style.height = row3H + 'px';
 
-        colA.style.top    = y2 + 'px';
-        colA.style.left   = '0px';
-        colA.style.width  = x1 + 'px';
-        colA.style.height = row3H + 'px';
+        colC.style.top = y2 + 'px'; colC.style.left = x2 + 'px';
+        colC.style.width = (W - x2) + 'px'; colC.style.height = row3H + 'px';
 
-        colB.style.top    = y2 + 'px';
-        colB.style.left   = x1 + 'px';
-        colB.style.width  = (x2 - x1) + 'px';
-        colB.style.height = row3H + 'px';
+        titleA.style.top = y1 + 'px'; titleA.style.left = '0px';
+        titleA.style.width = x1 + 'px'; titleA.style.height = row2H + 'px';
+        titleC.style.top = y1 + 'px'; titleC.style.left = x2 + 'px';
+        titleC.style.width = (W - x2) + 'px'; titleC.style.height = row2H + 'px';
 
-        colC.style.top    = y2 + 'px';
-        colC.style.left   = x2 + 'px';
-        colC.style.width  = (W - x2) + 'px';
-        colC.style.height = row3H + 'px';
-
-        // Outer titles sit in Row 1 tagline band, within their column sections
-        const titleA = document.getElementById('titleA');
-        const titleC = document.getElementById('titleC');
-        titleA.style.top    = y1 + 'px';
-        titleA.style.left   = '0px';
-        titleA.style.width  = x1 + 'px';
-        titleA.style.height = row2H + 'px';
-        titleC.style.top    = y1 + 'px';
-        titleC.style.left   = x2 + 'px';
-        titleC.style.width  = (W - x2) + 'px';
-        titleC.style.height = row2H + 'px';
-
-        // Fit col h3 titles to single row
         fitColTitles();
 
-        // Row 4 quote
-        const quote = document.getElementById('rowQuote');
-        quote.style.top    = y3 + 'px';
-        quote.style.height = row4H + 'px';
+        quote.style.top = y3 + 'px'; quote.style.height = row4H + 'px';
       }
 
       // ── Multi-pass golden glow line drawing ───────────────────────────────
@@ -422,29 +445,30 @@
       function draw(time) {
         ctx.clearRect(0, 0, W, H);
 
+        const isMobile  = W < 768;
         const remaining = H - ROW1_H;
-        const row2H     = remaining * ROW2_F;
-        const row3H     = remaining * ROW3_F;
 
-        const y1 = ROW1_H;
-        const y2 = y1 + row2H;
-        const y3 = y2 + row3H;
-
-        const x1 = W * 0.20;
-        const x2 = W * 0.80;
-
-        // Horizontal dividers
-        drawThread(true,  y1, time, threadPhases[0]);   // after tagline bar
-        drawThread(true,  y2, time, threadPhases[1]);   // after hero
-        drawThread(true,  y3, time, threadPhases[2]);   // after 3-col row
-
-        // Vertical dividers (only in row 3 zone — but drawn full height looks cinematic)
-        drawThread(false, x1, time, threadPhases[3]);
-        drawThread(false, x2, time, threadPhases[4]);
-
-        // Mask vertical threads outside of row 3 with a subtle fade
-        // (leave full-height for the cinematic feel — just reduce opacity outside row 3)
-        // Already handled by drawing at low alpha. No extra clip needed.
+        if (isMobile) {
+          // Mobile: two horizontal dividers only (no vertical columns)
+          const row2H = remaining * 0.74;
+          const y1    = ROW1_H;
+          const y2    = y1 + row2H;
+          drawThread(true, y1, time, threadPhases[0]);
+          drawThread(true, y2, time, threadPhases[2]);
+        } else {
+          const row2H = remaining * ROW2_F;
+          const row3H = remaining * ROW3_F;
+          const y1    = ROW1_H;
+          const y2    = y1 + row2H;
+          const y3    = y2 + row3H;
+          const x1    = W * 0.20;
+          const x2    = W * 0.80;
+          drawThread(true,  y1, time, threadPhases[0]);
+          drawThread(true,  y2, time, threadPhases[1]);
+          drawThread(true,  y3, time, threadPhases[2]);
+          drawThread(false, x1, time, threadPhases[3]);
+          drawThread(false, x2, time, threadPhases[4]);
+        }
 
         drawMouseTrail();
         requestAnimationFrame(draw);

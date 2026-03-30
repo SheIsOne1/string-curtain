@@ -83,12 +83,23 @@ html, body {
 }
 
 /* ===== MOBILE ===== */
-@media (max-width: 600px) {
+@media (max-width: 767px) {
+  .page-header {
+    height: 54px;
+    padding: 0 16px;
+    gap: 14px;
+  }
+  .page-title {
+    font-size: 26px;
+  }
+  .back-link {
+    font-size: 11px;
+  }
   .layout-grid {
     grid-template-columns: 1fr;
     grid-template-rows: 44px 220px 140px 140px 140px 80px;
     height: auto;
-    min-height: calc(100vh - 72px);
+    min-height: calc(100vh - 54px);
   }
   .cell--full { grid-column: 1; }
 }
