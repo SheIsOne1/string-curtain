@@ -22,7 +22,12 @@ function easeOutCubic(t) { return 1 - Math.pow(1-t,3); }
 let phase    = "idle";
 let phaseT0  = 0;
 let progress = 0;
-function setPhase(p) { phase = p; phaseT0 = performance.now(); }
+function setPhase(p) {
+  phase = p;
+  phaseT0 = performance.now();
+  // Hide system cursor only when curtain is fully open (particle takes over)
+  document.body.style.cursor = p === "open" ? "none" : "";
+}
 
 // ─── HOVER STATE ─────────────────────────────────────────────────────────────
 let hoveredIdx   = -1;
