@@ -74,6 +74,17 @@
       border: none;
       background: rgba(210,168,65,0.03);
       min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .img-slot img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
     }
 
     #timecode {
@@ -109,10 +120,10 @@
     <div class="frame" id="frame1">
       <div class="frame-title-row"><div class="frame-title" id="ft1">The Idea</div></div>
       <div class="frame-slots-row" id="slots1">
+        <div class="img-slot"><img src="Film/mof1.png" alt=""></div>
         <div class="img-slot"></div>
         <div class="img-slot"></div>
-        <div class="img-slot"></div>
-        <div class="img-slot"></div>
+        <div class="img-slot"><img src="Film/mof2.png" alt=""></div>
         <div class="img-slot"></div>
         <div class="img-slot"></div>
       </div>
@@ -122,10 +133,10 @@
       <div class="frame-title-row"><div class="frame-title" id="ft2">The Light</div></div>
       <div class="frame-slots-row" id="slots2">
         <div class="img-slot"></div>
+        <div class="img-slot"><img src="Film/mof3.jpg" alt=""></div>
         <div class="img-slot"></div>
         <div class="img-slot"></div>
-        <div class="img-slot"></div>
-        <div class="img-slot"></div>
+        <div class="img-slot"><img src="Film/mof5.jpg" alt=""></div>
         <div class="img-slot"></div>
       </div>
     </div>
@@ -135,10 +146,10 @@
       <div class="frame-slots-row" id="slots3">
         <div class="img-slot"></div>
         <div class="img-slot"></div>
+        <div class="img-slot"><img src="Film/mof4.gif" alt=""></div>
         <div class="img-slot"></div>
         <div class="img-slot"></div>
-        <div class="img-slot"></div>
-        <div class="img-slot"></div>
+        <div class="img-slot"><img src="Film/mof6.gif" alt=""></div>
       </div>
     </div>
 
