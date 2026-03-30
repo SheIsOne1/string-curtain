@@ -187,17 +187,6 @@
     ctx.fillStyle = cg; ctx.fill();
   }
 
-  // ── Thin thread from face anchor to particle ──────────────────────────────
-  function drawThread(ax, ay, px, py, pulse) {
-    // tiny dot on the face outline
-    ctx.beginPath(); ctx.arc(ax, ay, 1.8, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,252,185,${0.55 * pulse})`; ctx.fill();
-    // thread line
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(px, py);
-    ctx.strokeStyle = `rgba(255,252,185,${0.22 * pulse})`;
-    ctx.lineWidth = 0.6; ctx.stroke();
-  }
-
   // ── Award label – drawn just beyond the particle ──────────────────────────
   function drawLabel(px, py, prize, festival, size, time, phase, side) {
     const pulse  = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
@@ -302,7 +291,6 @@
       const pulse = 0.70 + 0.30 * Math.sin(time * 0.002 + a.phase);
 
       awardPositions.push({ x: px, y: py, award: a });
-      drawThread(ax, ay, px, py, pulse);
       drawParticle(px, py, a.size, time, a.phase);
       drawLabel(px, py, a.prize, a.festival, a.size, time, a.phase, a.side);
     });
