@@ -191,10 +191,10 @@
   function drawThread(ax, ay, px, py, pulse) {
     // tiny dot on the face outline
     ctx.beginPath(); ctx.arc(ax, ay, 1.8, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,200,50,${0.55 * pulse})`; ctx.fill();
+    ctx.fillStyle = `rgba(255,252,185,${0.55 * pulse})`; ctx.fill();
     // thread line
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(px, py);
-    ctx.strokeStyle = `rgba(255,200,50,${0.22 * pulse})`;
+    ctx.strokeStyle = `rgba(255,252,185,${0.22 * pulse})`;
     ctx.lineWidth = 0.6; ctx.stroke();
   }
 
@@ -264,25 +264,28 @@
 
     const { ix, iy, iw, ih } = faceRect();
     const pulse = 0.88 + 0.12 * Math.sin(time * 0.0007);
-    const gold  = 'invert(1) sepia(1) saturate(4) hue-rotate(2deg) brightness(1.5) contrast(1.1)';
+    // Matches title color rgba(255,250,185): pale warm cream-yellow, glowing
+    const gold  = 'invert(1) sepia(1) saturate(2) hue-rotate(8deg) brightness(2.0)';
 
-    ctx.save(); ctx.globalAlpha = 0.10 * pulse;
-    ctx.filter = `blur(24px) ${gold}`;
+    // Wide outer glow (strongest pulse)
+    ctx.save(); ctx.globalAlpha = 0.14 * pulse;
+    ctx.filter = `blur(30px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    ctx.save(); ctx.globalAlpha = 0.18 * pulse;
-    ctx.filter = `blur(13px) ${gold}`;
+    ctx.save(); ctx.globalAlpha = 0.22 * pulse;
+    ctx.filter = `blur(16px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    ctx.save(); ctx.globalAlpha = 0.32 * pulse;
-    ctx.filter = `blur(6px) ${gold}`;
+    ctx.save(); ctx.globalAlpha = 0.40 * pulse;
+    ctx.filter = `blur(7px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    ctx.save(); ctx.globalAlpha = 0.55;
+    ctx.save(); ctx.globalAlpha = 0.60;
     ctx.filter = `blur(2px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    ctx.save(); ctx.globalAlpha = 0.92;
+    // Sharp core line
+    ctx.save(); ctx.globalAlpha = 0.95;
     ctx.filter = gold;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
