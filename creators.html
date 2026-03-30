@@ -249,18 +249,26 @@
       positions.forEach((cx, i) => {
         drawRopeCoil(cx, cy, R, time, phases[i]);
 
-        // Draw portrait inside centre sphere
+        // Draw portrait inside centre sphere — cover-fill, face centered
         if (i === 1 && portrait.complete && portrait.naturalWidth > 0) {
-          const clipR = R * 0.54;
+          const clipR  = R * 0.54;
+          const aspect = portrait.naturalWidth / portrait.naturalHeight;
+
+          // Cover: scale so the image fully fills the circle
+          let iw, ih;
+          if (aspect >= 1) { ih = clipR * 2; iw = ih * aspect; }
+          else              { iw = clipR * 2; ih = iw / aspect; }
+
+          // Face sits roughly in the top 38% of this portrait — align it to circle centre
+          const drawX = cx - iw / 2;
+          const drawY = cy - ih * 0.38;
+
           ctx.save();
           ctx.beginPath();
           ctx.arc(cx, cy, clipR, 0, Math.PI * 2);
           ctx.clip();
-          const aspect = portrait.naturalWidth / portrait.naturalHeight;
-          const ih = clipR * 2;
-          const iw = ih * aspect;
-          ctx.globalAlpha = 0.82;
-          ctx.drawImage(portrait, cx - iw / 2, cy - clipR, iw, ih);
+          ctx.globalAlpha = 0.88;
+          ctx.drawImage(portrait, drawX, drawY, iw, ih);
           ctx.restore();
         }
 
