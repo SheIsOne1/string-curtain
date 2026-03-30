@@ -23,7 +23,48 @@
       font-family: 'Imperial Script', cursive; font-size: 32px;
       font-weight: 400; color: rgba(210,168,65,0.85); margin-left: 24px;
     }
-    canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+    canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; cursor: default; }
+
+    /* Modal */
+    #modal {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    }
+    #modal.open { display: flex; }
+    #modal-box {
+      position: relative;
+      border: 1px solid rgba(210,168,65,0.35);
+      background: rgba(0,0,0,0.88);
+      padding: 44px 60px 36px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 0 80px rgba(255,248,180,0.08), 0 0 30px rgba(210,168,65,0.12);
+    }
+    #modal-festival {
+      font-family: 'Imperial Script', cursive;
+      font-size: 13px; letter-spacing: 0.14em;
+      color: rgba(122,174,255,0.75);
+      margin-bottom: 14px;
+    }
+    #modal-prize {
+      font-family: 'Imperial Script', cursive;
+      font-size: 42px; line-height: 1.1;
+      color: rgba(255,252,200,0.95);
+      margin-bottom: 10px;
+    }
+    #modal-year {
+      font-family: 'Imperial Script', cursive;
+      font-size: 17px;
+      color: rgba(210,168,65,0.6);
+    }
+    #modal-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none; cursor: pointer;
+      color: rgba(210,168,65,0.45); font-size: 24px;
+      font-family: sans-serif; line-height: 1; transition: color 0.2s;
+    }
+    #modal-close:hover { color: rgba(255,248,180,0.9); }
   </style>
 </head>
 <body>
@@ -33,137 +74,186 @@
     <h1 class="page-title">Awards</h1>
   </header>
 
+  <div id="modal">
+    <div id="modal-box">
+      <button id="modal-close" onclick="closeModal()">×</button>
+      <div id="modal-festival"></div>
+      <div id="modal-prize"></div>
+      <div id="modal-year"></div>
+    </div>
+  </div>
+
   <script>
   const canvas = document.getElementById('c');
   const ctx    = canvas.getContext('2d');
   let W, H, dpr;
   const HEADER = 60;
+  const ZOOM   = 1.10;   // slight zoom in
 
-  // ── Load face image ───────────────────────────────────────────────────────
   const img = new Image();
   img.src = 'face.png';
 
-  // ── Face outline path – normalized [fx, fy] within image rect ────────────
-  // Traced from the line art: hair → forehead → eye → nose → lips → chin → neck → shoulder
+  // ── Face outline path – [fx, fy] normalized within image rect ─────────────
+  // Traces the main contour: hair curl → forehead → eye → nose → lips → chin → neck → shoulder
   const FACE_PATH = [
-    [0.41, 0.00],  // hair peak (curl at top)
-    [0.38, 0.04],  // hair base
-    [0.43, 0.09],  // forehead top
-    [0.45, 0.18],  // mid forehead
-    [0.44, 0.27],  // brow
-    [0.45, 0.33],  // eye
-    [0.48, 0.38],  // nose bridge
-    [0.54, 0.44],  // nose tip
-    [0.52, 0.49],  // upper lip
+    [0.41, 0.00],  // hair peak
+    [0.38, 0.05],  // hair curl base
+    [0.43, 0.11],  // forehead top
+    [0.45, 0.20],  // upper forehead
+    [0.44, 0.29],  // brow
+    [0.46, 0.35],  // eye
+    [0.49, 0.40],  // nose bridge
+    [0.55, 0.45],  // nose tip
+    [0.53, 0.50],  // upper lip
     [0.50, 0.54],  // mouth
     [0.47, 0.59],  // lower lip
-    [0.45, 0.64],  // chin
-    [0.41, 0.69],  // jaw
-    [0.43, 0.76],  // upper neck
-    [0.44, 0.83],  // lower neck
-    [0.39, 0.90],  // collarbone
+    [0.45, 0.63],  // chin
+    [0.41, 0.68],  // jaw
+    [0.42, 0.75],  // upper neck
+    [0.43, 0.83],  // lower neck
+    [0.38, 0.90],  // collarbone
     [0.33, 0.97],  // shoulder
   ];
 
-  // Catmull-Rom spline: get [fx, fy] at parameter t ∈ [0, 1]
+  // Catmull-Rom spline: t ∈ [0,1] → [fx, fy]
   function pathPoint(t) {
     const n = FACE_PATH.length - 1;
     const seg = Math.min(Math.floor(t * n), n - 1);
     const lt  = t * n - seg;
-    const p0  = FACE_PATH[Math.max(0,   seg - 1)];
+    const p0  = FACE_PATH[Math.max(0,  seg - 1)];
     const p1  = FACE_PATH[seg];
-    const p2  = FACE_PATH[Math.min(n,   seg + 1)];
-    const p3  = FACE_PATH[Math.min(n,   seg + 2)];
+    const p2  = FACE_PATH[Math.min(n,  seg + 1)];
+    const p3  = FACE_PATH[Math.min(n,  seg + 2)];
     const cr  = (a, b, c, d, s) => 0.5 * (
       2*b + (-a+c)*s + (2*a-5*b+4*c-d)*s*s + (-a+3*b-3*c+d)*s*s*s
     );
     return [ cr(p0[0],p1[0],p2[0],p3[0],lt), cr(p0[1],p1[1],p2[1],p3[1],lt) ];
   }
 
-  // ── Awards placed at t-positions along the face path ─────────────────────
+  // ── 6 awards along the face outline – real prize names ───────────────────
   const AWARDS = [
-    { t:0.04, side:'right', label:"Palme d'Or",          sub:"Cannes 2025",    size:2.0, phase:0.0 },
-    { t:0.18, side:'left',  label:"Best Score",          sub:"Edinburgh 2025", size:1.1, phase:2.5 },
-    { t:0.30, side:'left',  label:"Best Director",       sub:"TIFF 2025",      size:1.6, phase:1.1 },
-    { t:0.42, side:'right', label:"Grand Prix",          sub:"Tribeca 2025",   size:1.5, phase:2.2 },
-    { t:0.52, side:'left',  label:"Jury Prize",          sub:"Venice 2025",    size:1.3, phase:0.7 },
-    { t:0.62, side:'right', label:"Best Cinematography", sub:"Sundance 2025",  size:1.4, phase:1.8 },
-    { t:0.74, side:'left',  label:"Best Feature",        sub:"Berlin 2025",    size:1.4, phase:3.1 },
-    { t:0.88, side:'right', label:"Audience Award",      sub:"Rotterdam 2025", size:1.1, phase:0.4 },
+    { t:0.05, side:'right', prize:"Palme d'Or",      festival:"Cannes Film Festival",           year:"2025", size:2.0, phase:0.0 },
+    { t:0.22, side:'left',  prize:"Golden Bear",      festival:"Berlin Int'l Film Festival",     year:"2025", size:1.7, phase:1.4 },
+    { t:0.36, side:'right', prize:"Golden Lion",      festival:"Venice Film Festival",           year:"2024", size:1.8, phase:2.1 },
+    { t:0.52, side:'left',  prize:"Grand Jury Prize", festival:"Sundance Film Festival",         year:"2025", size:1.5, phase:0.8 },
+    { t:0.66, side:'right', prize:"Silver Bear",      festival:"Berlin Film Festival",           year:"2024", size:1.5, phase:2.8 },
+    { t:0.84, side:'left',  prize:"BAFTA Award",      festival:"British Academy of Film & TV",   year:"2025", size:1.4, phase:1.6 },
   ];
 
-  // ── Face image rect ───────────────────────────────────────────────────────
+  // ── Face image rect (with zoom) ───────────────────────────────────────────
   function faceRect() {
-    const ih  = (H - HEADER) * 0.88;
+    const ih  = (H - HEADER) * 0.88 * ZOOM;
     const aspect = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0.74;
     const iw  = ih * aspect;
     const ix  = (W - iw) / 2;
-    const iy  = HEADER + (H - HEADER) * 0.06;
+    // center vertically within the available space, accounting for zoom
+    const iy  = HEADER + (H - HEADER) * 0.06 - (ih - (H - HEADER) * 0.88) / 2;
     return { ix, iy, iw, ih };
   }
 
-  // ── Draw glowing star ─────────────────────────────────────────────────────
-  function drawStar(x, y, size, time, phase) {
-    const pulse = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
-    const gR = size * 16 * pulse;
+  // ── Glowing particle cluster ──────────────────────────────────────────────
+  function drawParticle(x, y, size, time, phase) {
+    const pulse = 0.70 + 0.30 * Math.sin(time * 0.002 + phase);
 
-    const g = ctx.createRadialGradient(x, y, 0, x, y, gR);
-    g.addColorStop(0,    `rgba(255,242,200,${0.65 * pulse})`);
-    g.addColorStop(0.25, `rgba(210,168,65,${0.28 * pulse})`);
-    g.addColorStop(0.7,  `rgba(210,168,65,${0.05 * pulse})`);
-    g.addColorStop(1,    'rgba(0,0,0,0)');
+    // Wide soft glow
+    const gR = size * 24 * pulse;
+    const g  = ctx.createRadialGradient(x, y, 0, x, y, gR);
+    g.addColorStop(0,   `rgba(255,253,210,${0.50 * pulse})`);
+    g.addColorStop(0.3, `rgba(255,242,150,${0.16 * pulse})`);
+    g.addColorStop(1,   'rgba(255,220,80,0)');
     ctx.beginPath(); ctx.arc(x, y, gR, 0, Math.PI * 2);
     ctx.fillStyle = g; ctx.fill();
 
-    const sLen = size * 9 * pulse;
-    for (let i = 0; i < 4; i++) {
-      const ang = i * Math.PI / 2 + time * 0.00012;
-      const sg  = ctx.createLinearGradient(x, y,
-        x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
-      sg.addColorStop(0, `rgba(255,248,220,${0.6 * pulse})`);
-      sg.addColorStop(1,  'rgba(210,168,65,0)');
-      ctx.beginPath(); ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(ang) * sLen, y + Math.sin(ang) * sLen);
-      ctx.strokeStyle = sg; ctx.lineWidth = 0.8; ctx.stroke();
+    // Orbiting micro-particles
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const speed = i % 2 === 0 ? 0.00085 : -0.00055;
+      const ang   = (i / count) * Math.PI * 2 + time * speed + phase;
+      const r     = size * (4.5 + Math.sin(time * 0.0025 + i * 1.1) * 1.8);
+      const px    = x + Math.cos(ang) * r;
+      const py    = y + Math.sin(ang) * r;
+      const ps    = Math.max(0.4, (1.0 + Math.sin(time * 0.003 + i * 1.7) * 0.55) * pulse);
+      ctx.beginPath(); ctx.arc(px, py, ps, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,253,190,${0.80 * pulse})`;
+      ctx.fill();
     }
 
-    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 2.5);
-    cg.addColorStop(0, `rgba(255,255,245,${0.95 * pulse})`);
-    cg.addColorStop(1,  'rgba(210,168,65,0.3)');
-    ctx.beginPath(); ctx.arc(x, y, size * 2.5, 0, Math.PI * 2);
+    // Bright core
+    const cg = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
+    cg.addColorStop(0,   `rgba(255,255,240,${pulse})`);
+    cg.addColorStop(0.4, `rgba(255,250,180,${0.55 * pulse})`);
+    cg.addColorStop(1,   'rgba(255,230,90,0)');
+    ctx.beginPath(); ctx.arc(x, y, size * 3, 0, Math.PI * 2);
     ctx.fillStyle = cg; ctx.fill();
   }
 
-  // ── Draw award label ──────────────────────────────────────────────────────
-  function drawLabel(x, y, label, sub, size, time, phase, side) {
+  // ── Award label ───────────────────────────────────────────────────────────
+  function drawLabel(x, y, prize, festival, size, time, phase, side) {
     const pulse  = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
     const alpha  = 0.65 + 0.35 * pulse;
     const fSize  = Math.round(9 + size * 3);
     const isLeft = side === 'left';
-    const offX   = isLeft ? -(size * 26 + 16) : (size * 26 + 16);
+    const offX   = isLeft ? -(size * 28 + 18) : (size * 28 + 18);
 
     ctx.textAlign    = isLeft ? 'right' : 'left';
     ctx.textBaseline = 'middle';
     ctx.font      = `${fSize}px 'Imperial Script', cursive`;
-    ctx.fillStyle = `rgba(210,168,65,${alpha})`;
-    ctx.fillText(label, x + offX, y);
-    ctx.font      = `${Math.round(fSize * 0.70)}px 'Imperial Script', cursive`;
-    ctx.fillStyle = `rgba(122,174,255,${alpha * 0.82})`;
-    ctx.fillText(sub, x + offX, y + fSize * 1.1);
+    ctx.fillStyle = `rgba(255,250,185,${alpha})`;
+    ctx.fillText(prize, x + offX, y);
+    ctx.font      = `${Math.round(fSize * 0.68)}px 'Imperial Script', cursive`;
+    ctx.fillStyle = `rgba(122,174,255,${alpha * 0.78})`;
+    ctx.fillText(festival, x + offX, y + fSize * 1.1);
   }
 
-  // ── Main draw loop ─────────────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  function showModal(a) {
+    document.getElementById('modal-festival').textContent = a.festival;
+    document.getElementById('modal-prize').textContent    = a.prize;
+    document.getElementById('modal-year').textContent     = a.year;
+    document.getElementById('modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  });
+
+  // ── Hit detection ─────────────────────────────────────────────────────────
+  let awardPositions = [];
+
+  canvas.addEventListener('click', e => {
+    if (document.getElementById('modal').classList.contains('open')) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    for (const ap of awardPositions) {
+      const dx = mx - ap.x, dy = my - ap.y;
+      if (dx*dx + dy*dy < 34*34) { showModal(ap.award); break; }
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    let hit = false;
+    for (const ap of awardPositions) {
+      const dx = mx - ap.x, dy = my - ap.y;
+      if (dx*dx + dy*dy < 34*34) { hit = true; break; }
+    }
+    canvas.style.cursor = hit ? 'pointer' : 'default';
+  });
+
+  // ── Main draw loop ────────────────────────────────────────────────────────
   function draw(time) {
     if (!img.complete || !img.naturalWidth) { requestAnimationFrame(draw); return; }
     ctx.clearRect(0, 0, W, H);
 
     const { ix, iy, iw, ih } = faceRect();
     const pulse = 0.88 + 0.12 * Math.sin(time * 0.0007);
+    const gold  = 'invert(1) sepia(1) saturate(5) hue-rotate(10deg) brightness(1.25)';
 
-    // Gold filter: invert black→white lines, sepia+saturate→gold tones
-    const gold = 'invert(1) sepia(1) saturate(5) hue-rotate(10deg) brightness(1.25)';
-
-    // Multi-pass glow (same technique as thread lines)
     ctx.save(); ctx.globalAlpha = 0.10 * pulse;
     ctx.filter = `blur(24px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
@@ -180,18 +270,19 @@
     ctx.filter = `blur(2px) ${gold}`;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // Sharp core line
     ctx.save(); ctx.globalAlpha = 0.92;
     ctx.filter = gold;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // Award stars + labels – positioned along face outline path
+    // Particles + labels along face outline
+    awardPositions = [];
     AWARDS.forEach(a => {
       const [fx, fy] = pathPoint(a.t);
       const x = ix + fx * iw;
       const y = iy + fy * ih;
-      drawStar(x, y, a.size, time, a.phase);
-      drawLabel(x, y, a.label, a.sub, a.size, time, a.phase, a.side);
+      awardPositions.push({ x, y, award: a });
+      drawParticle(x, y, a.size, time, a.phase);
+      drawLabel(x, y, a.prize, a.festival, a.size, time, a.phase, a.side);
     });
 
     requestAnimationFrame(draw);
