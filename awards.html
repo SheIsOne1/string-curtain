@@ -191,10 +191,10 @@
   function drawThread(ax, ay, px, py, pulse) {
     // tiny dot on the face outline
     ctx.beginPath(); ctx.arc(ax, ay, 1.8, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(210,168,65,${0.45 * pulse})`; ctx.fill();
+    ctx.fillStyle = `rgba(255,200,50,${0.55 * pulse})`; ctx.fill();
     // thread line
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(px, py);
-    ctx.strokeStyle = `rgba(210,168,65,${0.18 * pulse})`;
+    ctx.strokeStyle = `rgba(255,200,50,${0.22 * pulse})`;
     ctx.lineWidth = 0.6; ctx.stroke();
   }
 
@@ -264,7 +264,7 @@
 
     const { ix, iy, iw, ih } = faceRect();
     const pulse = 0.88 + 0.12 * Math.sin(time * 0.0007);
-    const gold  = 'invert(1) sepia(1) saturate(5) hue-rotate(10deg) brightness(1.25)';
+    const gold  = 'invert(1) sepia(1) saturate(4) hue-rotate(2deg) brightness(1.5) contrast(1.1)';
 
     ctx.save(); ctx.globalAlpha = 0.10 * pulse;
     ctx.filter = `blur(24px) ${gold}`;
