@@ -187,22 +187,34 @@
     ctx.fillStyle = cg; ctx.fill();
   }
 
-  // ── Award label ───────────────────────────────────────────────────────────
-  function drawLabel(x, y, prize, festival, size, time, phase, side) {
+  // ── Thin thread from face anchor to particle ──────────────────────────────
+  function drawThread(ax, ay, px, py, pulse) {
+    // tiny dot on the face outline
+    ctx.beginPath(); ctx.arc(ax, ay, 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210,168,65,${0.45 * pulse})`; ctx.fill();
+    // thread line
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(px, py);
+    ctx.strokeStyle = `rgba(210,168,65,${0.18 * pulse})`;
+    ctx.lineWidth = 0.6; ctx.stroke();
+  }
+
+  // ── Award label – drawn just beyond the particle ──────────────────────────
+  function drawLabel(px, py, prize, festival, size, time, phase, side) {
     const pulse  = 0.72 + 0.28 * Math.sin(time * 0.0017 + phase);
     const alpha  = 0.65 + 0.35 * pulse;
     const fSize  = Math.round(9 + size * 3);
     const isLeft = side === 'left';
-    const offX   = isLeft ? -(size * 28 + 18) : (size * 28 + 18);
+    // small gap beyond the particle core
+    const offX   = isLeft ? -(size * 5 + 12) : (size * 5 + 12);
 
     ctx.textAlign    = isLeft ? 'right' : 'left';
     ctx.textBaseline = 'middle';
     ctx.font      = `${fSize}px 'Imperial Script', cursive`;
     ctx.fillStyle = `rgba(255,250,185,${alpha})`;
-    ctx.fillText(prize, x + offX, y);
+    ctx.fillText(prize, px + offX, py);
     ctx.font      = `${Math.round(fSize * 0.68)}px 'Imperial Script', cursive`;
     ctx.fillStyle = `rgba(122,174,255,${alpha * 0.78})`;
-    ctx.fillText(festival, x + offX, y + fSize * 1.1);
+    ctx.fillText(festival, px + offX, py + fSize * 1.1);
   }
 
   // ── Modal ─────────────────────────────────────────────────────────────────
@@ -274,15 +286,22 @@
     ctx.filter = gold;
     ctx.drawImage(img, ix, iy, iw, ih); ctx.restore();
 
-    // Particles + labels along face outline
+    // Particles + labels: anchor on face outline, particle at title position
     awardPositions = [];
     AWARDS.forEach(a => {
       const [fx, fy] = pathPoint(a.t);
-      const x = ix + fx * iw;
-      const y = iy + fy * ih;
-      awardPositions.push({ x, y, award: a });
-      drawParticle(x, y, a.size, time, a.phase);
-      drawLabel(x, y, a.prize, a.festival, a.size, time, a.phase, a.side);
+      const ax = ix + fx * iw;           // anchor on face outline
+      const ay = iy + fy * ih;
+      const isLeft = a.side === 'left';
+      const dist   = a.size * 90 + 40;  // how far the particle sits from the face
+      const px = ax + (isLeft ? -dist : dist);  // particle / title position
+      const py = ay;
+      const pulse = 0.70 + 0.30 * Math.sin(time * 0.002 + a.phase);
+
+      awardPositions.push({ x: px, y: py, award: a });
+      drawThread(ax, ay, px, py, pulse);
+      drawParticle(px, py, a.size, time, a.phase);
+      drawLabel(px, py, a.prize, a.festival, a.size, time, a.phase, a.side);
     });
 
     requestAnimationFrame(draw);
